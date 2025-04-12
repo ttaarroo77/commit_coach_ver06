@@ -1,5 +1,5 @@
 ---
-name: "docs/overview/project-structure.md"
+name: "docs/overview_0/project-structure.md"
 title: "プロジェクト構造概要 (Project Structure)"
 description: "[コミットコーチ] - ディレクトリ構成など"
 ---
@@ -513,4 +513,3 @@ backend/
 
 以上が**コミットコーチ**のプロジェクト構造と、特に**`backend/`**ディレクトリの詳細要件定義です。  
 本ドキュメントは随時更新し、プロジェクトのスケールや設計変更に合わせて適切な修正を行ってください。
-```
