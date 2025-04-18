@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import type { DragDropContextProps, DroppableProps } from "react-beautiful-dnd"
 
 import { useState, useRef, useEffect } from "react"
 import { DragDropContext, Droppable, Draggable, type DropResult } from "react-beautiful-dnd"
@@ -157,6 +158,23 @@ const reorder = <T,>(list: T[], startIndex: number, endIndex: number): T[] => {
   return result
 }
 
+// DroppablePropsの型を拡張
+interface CustomDroppableProps extends Omit<DroppableProps, "children"> {
+  children: DroppableProps["children"]
+  isDropDisabled?: boolean
+}
+
+// クライアントサイドでのみ実行される処理を分離
+const useClientSideEffects = () => {
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  return isMounted
+}
+
 // ProjectTemplate関数の引数を更新
 export default function ProjectTemplate({
   projectTitle: initialProjectTitle,
@@ -164,6 +182,8 @@ export default function ProjectTemplate({
   dueDate: initialDueDate,
   projectColor = "#31A9B8", // デフォルト色を設定
 }: ProjectTemplateProps) {
+  const isMounted = useClientSideEffects()
+
   // 既存のコードの中で、ProjectTemplate関数の先頭付近に以下の状態変数を追加
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | "none">("none")
 
@@ -333,9 +353,9 @@ export default function ProjectTemplate({
       prevGroups.map((group) =>
         group.id === groupId
           ? {
-              ...group,
-              tasks: group.tasks.map((task) => (task.id === taskId ? { ...task, expanded: !task.expanded } : task)),
-            }
+            ...group,
+            tasks: group.tasks.map((task) => (task.id === taskId ? { ...task, expanded: !task.expanded } : task)),
+          }
           : group,
       ),
     )
@@ -449,18 +469,18 @@ export default function ProjectTemplate({
       prevGroups.map((group) =>
         group.id === groupId
           ? {
-              ...group,
-              tasks: group.tasks.map((task) =>
-                task.id === taskId
-                  ? {
-                      ...task,
-                      subtasks: task.subtasks.map((subtask) =>
-                        subtask.id === subtaskId ? { ...subtask, completed: !subtask.completed } : subtask,
-                      ),
-                    }
-                  : task,
-              ),
-            }
+            ...group,
+            tasks: group.tasks.map((task) =>
+              task.id === taskId
+                ? {
+                  ...task,
+                  subtasks: task.subtasks.map((subtask) =>
+                    subtask.id === subtaskId ? { ...subtask, completed: !subtask.completed } : subtask,
+                  ),
+                }
+                : task,
+            ),
+          }
           : group,
       ),
     )
@@ -501,9 +521,9 @@ export default function ProjectTemplate({
       prevGroups.map((group) =>
         group.id === groupId
           ? {
-              ...group,
-              tasks: group.tasks.map((task) => (task.id === taskId ? { ...task, title: newTitle } : task)),
-            }
+            ...group,
+            tasks: group.tasks.map((task) => (task.id === taskId ? { ...task, title: newTitle } : task)),
+          }
           : group,
       ),
     )
@@ -515,9 +535,9 @@ export default function ProjectTemplate({
       prevGroups.map((group) =>
         group.id === groupId
           ? {
-              ...group,
-              tasks: group.tasks.map((task) => (task.id === taskId ? { ...task, dueDate: newDueDate } : task)),
-            }
+            ...group,
+            tasks: group.tasks.map((task) => (task.id === taskId ? { ...task, dueDate: newDueDate } : task)),
+          }
           : group,
       ),
     )
@@ -529,18 +549,18 @@ export default function ProjectTemplate({
       prevGroups.map((group) =>
         group.id === groupId
           ? {
-              ...group,
-              tasks: group.tasks.map((task) =>
-                task.id === taskId
-                  ? {
-                      ...task,
-                      subtasks: task.subtasks.map((subtask) =>
-                        subtask.id === subtaskId ? { ...subtask, title: newTitle } : subtask,
-                      ),
-                    }
-                  : task,
-              ),
-            }
+            ...group,
+            tasks: group.tasks.map((task) =>
+              task.id === taskId
+                ? {
+                  ...task,
+                  subtasks: task.subtasks.map((subtask) =>
+                    subtask.id === subtaskId ? { ...subtask, title: newTitle } : subtask,
+                  ),
+                }
+                : task,
+            ),
+          }
           : group,
       ),
     )
@@ -557,9 +577,9 @@ export default function ProjectTemplate({
       prevGroups.map((group) =>
         group.id === groupId
           ? {
-              ...group,
-              tasks: group.tasks.filter((task) => task.id !== taskId),
-            }
+            ...group,
+            tasks: group.tasks.filter((task) => task.id !== taskId),
+          }
           : group,
       ),
     )
@@ -574,16 +594,16 @@ export default function ProjectTemplate({
       prevGroups.map((group) =>
         group.id === groupId
           ? {
-              ...group,
-              tasks: group.tasks.map((task) =>
-                task.id === taskId
-                  ? {
-                      ...task,
-                      subtasks: task.subtasks.filter((subtask) => subtask.id !== subtaskId),
-                    }
-                  : task,
-              ),
-            }
+            ...group,
+            tasks: group.tasks.map((task) =>
+              task.id === taskId
+                ? {
+                  ...task,
+                  subtasks: task.subtasks.filter((subtask) => subtask.id !== subtaskId),
+                }
+                : task,
+            ),
+          }
           : group,
       ),
     )
@@ -637,11 +657,11 @@ export default function ProjectTemplate({
       prevGroups.map((group) =>
         group.id === groupId
           ? {
-              ...group,
-              tasks: group.tasks.map((task) =>
-                task.id === taskId ? { ...task, subtasks: [...task.subtasks, newSubtask] } : task,
-              ),
-            }
+            ...group,
+            tasks: group.tasks.map((task) =>
+              task.id === taskId ? { ...task, subtasks: [...task.subtasks, newSubtask] } : task,
+            ),
+          }
           : group,
       ),
     )
@@ -928,488 +948,490 @@ export default function ProjectTemplate({
               </div>
 
               {/* タスクグループのリスト - ドラッグ&ドロップコンテキスト */}
-              <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="taskGroups" type="taskGroup">
-                  {(provided, snapshot) => (
-                    <div
-                      className={`space-y-6 relative ${snapshot.isDraggingOver ? "bg-gray-50/50 rounded-lg" : ""}`}
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      style={{
-                        minHeight: snapshot.isDraggingOver ? "200px" : "auto",
-                      }}
-                    >
-                      {taskGroups.map((group, groupIndex) => (
-                        <Draggable key={group.id} draggableId={group.id} index={groupIndex}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              style={{
-                                ...provided.draggableProps.style,
-                                // ドラッグ中のアイテムのスタイルを調整
-                                opacity: snapshot.isDragging ? 0.8 : 1,
-                                zIndex: snapshot.isDragging ? 10 : 1,
-                                position: snapshot.isDragging ? "relative" : "static",
-                                pointerEvents: snapshot.isDragging ? "none" : "auto",
-                              }}
-                            >
-                              <Card className={`overflow-hidden ${snapshot.isDragging ? "shadow-lg" : ""}`}>
-                                <CardHeader
-                                  className="p-4 bg-gray-50"
-                                  onMouseEnter={() => setHoveredGroup(group.id)}
-                                  onMouseLeave={() => setHoveredGroup(null)}
-                                >
-                                  <div className="flex items-center gap-4">
-                                    {/* 展開/折りたたみボタン - 左端に配置 */}
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="p-0 h-6 w-6"
-                                      onClick={() => toggleTaskGroup(group.id)}
-                                    >
-                                      {group.expanded ? (
-                                        <ChevronDown className="h-5 w-5" />
-                                      ) : (
-                                        <ChevronRight className="h-5 w-5" />
-                                      )}
-                                    </Button>
-
-                                    {/* ドラッグハンドル */}
-                                    <div {...provided.dragHandleProps} className="cursor-grab">
-                                      <GripVertical className="h-5 w-5 text-gray-400" />
-                                    </div>
-
-                                    {/* チェックボックス */}
-                                    <Checkbox
-                                      checked={group.completed}
-                                      onCheckedChange={() => toggleTaskGroupCompleted(group.id)}
-                                    />
-
-                                    {/* タスクグループタイトル */}
-                                    <CardTitle className="text-lg font-bold flex-1">
-                                      <EditableText
-                                        value={group.title}
-                                        onChange={(newTitle) => updateTaskGroupTitle(group.id, newTitle)}
-                                        prefix="## "
-                                        className={group.completed ? "line-through text-gray-400" : ""}
-                                        isOverdue={!group.completed && isDateOverdue(group.dueDate)}
-                                      />
-                                    </CardTitle>
-
-                                    {/* メニューアイコン - 常に領域を確保し、ホバー時のみ表示 */}
-                                    <div className="flex items-center gap-1 w-48 relative">
-                                      <div
-                                        className={`absolute right-0 flex items-center gap-1 transition-opacity ${hoveredGroup === group.id ? "opacity-100" : "opacity-0"}`}
+              {isMounted && (
+                <DragDropContext onDragEnd={handleDragEnd}>
+                  <Droppable droppableId="taskGroups" type="taskGroup" isDropDisabled={false} isCombineEnabled={false} ignoreContainerClipping={false}>
+                    {(provided, snapshot) => (
+                      <div
+                        className={`space-y-6 relative ${snapshot.isDraggingOver ? "bg-gray-50/50 rounded-lg" : ""}`}
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                      >
+                        {taskGroups.map((group, groupIndex) => (
+                          <Draggable key={group.id} draggableId={group.id} index={groupIndex}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                style={{
+                                  ...provided.draggableProps.style,
+                                  opacity: snapshot.isDragging ? 0.8 : 1,
+                                  zIndex: snapshot.isDragging ? 10 : 1,
+                                  position: snapshot.isDragging ? "relative" : "static",
+                                  pointerEvents: snapshot.isDragging ? "none" : "auto",
+                                }}
+                              >
+                                <Card className={`overflow-hidden ${snapshot.isDragging ? "shadow-lg" : ""}`}>
+                                  <CardHeader
+                                    className="p-4 bg-gray-50"
+                                    onMouseEnter={() => setHoveredGroup(group.id)}
+                                    onMouseLeave={() => setHoveredGroup(null)}
+                                  >
+                                    <div className="flex items-center gap-4">
+                                      {/* 展開/折りたたみボタン - 左端に配置 */}
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="p-0 h-6 w-6"
+                                        onClick={() => toggleTaskGroup(group.id)}
                                       >
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-8 w-8 p-0"
-                                          onClick={() => deleteTaskGroup(group.id)}
-                                          title="タスクグループ削除"
+                                        {group.expanded ? (
+                                          <ChevronDown className="h-5 w-5" />
+                                        ) : (
+                                          <ChevronRight className="h-5 w-5" />
+                                        )}
+                                      </Button>
+
+                                      {/* ドラッグハンドル */}
+                                      <div {...provided.dragHandleProps} className="cursor-grab">
+                                        <GripVertical className="h-5 w-5 text-gray-400" />
+                                      </div>
+
+                                      {/* チェックボックス */}
+                                      <Checkbox
+                                        checked={group.completed}
+                                        onCheckedChange={() => toggleTaskGroupCompleted(group.id)}
+                                      />
+
+                                      {/* タスクグループタイトル */}
+                                      <CardTitle className="text-lg font-bold flex-1">
+                                        <EditableText
+                                          value={group.title}
+                                          onChange={(newTitle) => updateTaskGroupTitle(group.id, newTitle)}
+                                          prefix="## "
+                                          className={group.completed ? "line-through text-gray-400" : ""}
+                                          isOverdue={!group.completed && isDateOverdue(group.dueDate)}
+                                        />
+                                      </CardTitle>
+
+                                      {/* メニューアイコン - 常に領域を確保し、ホバー時のみ表示 */}
+                                      <div className="flex items-center gap-1 w-48 relative">
+                                        <div
+                                          className={`absolute right-0 flex items-center gap-1 transition-opacity ${hoveredGroup === group.id ? "opacity-100" : "opacity-0"}`}
                                         >
-                                          <Trash2 className="h-4 w-4 text-red-500" />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-8 w-8 p-0"
-                                          onClick={() => startGroupVoiceInput(group.id)}
-                                          title="音声入力"
-                                        >
-                                          <Mic className={iconStyle} />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-8 w-8 p-0"
-                                          onClick={() => decomposeGroup(group.id)}
-                                          title="AI分解機能"
-                                        >
-                                          <SplitSquareVertical className={iconStyle} />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-8 w-8 p-0"
-                                          onClick={() => addTask(group.id)}
-                                          title="項目追加"
-                                        >
-                                          <Plus className={iconStyle} />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-8 w-8 p-0"
-                                          onClick={() => addTaskGroupToSchedule(group.id)}
-                                          title="ダッシュボードに追加"
-                                        >
-                                          <Clock className={iconStyle} />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-8 w-8 p-0"
-                                          onClick={() => sortTasksByDueDate(sortOrder === "asc" ? "desc" : "asc")}
-                                          title="更新"
-                                        >
-                                          <RefreshCw
-                                            className={`h-4 w-4 ${sortOrder !== "none" ? "text-[#31A9B8]" : iconStyle}`}
-                                          />
-                                        </Button>
-                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="他メニュー">
-                                          <MoreHorizontal className={iconStyle} />
-                                        </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 w-8 p-0"
+                                            onClick={() => deleteTaskGroup(group.id)}
+                                            title="タスクグループ削除"
+                                          >
+                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 w-8 p-0"
+                                            onClick={() => startGroupVoiceInput(group.id)}
+                                            title="音声入力"
+                                          >
+                                            <Mic className={iconStyle} />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 w-8 p-0"
+                                            onClick={() => decomposeGroup(group.id)}
+                                            title="AI分解機能"
+                                          >
+                                            <SplitSquareVertical className={iconStyle} />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 w-8 p-0"
+                                            onClick={() => addTask(group.id)}
+                                            title="項目追加"
+                                          >
+                                            <Plus className={iconStyle} />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 w-8 p-0"
+                                            onClick={() => addTaskGroupToSchedule(group.id)}
+                                            title="ダッシュボードに追加"
+                                          >
+                                            <Clock className={iconStyle} />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 w-8 p-0"
+                                            onClick={() => sortTasksByDueDate(sortOrder === "asc" ? "desc" : "asc")}
+                                            title="更新"
+                                          >
+                                            <RefreshCw
+                                              className={`h-4 w-4 ${sortOrder !== "none" ? "text-[#31A9B8]" : iconStyle}`}
+                                            />
+                                          </Button>
+                                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="他メニュー">
+                                            <MoreHorizontal className={iconStyle} />
+                                          </Button>
+                                        </div>
+                                      </div>
+
+                                      {/* 納期表示 - 常に右端に固定 */}
+                                      <div className="flex items-center min-w-[200px]">
+                                        <DatePicker
+                                          value={group.dueDate || ""}
+                                          onChange={(newDate) => updateTaskGroupDueDate(group.id, newDate)}
+                                        />
                                       </div>
                                     </div>
+                                  </CardHeader>
 
-                                    {/* 納期表示 - 常に右端に固定 */}
-                                    <div className="flex items-center min-w-[200px]">
-                                      <DatePicker
-                                        value={group.dueDate || ""}
-                                        onChange={(newDate) => updateTaskGroupDueDate(group.id, newDate)}
-                                      />
-                                    </div>
-                                  </div>
-                                </CardHeader>
-
-                                {group.expanded && (
-                                  <CardContent className="p-4">
-                                    <Droppable droppableId={group.id} type="task">
-                                      {(provided, snapshot) => (
-                                        <div
-                                          className={`space-y-4 relative ${snapshot.isDraggingOver ? "bg-gray-50/50 rounded-lg p-2" : ""}`}
-                                          ref={provided.innerRef}
-                                          {...provided.droppableProps}
-                                          style={{
-                                            minHeight: snapshot.isDraggingOver ? "50px" : "auto",
-                                          }}
-                                        >
-                                          {group.tasks.map((task, taskIndex) => (
-                                            <Draggable key={task.id} draggableId={task.id} index={taskIndex}>
-                                              {(provided, snapshot) => (
-                                                <div
-                                                  ref={provided.innerRef}
-                                                  {...provided.draggableProps}
-                                                  style={{
-                                                    ...provided.draggableProps.style,
-                                                    opacity: snapshot.isDragging ? 0.8 : 1,
-                                                    zIndex: snapshot.isDragging ? 10 : 1,
-                                                    position: snapshot.isDragging ? "relative" : "static",
-                                                    pointerEvents: snapshot.isDragging ? "none" : "auto",
-                                                  }}
-                                                  className={snapshot.isDragging ? "" : ""}
-                                                >
+                                  {group.expanded && (
+                                    <CardContent className="p-4">
+                                      <Droppable
+                                        droppableId={group.id}
+                                        type="task"
+                                        isDropDisabled={false}
+                                        isCombineEnabled={false}
+                                        ignoreContainerClipping={false}
+                                      >
+                                        {(provided, snapshot) => (
+                                          <div
+                                            className={`space-y-4 relative ${snapshot.isDraggingOver ? "bg-gray-50/50 rounded-lg p-2" : ""}`}
+                                            ref={provided.innerRef}
+                                            {...provided.droppableProps}
+                                            style={{
+                                              minHeight: snapshot.isDraggingOver ? "50px" : "auto",
+                                            }}
+                                          >
+                                            {group.tasks.map((task, taskIndex) => (
+                                              <Draggable key={task.id} draggableId={task.id} index={taskIndex}>
+                                                {(provided, snapshot) => (
                                                   <div
-                                                    className={`border rounded-md ${snapshot.isDragging ? "shadow-lg bg-gray-50" : ""}`}
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    style={{
+                                                      ...provided.draggableProps.style,
+                                                      opacity: snapshot.isDragging ? 0.8 : 1,
+                                                      zIndex: snapshot.isDragging ? 10 : 1,
+                                                      position: snapshot.isDragging ? "relative" : "static",
+                                                      pointerEvents: snapshot.isDragging ? "none" : "auto",
+                                                    }}
+                                                    className={snapshot.isDragging ? "" : ""}
                                                   >
-                                                    {/* 中タスク */}
                                                     <div
-                                                      className="p-3 bg-gray-50 flex items-center"
-                                                      onMouseEnter={() =>
-                                                        setHoveredTask({ groupId: group.id, taskId: task.id })
-                                                      }
-                                                      onMouseLeave={() => setHoveredTask(null)}
+                                                      className={`border rounded-md ${snapshot.isDragging ? "shadow-lg bg-gray-50" : ""}`}
                                                     >
-                                                      <div className="flex items-center flex-1 gap-4">
-                                                        {/* 展開/折りたたみボタン - 左端に配置 */}
-                                                        <Button
-                                                          variant="ghost"
-                                                          size="sm"
-                                                          className="p-0 h-6 w-6"
-                                                          onClick={() => toggleTask(group.id, task.id)}
-                                                        >
-                                                          {task.expanded ? (
-                                                            <ChevronDown className="h-4 w-4" />
-                                                          ) : (
-                                                            <ChevronRight className="h-4 w-4" />
-                                                          )}
-                                                        </Button>
+                                                      {/* 中タスク */}
+                                                      <div
+                                                        className="p-3 bg-gray-50 flex items-center"
+                                                        onMouseEnter={() =>
+                                                          setHoveredTask({ groupId: group.id, taskId: task.id })
+                                                        }
+                                                        onMouseLeave={() => setHoveredTask(null)}
+                                                      >
+                                                        <div className="flex items-center flex-1 gap-4">
+                                                          {/* 展開/折りたたみボタン - 左端に配置 */}
+                                                          <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="p-0 h-6 w-6"
+                                                            onClick={() => toggleTask(group.id, task.id)}
+                                                          >
+                                                            {task.expanded ? (
+                                                              <ChevronDown className="h-4 w-4" />
+                                                            ) : (
+                                                              <ChevronRight className="h-4 w-4" />
+                                                            )}
+                                                          </Button>
 
-                                                        {/* ドラッグハンドル */}
-                                                        <div {...provided.dragHandleProps} className="cursor-grab mr-2">
-                                                          <GripVertical className="h-4 w-4 text-gray-400" />
-                                                        </div>
+                                                          {/* ドラッグハンドル */}
+                                                          <div {...provided.dragHandleProps} className="cursor-grab mr-2">
+                                                            <GripVertical className="h-4 w-4 text-gray-400" />
+                                                          </div>
 
-                                                        {/* チェックボックス */}
-                                                        <Checkbox
-                                                          checked={task.completed}
-                                                          onCheckedChange={() => toggleTaskCompleted(group.id, task.id)}
-                                                        />
-
-                                                        {/* タスクタイトル */}
-                                                        <span
-                                                          className={`flex-1 ${task.completed ? "line-through text-gray-400" : ""}`}
-                                                        >
-                                                          <EditableText
-                                                            value={task.title}
-                                                            onChange={(newTitle) =>
-                                                              updateTaskTitle(group.id, task.id, newTitle)
-                                                            }
-                                                            prefix="### "
-                                                            className={
-                                                              task.completed ? "line-through text-gray-400" : ""
-                                                            }
-                                                            isOverdue={!task.completed && isDateOverdue(task.dueDate)}
+                                                          {/* チェックボックス */}
+                                                          <Checkbox
+                                                            checked={task.completed}
+                                                            onCheckedChange={() => toggleTaskCompleted(group.id, task.id)}
                                                           />
-                                                        </span>
 
-                                                        {/* メニューアイコン - 常に領域を確保し、ホバー時のみ表示 */}
-                                                        <div className="flex items-center gap-1 w-48 relative">
-                                                          <div
-                                                            className={`absolute right-0 flex items-center gap-1 transition-opacity ${
-                                                              hoveredTask &&
-                                                              hoveredTask.groupId === group.id &&
-                                                              hoveredTask.taskId === task.id
+                                                          {/* タスクタイトル */}
+                                                          <span
+                                                            className={`flex-1 ${task.completed ? "line-through text-gray-400" : ""}`}
+                                                          >
+                                                            <EditableText
+                                                              value={task.title}
+                                                              onChange={(newTitle) =>
+                                                                updateTaskTitle(group.id, task.id, newTitle)
+                                                              }
+                                                              prefix="### "
+                                                              className={
+                                                                task.completed ? "line-through text-gray-400" : ""
+                                                              }
+                                                              isOverdue={!task.completed && isDateOverdue(task.dueDate)}
+                                                            />
+                                                          </span>
+
+                                                          {/* メニューアイコン - 常に領域を確保し、ホバー時のみ表示 */}
+                                                          <div className="flex items-center gap-1 w-48 relative">
+                                                            <div
+                                                              className={`absolute right-0 flex items-center gap-1 transition-opacity ${hoveredTask &&
+                                                                hoveredTask.groupId === group.id &&
+                                                                hoveredTask.taskId === task.id
                                                                 ? "opacity-100"
                                                                 : "opacity-0"
-                                                            }`}
-                                                          >
-                                                            <Button
-                                                              variant="ghost"
-                                                              size="sm"
-                                                              className="h-8 w-8 p-0"
-                                                              onClick={() => deleteTask(group.id, task.id)}
-                                                              title="タスク削除"
+                                                                }`}
                                                             >
-                                                              <Trash2 className="h-4 w-4 text-red-500" />
-                                                            </Button>
-                                                            <Button
-                                                              variant="ghost"
-                                                              size="sm"
-                                                              className="h-8 w-8 p-0"
-                                                              onClick={() => startVoiceInput()}
-                                                              title="音声入力"
-                                                            >
-                                                              <Mic className={iconStyle} />
-                                                            </Button>
-                                                            <Button
-                                                              variant="ghost"
-                                                              size="sm"
-                                                              className="h-8 w-8 p-0"
-                                                              onClick={() => decomposeTask(group.id, task.id)}
-                                                              title="AI分解機能"
-                                                            >
-                                                              <SplitSquareVertical className={iconStyle} />
-                                                            </Button>
-                                                            <Button
-                                                              variant="ghost"
-                                                              size="sm"
-                                                              className="h-8 w-8 p-0"
-                                                              onClick={() => addSubtask(group.id, task.id)}
-                                                              title="項目追加"
-                                                            >
-                                                              <Plus className={iconStyle} />
-                                                            </Button>
-                                                            <Button
-                                                              variant="ghost"
-                                                              size="sm"
-                                                              className="h-8 w-8 p-0"
-                                                              onClick={() => addToSchedule(group.id, task.id)}
-                                                              title="ダッシュボードに追加"
-                                                            >
-                                                              <Clock className={iconStyle} />
-                                                            </Button>
-                                                            <Button
-                                                              variant="ghost"
-                                                              size="sm"
-                                                              className="h-8 w-8 p-0"
-                                                              onClick={() =>
-                                                                sortTasksByDueDate(sortOrder === "asc" ? "desc" : "asc")
+                                                              <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0"
+                                                                onClick={() => deleteTask(group.id, task.id)}
+                                                                title="タスク削除"
+                                                              >
+                                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                                              </Button>
+                                                              <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0"
+                                                                onClick={() => startVoiceInput()}
+                                                                title="音声入力"
+                                                              >
+                                                                <Mic className={iconStyle} />
+                                                              </Button>
+                                                              <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0"
+                                                                onClick={() => decomposeTask(group.id, task.id)}
+                                                                title="AI分解機能"
+                                                              >
+                                                                <SplitSquareVertical className={iconStyle} />
+                                                              </Button>
+                                                              <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0"
+                                                                onClick={() => addSubtask(group.id, task.id)}
+                                                                title="項目追加"
+                                                              >
+                                                                <Plus className={iconStyle} />
+                                                              </Button>
+                                                              <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0"
+                                                                onClick={() => addToSchedule(group.id, task.id)}
+                                                                title="ダッシュボードに追加"
+                                                              >
+                                                                <Clock className={iconStyle} />
+                                                              </Button>
+                                                              <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0"
+                                                                onClick={() =>
+                                                                  sortTasksByDueDate(sortOrder === "asc" ? "desc" : "asc")
+                                                                }
+                                                                title="更新"
+                                                              >
+                                                                <RefreshCw className={iconStyle} />
+                                                              </Button>
+                                                              <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0"
+                                                                title="他メニュー"
+                                                              >
+                                                                <MoreHorizontal className={iconStyle} />
+                                                              </Button>
+                                                            </div>
+                                                          </div>
+
+                                                          {/* 納期表示 - 常に右端に固定 */}
+                                                          <div className="flex items-center min-w-[200px]">
+                                                            <DatePicker
+                                                              value={task.dueDate || ""}
+                                                              onChange={(newDate) =>
+                                                                updateTaskDueDate(group.id, task.id, newDate)
                                                               }
-                                                              title="更新"
-                                                            >
-                                                              <RefreshCw className={iconStyle} />
-                                                            </Button>
-                                                            <Button
-                                                              variant="ghost"
-                                                              size="sm"
-                                                              className="h-8 w-8 p-0"
-                                                              title="他メニュー"
-                                                            >
-                                                              <MoreHorizontal className={iconStyle} />
-                                                            </Button>
+                                                            />
                                                           </div>
                                                         </div>
-
-                                                        {/* 納期表示 - 常に右端に固定 */}
-                                                        <div className="flex items-center min-w-[200px]">
-                                                          <DatePicker
-                                                            value={task.dueDate || ""}
-                                                            onChange={(newDate) =>
-                                                              updateTaskDueDate(group.id, task.id, newDate)
-                                                            }
-                                                          />
-                                                        </div>
                                                       </div>
-                                                    </div>
 
-                                                    {/* 小タスク（サブタスク） */}
-                                                    {task.expanded && task.subtasks.length > 0 && (
-                                                      <div className="p-3 pl-10 space-y-2 border-t">
-                                                        {task.subtasks.map((subtask) => (
-                                                          <div
-                                                            key={subtask.id}
-                                                            className="flex items-center"
-                                                            onMouseEnter={() =>
-                                                              setHoveredSubtask({
-                                                                groupId: group.id,
-                                                                taskId: task.id,
-                                                                subtaskId: subtask.id,
-                                                              })
-                                                            }
-                                                            onMouseLeave={() => setHoveredSubtask(null)}
-                                                          >
-                                                            <div className="flex items-center flex-1 gap-4">
-                                                              {/* 左側の余白（展開ボタンの代わり） */}
-                                                              <div className="w-6"></div>
+                                                      {/* 小タスク（サブタスク） */}
+                                                      {task.expanded && task.subtasks.length > 0 && (
+                                                        <div className="p-3 pl-10 space-y-2 border-t">
+                                                          {task.subtasks.map((subtask) => (
+                                                            <div
+                                                              key={subtask.id}
+                                                              className="flex items-center"
+                                                              onMouseEnter={() =>
+                                                                setHoveredSubtask({
+                                                                  groupId: group.id,
+                                                                  taskId: task.id,
+                                                                  subtaskId: subtask.id,
+                                                                })
+                                                              }
+                                                              onMouseLeave={() => setHoveredSubtask(null)}
+                                                            >
+                                                              <div className="flex items-center flex-1 gap-4">
+                                                                {/* 左側の余白（展開ボタンの代わり） */}
+                                                                <div className="w-6"></div>
 
-                                                              {/* ドラッグハンドルの余白 */}
-                                                              <div className="w-6"></div>
+                                                                {/* ドラッグハンドルの余白 */}
+                                                                <div className="w-6"></div>
 
-                                                              {/* チェックボックス */}
-                                                              <Checkbox
-                                                                checked={subtask.completed}
-                                                                onCheckedChange={() =>
-                                                                  toggleSubtaskCompleted(group.id, task.id, subtask.id)
-                                                                }
-                                                                className="mr-2"
-                                                              />
-
-                                                              {/* サブタスクタイトル */}
-                                                              <span
-                                                                className={`flex-1 ${subtask.completed ? "line-through text-gray-400" : ""}`}
-                                                              >
-                                                                <EditableText
-                                                                  value={subtask.title}
-                                                                  onChange={(newTitle) =>
-                                                                    updateSubtaskTitle(
-                                                                      group.id,
-                                                                      task.id,
-                                                                      subtask.id,
-                                                                      newTitle,
-                                                                    )
+                                                                {/* チェックボックス */}
+                                                                <Checkbox
+                                                                  checked={subtask.completed}
+                                                                  onCheckedChange={() =>
+                                                                    toggleSubtaskCompleted(group.id, task.id, subtask.id)
                                                                   }
-                                                                  className={
-                                                                    subtask.completed
-                                                                      ? "line-through text-gray-400"
-                                                                      : ""
-                                                                  }
-                                                                  isOverdue={
-                                                                    !subtask.completed && isDateOverdue(task.dueDate)
-                                                                  }
+                                                                  className="mr-2"
                                                                 />
-                                                              </span>
 
-                                                              {/* メニューアイコン - 常に領域を確保し、ホバー時のみ表示 */}
-                                                              <div className="flex items-center gap-1 w-32 relative">
-                                                                <div
-                                                                  className={`absolute right-0 flex items-center gap-1 transition-opacity ${
-                                                                    hoveredSubtask &&
-                                                                    hoveredSubtask.groupId === group.id &&
-                                                                    hoveredSubtask.taskId === task.id &&
-                                                                    hoveredSubtask.subtaskId === subtask.id
-                                                                      ? "opacity-100"
-                                                                      : "opacity-0"
-                                                                  }`}
+                                                                {/* サブタスクタイトル */}
+                                                                <span
+                                                                  className={`flex-1 ${subtask.completed ? "line-through text-gray-400" : ""}`}
                                                                 >
-                                                                  <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-8 w-8 p-0"
-                                                                    onClick={() =>
-                                                                      deleteSubtask(group.id, task.id, subtask.id)
-                                                                    }
-                                                                    title="サブタスク削除"
-                                                                  >
-                                                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                                                  </Button>
-                                                                  <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-8 w-8 p-0"
-                                                                    onClick={() => startVoiceInput()}
-                                                                    title="音声入力"
-                                                                  >
-                                                                    <Mic className={iconStyle} />
-                                                                  </Button>
-                                                                  <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-8 w-8 p-0"
-                                                                    onClick={() =>
-                                                                      addSubtaskToSchedule(
+                                                                  <EditableText
+                                                                    value={subtask.title}
+                                                                    onChange={(newTitle) =>
+                                                                      updateSubtaskTitle(
                                                                         group.id,
                                                                         task.id,
                                                                         subtask.id,
+                                                                        newTitle,
                                                                       )
                                                                     }
-                                                                    title="ダッシュボードに追加"
+                                                                    className={
+                                                                      subtask.completed
+                                                                        ? "line-through text-gray-400"
+                                                                        : ""
+                                                                    }
+                                                                    isOverdue={
+                                                                      !subtask.completed && isDateOverdue(task.dueDate)
+                                                                    }
+                                                                  />
+                                                                </span>
+
+                                                                {/* メニューアイコン - 常に領域を確保し、ホバー時のみ表示 */}
+                                                                <div className="flex items-center gap-1 w-32 relative">
+                                                                  <div
+                                                                    className={`absolute right-0 flex items-center gap-1 transition-opacity ${hoveredSubtask &&
+                                                                      hoveredSubtask.groupId === group.id &&
+                                                                      hoveredSubtask.taskId === task.id &&
+                                                                      hoveredSubtask.subtaskId === subtask.id
+                                                                      ? "opacity-100"
+                                                                      : "opacity-0"
+                                                                      }`}
                                                                   >
-                                                                    <Clock className={iconStyle} />
-                                                                  </Button>
-                                                                  <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-8 w-8 p-0"
-                                                                    title="他メニュー"
-                                                                  >
-                                                                    <MoreHorizontal className={iconStyle} />
-                                                                  </Button>
+                                                                    <Button
+                                                                      variant="ghost"
+                                                                      size="sm"
+                                                                      className="h-8 w-8 p-0"
+                                                                      onClick={() =>
+                                                                        deleteSubtask(group.id, task.id, subtask.id)
+                                                                      }
+                                                                      title="サブタスク削除"
+                                                                    >
+                                                                      <Trash2 className="h-4 w-4 text-red-500" />
+                                                                    </Button>
+                                                                    <Button
+                                                                      variant="ghost"
+                                                                      size="sm"
+                                                                      className="h-8 w-8 p-0"
+                                                                      onClick={() => startVoiceInput()}
+                                                                      title="音声入力"
+                                                                    >
+                                                                      <Mic className={iconStyle} />
+                                                                    </Button>
+                                                                    <Button
+                                                                      variant="ghost"
+                                                                      size="sm"
+                                                                      className="h-8 w-8 p-0"
+                                                                      onClick={() =>
+                                                                        addSubtaskToSchedule(
+                                                                          group.id,
+                                                                          task.id,
+                                                                          subtask.id,
+                                                                        )
+                                                                      }
+                                                                      title="ダッシュボードに追加"
+                                                                    >
+                                                                      <Clock className={iconStyle} />
+                                                                    </Button>
+                                                                    <Button
+                                                                      variant="ghost"
+                                                                      size="sm"
+                                                                      className="h-8 w-8 p-0"
+                                                                      title="他メニュー"
+                                                                    >
+                                                                      <MoreHorizontal className={iconStyle} />
+                                                                    </Button>
+                                                                  </div>
                                                                 </div>
                                                               </div>
                                                             </div>
-                                                          </div>
-                                                        ))}
-                                                      </div>
-                                                    )}
+                                                          ))}
+                                                        </div>
+                                                      )}
+                                                    </div>
                                                   </div>
-                                                </div>
-                                              )}
-                                            </Draggable>
-                                          ))}
-                                          {provided.placeholder}
-                                        </div>
-                                      )}
-                                    </Droppable>
-                                  </CardContent>
-                                )}
-                              </Card>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                      {taskGroups.length === 0 && (
-                        <div className="flex justify-center my-8">
-                          <Button
-                            variant="outline"
-                            className="border-dashed text-gray-400 hover:text-gray-600"
-                            onClick={addTaskGroup}
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            最初のタスクグループを追加
-                          </Button>
-                        </div>
-                      )}
+                                                )}
+                                              </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                          </div>
+                                        )}
+                                      </Droppable>
+                                    </CardContent>
+                                  )}
+                                </Card>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                        {taskGroups.length === 0 && (
+                          <div className="flex justify-center my-8">
+                            <Button
+                              variant="outline"
+                              className="border-dashed text-gray-400 hover:text-gray-600"
+                              onClick={addTaskGroup}
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              最初のタスクグループを追加
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Droppable>
+
+                  {taskGroups.length > 0 && (
+                    <div className="flex justify-center my-4">
+                      <Button
+                        variant="outline"
+                        className="border-dashed text-gray-400 hover:text-gray-600"
+                        onClick={addTaskGroup}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        新しいタスクグループを追加
+                      </Button>
                     </div>
                   )}
-                </Droppable>
-
-                {taskGroups.length > 0 && (
-                  <div className="flex justify-center my-4">
-                    <Button
-                      variant="outline"
-                      className="border-dashed text-gray-400 hover:text-gray-600"
-                      onClick={addTaskGroup}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      新しいタスクグループを追加
-                    </Button>
-                  </div>
-                )}
-              </DragDropContext>
+                </DragDropContext>
+              )}
             </div>
 
             {/* AIコーチング */}
@@ -1436,7 +1458,6 @@ export default function ProjectTemplate({
               <Button variant="outline" onClick={cancelDeleteProject}>
                 キャンセル
               </Button>
-              <Button onClick={cancelDeleteProject}>キャンセル</Button>
               <Button variant="destructive" onClick={confirmDeleteProject}>
                 削除する
               </Button>
