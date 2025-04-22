@@ -148,6 +148,7 @@ const getProjectColor = (project: string) => {
 }
 
 export default function DashboardPage() {
+  const [mounted, setMounted] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [sortOrder, setSortOrder] = useState<"asc" | "desc" | "none">("none")
 
@@ -300,6 +301,10 @@ export default function DashboardPage() {
     }, 60000) // 1分ごとに更新
 
     return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    setMounted(true)
   }, [])
 
   // タスクを期限順にソートする
@@ -733,6 +738,10 @@ export default function DashboardPage() {
 
   // 共通のアイコンスタイル
   const iconStyle = "h-4 w-4 text-gray-300"
+
+  if (!mounted) {
+    return null
+  }
 
   return (
     <div className="flex h-screen">

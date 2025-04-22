@@ -6,7 +6,7 @@ import "./globals.css"
 export const metadata: Metadata = {
   title: "コミットコーチ - AIタスク管理アプリ",
   description: "AIコーチングでタスク管理を次のレベルへ",
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -15,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ja">
-      <body>
+    <html lang="ja" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

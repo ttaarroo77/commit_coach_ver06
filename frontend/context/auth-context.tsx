@@ -21,9 +21,9 @@ const defaultContextValue: AuthContextType = {
   user: null,
   loading: true,
   error: null,
-  login: async () => {},
-  register: async () => {},
-  logout: async () => {},
+  login: async () => { },
+  register: async () => { },
+  logout: async () => { },
 }
 
 const AuthContext = createContext<AuthContextType>(defaultContextValue)
@@ -32,11 +32,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isClient, setIsClient] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    setIsClient(true)
     const supabase = getSupabaseClient()
 
     // デモモードのチェック
@@ -98,47 +96,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // デモモードのチェック
       if (email === "demo@example.com" && password === "demopassword") {
-        console.log("デモモードでログインします")
-        // デモモードをクッキーに保存
-        Cookies.set("demo_mode", "true", { expires: 1 }) // 1日間有効
-
-        // デモユーザー情報を設定
+        Cookies.set("demo_mode", "true")
         const demoUser = {
           id: "demo-user-id",
           email: "demo@example.com",
           user_metadata: { name: "デモユーザー" },
         } as User
-
         setUser(demoUser)
         router.push("/dashboard")
         return
       }
 
-      const { user } = await signIn(email, password)
-      setUser(user)
+      await signIn(email, password)
       router.push("/dashboard")
     } catch (err: any) {
-      console.error("ログインエラー:", err)
-      // エラーメッセージを日本語に変換
-      const errorMessage = err.message ? authErrorMessages[err.message] || err.message : "ログインに失敗しました"
+      const errorMessage = authErrorMessages[err.message] || "ログインに失敗しました"
       setError(errorMessage)
     } finally {
       setLoading(false)
     }
   }
 
-  // 新規登録処理
+  // 登録処理
   const register = async (email: string, password: string, name: string) => {
     try {
       setError(null)
       setLoading(true)
-      const { user } = await signUp(email, password, name)
-      setUser(user)
-      router.push("/dashboard")
+      await signUp(email, password, name)
+      router.push("/login?registered=true")
     } catch (err: any) {
-      console.error("登録エラー:", err)
-      // エラーメッセージを日本語に変換
-      const errorMessage = err.message ? authErrorMessages[err.message] || err.message : "新規登録に失敗しました"
+      const errorMessage = authErrorMessages[err.message] || "登録に失敗しました"
       setError(errorMessage)
     } finally {
       setLoading(false)
@@ -148,37 +135,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ログアウト処理
   const logout = async () => {
     try {
+      setError(null)
       setLoading(true)
-
-      // デモモードのチェック
-      if (Cookies.get("demo_mode") === "true") {
-        console.log("デモモードからログアウトします")
-        // デモモードのクッキーを削除
-        Cookies.remove("demo_mode")
-        setUser(null)
-        router.push("/")
-        return
-      }
-
       await signOut()
+      Cookies.remove("demo_mode")
       setUser(null)
-      router.push("/")
+      router.push("/login")
     } catch (err: any) {
-      setError(err.message || "ログアウトに失敗しました")
-      console.error("ログアウトエラー:", err)
+      setError("ログアウトに失敗しました")
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, register, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        error,
+        login,
+        register,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   )
 }
 
 export function useAuth() {
   const context = useContext(AuthContext)
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider")
   }
   return context

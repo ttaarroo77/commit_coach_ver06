@@ -1,361 +1,256 @@
 ---
 name: "docs/overview_0/development_flow.md"
-title: "開発フロー概要 (Development Flow)"
-description: "[コミットコーチ] - ステップ別の開発フロー (合計200ステップ以上)"
+title: "開発フロー概要 (Development Flow) – 分離型モノレポ版"
+description: "[コミットコーチ] – モノレポで管理する Next.js(フロント) + Express(バック) 二層構成の詳細 200‑Step 作業計画表"
+version: "2.0"
+last_updated: "2025-04-22"
 ---
 
-# 開発手順書 (詳細版) - AI駆動開発対応
+---
+name: "docs/overview_0/development_flow.md"
+title: "開発フロー概要 (Development Flow) – 分離型モノレポ版"
+description: "[コミットコーチ] – Next.js(フロント) + Express(バック) を pnpm モノレポで開発するためのロードマップ。本文=要約、付録=200ステップの詳細チェックリスト。"
+version: "2.1"
+last_updated: "2025-04-22"
+---
 
-## 議事録
+# 開発手順書 – **要約＋付録詳細方式**
 
-### 最新の進捗状況
-- フロントエンド開発: Step 1-38 完了
-- バックエンド開発: Step 101-110 完了
-- 現在の課題: バックエンドのAPIエンドポイント実装とテスト
-
-### APIエンドポイント実装状況
-1. **基本エンドポイント実装完了** (Step 121-130)
-   - `/api/v1/users` (GET/POST/PUT)
-   - `/api/v1/projects` (GET/POST/PUT/DELETE)
-   - `/api/v1/tasks` (GET/POST/PUT/DELETE)
-   - `/api/v1/subtasks` (GET/POST/PUT/DELETE)
-   - `/api/v1/ai-messages` (GET/POST)
-
-2. **次回のアクションアイテム**
-   - 認証機能の実装 (Step 131-140)
-   - テストの実装 (Step 171-180)
-   - マイグレーションスクリプトの実行 (Step 113-120)
+> 本文は “いつでも俯瞰できる” 粒度に抑え、**付録 A** に旧版と同等の **全 200 ステップの詳細一覧** を残しています。チェックボックスは付録側に集約。
 
 ---
 
-## 1. 前提・共通作業
-
-### 1.1. 初期環境準備 (共通)
-
-- [x] **Node.js** / npm (または yarn, pnpm) のインストール  
-- [x] **Git** の初期設定（`git init` または既存リポジトリをクローン）  
-- [x] **.gitignore** に `node_modules` やビルド生成物など除外設定  
-- [x] **エディタ / IDE** (Cursor, VSCode等) をセットアップ
-  - ESLint / Prettier のプラグイン  
-  - **Cursor** なら AIモデル設定 (Claude 3.5 など)
-  - **cursorrules** の初期導入
-- [x] **AIモデル連携**: ソースコード生成/自動テストで活用する
-
-### 1.2. プロジェクト方針
-
-- [x] 基本要件書・詳細要件書を作成 (AI支援を受ける際の前提資料)  
-- [x] フロント/バックエンドの **API 仕様** を大まかに合意 (HTTPメソッド、エンドポイント、JSON構造)  
-- [x] DB 設計方針 (Supabase/PostgreSQL) + 認証方法 (JWT / Supabase Auth) の確認  
-- [x] リポジトリ構成 (MonoRepo or 分割リポジトリ) の決定  
-- [x] 全体マイルストーン (2ヶ月MVP) と主要機能 (タスク管理, AIコーチング) のスケジュール策定
+## 1. 進捗・次アクション（要約）
+| レイヤ | 完了 | 直近 TODO |
+|--------|------|-----------|
+| **共通基盤** | 0‑6 完了 | 7‑10 の CI/Husky 設定<br>初回コミット作成 |
+| **Frontend** | 1‑38 完了 | 41‑60 (Dashboard リファクタ & DnD 置換) |
+| **Backend** | 101‑110 完了 | 111‑120 (Supabase スキーマと RLS) |
+| **品質/CI** | lint OK | 30 までに unit test & CI 緑化 |
+| **デプロイ** | 未着手 | 181‑190 Fly.io セットアップ |
 
 ---
 
-## 2. フロントエンド開発フロー (Step 1～100)
+## 2. 作業フェーズ概要
+### 2.1 共通基盤 (Step 0‑20)
+- **目的**: モノレポ (pnpm workspaces) の骨格と開発ツール共有を整備。
+- **キーポイント**: ESLint/Prettier/CursorRules のルート共有、GitHub Actions を早期導入。
 
-### 2.1. プロジェクト初期化 (Step 1～10)
+### 2.2 フロントエンド
+| フェーズ | ステップ範囲 | 要点 |
+|----------|--------------|------|
+| 認証 & ダッシュボード | 21‑40 | UI 骨格と Supabase 認証フロー確立 |
+| UI リファクタ & DnD | 41‑60 | **dnd‑kit** 採用 / テスト追加 |
+| AI チャット & 設定 | 61‑80 | `/ai` チャット UI + ユーザ設定画面 |
+| 品質 & デプロイ | 81‑100 | 単体/E2E テスト→Vercel デプロイ |
 
-1. [x] **Step 1**: `frontend/` ディレクトリを作成し移動  
-2. [x] **Step 2**: `npm init -y` で Node.js プロジェクト初期化  
-3. [x] **Step 3**: Next.js, React, TypeScript, Tailwind CSS 等をインストール  
-4. [x] **Step 4**: `tsconfig.json` の生成 (ターゲット/モジュール設定)  
-5. [x] **Step 5**: `.eslintrc` / `.prettierrc` を作成し、cursorrules と整合性を取る  
-6. [x] **Step 6**: `package.json` の scripts に `dev`, `build`, `start`, `lint` など追加  
-7. [x] **Step 7**: 開発サーバーを起動して、初期の Next.js ページが表示されるか確認  
-8. [x] **Step 8**: **Gitコミット**: "feat(frontend): initial Next.js setup"  
-9. [x] **Step 9**: Tailwindの `tailwind.config.js` を最適化 (テーマ拡張など)  
-10. [x] **Step 10**: フロントエンド開発方針を簡単にドキュメント化
-
-### 2.2. ベースレイアウト構築 (Step 11～20)
-
-11. [x] **Step 11**: `app/` ディレクトリ (Next.js App Router) で基本ページ (`layout.tsx`, `page.tsx`) を作成  
-12. [x] **Step 12**: グローバルスタイル (`globals.css`) に Tailwind + カスタムCSS を適用  
-13. [x] **Step 13**: **Header** コンポーネント (ロゴ, ユーザープロフィールアイコン など)  
-14. [x] **Step 14**: **Footer** コンポーネント (コピーライト表記)  
-15. [x] **Step 15**: サイドバー (プロジェクト一覧リンク, 設定リンク) を実装 (レスポンシブ対応)  
-16. [x] **Step 16**: ダークモード対応（トグルスイッチ）をオプションで実装  
-17. [x] **Step 17**: ルーティング: `/dashboard`, `/projects`, `/settings` などを仮作成  
-18. [x] **Step 18**: UI の一貫性確認 (フォント, 色, コンポーネント配置)  
-19. [x] **Step 19**: **Gitコミット**: "feat(frontend): add base layout with header/footer"  
-20. [x] **Step 20**: 小規模E2Eテスト (Cypress等) でレイアウト崩れ確認
-
-### 2.3. 認証・ユーザー管理 (Step 21～30)
-
-21. [x] **Step 21**: `/login` ページ作成 (メール/パスワード入力フォーム)  
-22. [x] **Step 22**: `useAuth` カスタムフック or Context で認証情報をグローバル管理  
-23. [x] **Step 23**: ログイン成功時に JWT or Supabaseセッションをフロントに保持  
-24. [x] **Step 24**: ログアウト機能 (トークン破棄 or Supabaseサインアウト)  
-25. [x] **Step 25**: 未認証ユーザーへのガード (認証必須ページにリダイレクト)  
-26. [x] **Step 26**: `/register` (新規ユーザー登録) や `/password/reset` (パスワードリセット) が必要な場合は追加  
-27. [x] **Step 27**: バリデーション (Email形式、パスワード長など)  
-28. [x] **Step 28**: UI 改善 (エラーメッセージ, ローディングスピナー)  
-29. [x] **Step 29**: **Gitコミット**: "feat(frontend): login & auth flow"  
-30. [x] **Step 30**: 簡易ユニットテスト (React Testing Library) で認証フォームの動作を確認
-
-### 2.4. ダッシュボード (Step 31～40)
-
-31. [x] **Step 31**: `/dashboard` ページ: ユーザー名や今日のタスク, 未定タスクなどを表示する領域  
-32. [x] **Step 32**: **AIコーチング用チャット**をサイド or 下部に設置 (UIのみ仮)  
-33. [x] **Step 33**: ホーム画面に「今日のタスクリスト」「期限間近のタスク」をカードで表示  
-34. [x] **Step 34**: 時刻表示や簡単なカレンダー (Tailwind + date-fnsなど)  
-35. [x] **Step 35**: レスポンシブ対応 (モバイル時はカード縦並び)  
-36. [x] **Step 36**: バックエンドと通信が未実装なら、モックデータで仮表示  
-37. [x] **Step 37**: 軽いアニメーション (カードホバー, ドロップシャドウ等) でUX向上  
-38. [x] **Step 38**: **Gitコミット**: "feat(frontend): dashboard UI with mock tasks"  
-39. [ ] **Step 39**: 余裕があれば E2E テスト (Cypress) でダッシュボード画面動作確認  
-40. [ ] **Step 40**: AIコーチング画面の要件 (タスク分解機能など) を検討・設計
-
-### 2.4.1. ダッシュボードリファクタリング (Step 41～45)
-
-41. [ ] **Step 41**: コンポーネント分割
-    - `TaskGroup.tsx`: タスクグループ表示
-    - `TaskCard.tsx`: タスクカード表示
-    - `SubTaskList.tsx`: サブタスクリスト
-    - `EditableText.tsx`: 編集可能テキスト
-    - `TaskActions.tsx`: タスク操作ボタン
-42. [ ] **Step 42**: カスタムフック導入
-    - `useTaskManagement.ts`: タスク管理ロジック
-    - `useDragAndDrop.ts`: ドラッグ&ドロップ処理
-    - `useTaskFilters.ts`: タスクフィルタリング
-43. [ ] **Step 43**: 型定義の強化
-    - インターフェースの分割
-    - ユーティリティ型の追加
-    - エラーハンドリング型の追加
-44. [ ] **Step 44**: テストの追加
-    - 各コンポーネントのユニットテスト
-    - カスタムフックのテスト
-    - 統合テストの追加
-45. [ ] **Step 45**: **Gitコミット**: "refactor(frontend): split dashboard into components"
-
-### 2.5. プロジェクト一覧・詳細 (Step 46～50)
-
-46. [ ] **Step 46**: `/projects` ページ: プロジェクトリスト (カード or テーブル)  
-47. [ ] **Step 47**: フィルター (status: active/archived) や検索バー  
-48. [ ] **Step 48**: ページネーション or 無限スクロールを検討  
-49. [ ] **Step 49**: リストアイテムをクリックすると `/projects/[id]` に遷移  
-50. [ ] **Step 50**: `/projects/[id]`: プロジェクト名や説明、AIコーチングチャット、タスクグループ一覧を配置  
-
-### 2.6. タスク管理 (Step 51～60)
-
-51. [ ] **Step 51**: `/tasks` or `/projects/[id]` 内タスク管理UI (Trello風カンバン、またはリスト)  
-52. [ ] **Step 52**: ドラッグ&ドロップ (react-beautiful-dnd等) による並び替え  
-53. [ ] **Step 53**: タスクグループ (列) とタスク (カード) の階層表示  
-54. [ ] **Step 54**: クリックでタスク詳細をモーダル表示 (説明、期限、サブタスクなど)  
-55. [ ] **Step 55**: サブタスクは折りたたみ/展開 UI も検討  
-56. [ ] **Step 56**: AIコーチの「タスク分解提案」を受け取ってサブタスクを自動生成 (UI/モック)  
-57. [ ] **Step 57**: 「完了」チェックボックス, 期限切れのビジュアル (赤文字など)  
-58. [ ] **Step 58**: バックエンドAPIが用意できていなければモックを仮実装 → 後で切り替え  
-59. [ ] **Step 59**: **Gitコミット**: "feat(frontend): task management UI (kanban & subtasks)"  
-60. [ ] **Step 60**: レスポンシブ検証 + ユニットテスト数件追加
-
-### 2.7. AIコーチング画面 (Step 61～70)
-
-61. [ ] **Step 61**: `/ai` or ダッシュボード・プロジェクトページのサイドなどにチャットUI配置  
-62. [ ] **Step 62**: チャット入力 → 送信 → 送信ログを画面に表示 (モック)  
-63. [ ] **Step 63**: システムメッセージ (AIコーチのキャラクター設定) を表示 (デバッグ用)  
-64. [ ] **Step 64**: AIからの応答をメッセージバブルとして表示  
-65. [ ] **Step 65**: 「タスク分解モード」「モチベーション支援モード」などタブ分けUI (オプション)  
-66. [ ] **Step 66**: **音声入力**(Web Speech APIなど) や音声読み上げ対応 (将来検討)  
-67. [ ] **Step 67**: スクロール時に過去メッセージが遡れるUI  
-68. [ ] **Step 68**: バックエンドと連携 (暫定エンドポイントを叩いてみる)  
-69. [ ] **Step 69**: **Gitコミット**: "feat(frontend): AI coaching chat UI (mock integration)"  
-70. [ ] **Step 70**: 簡易的な対話ログ保存 (localStorage か Redux/Zustand) → 後で本API連携
-
-### 2.8. 設定/マイページ (Step 71～80)
-
-71. [ ] **Step 71**: `/settings` ページ (AIコーチ設定, 通知設定, テーマ切り替え等)  
-72. [ ] **Step 72**: AIコーチ設定フォーム (model選択, temperatureなど)  
-73. [ ] **Step 73**: `/mypage` ページ (ユーザー情報, アバター画像変更)  
-74. [ ] **Step 74**: API連携(仮)で保存し、UIに反映  
-75. [ ] **Step 75**: バリデーション (数値範囲チェック, 文字数など)  
-76. [ ] **Step 76**: 「保存成功」時のトースト表示、エラー時のアラート  
-77. [ ] **Step 77**: 開発中はモックAPIでも可 → 後で本番APIに切り替え  
-78. [ ] **Step 78**: **Gitコミット**: "feat(frontend): user settings & AI coach config"  
-79. [ ] **Step 79**: ユニットテスト (フォーム送信テスト)  
-80. [ ] **Step 80**: アクセシビリティ (Tabナビ, スクリーンリーダー) の基本チェック
-
-### 2.9. テスト・品質向上 (Step 81～90)
-
-81. [ ] **Step 81**: Jest + React Testing Library の単体テスト書き込み  
-82. [ ] **Step 82**: 各主要コンポーネント (Dashboard, ProjectList 等) のスナップショットテスト  
-83. [ ] **Step 83**: フォーム/バリデーション系テスト (空欄, 不正フォーマット)  
-84. [ ] **Step 84**: Cypress など E2E テスト (ログイン → ダッシュボード → ログアウト)  
-85. [ ] **Step 85**: **AIによるテストケース生成** → カバレッジを高める  
-86. [ ] **Step 86**: レスポンシブモードでのスクリーンショット比較  
-87. [ ] **Step 87**: 不要なconsole.log, デッドコード整理  
-88. [ ] **Step 88**: **Gitコミット**: "test(frontend): add unit & e2e tests, code cleanup"  
-89. [ ] **Step 89**: Lintや型エラーを全て解決し、CIでエラーが出ないようにする  
-90. [ ] **Step 90**: Storybookドキュメントの充実 (任意)
-
-### 2.10. ビルド・デプロイ (Step 91～100)
-
-91. [ ] **Step 91**: `npm run build` で本番ビルド、バンドルサイズを確認  
-92. [ ] **Step 92**: Vercel や Netlify へのデプロイを検討 (Next.jsならVercelが好適)  
-93. [ ] **Step 93**: `.env` や `.env.production` の管理 (APIのURL, Supabaseキー等)  
-94. [ ] **Step 94**: 初回デプロイ → URLアクセスで動作確認  
-95. [ ] **Step 95**: デザイン微調整 (ダークモード, 色の統一)  
-96. [ ] **Step 96**: アクセシビリティ追加対応 (aria-label, focus outline 等)  
-97. [ ] **Step 97**: CI/CD セットアップ (GitHub Actions でビルド & デプロイ)  
-98. [ ] **Step 98**: **Gitコミット**: "build(frontend): production ready + deployment config"  
-99. [ ] **Step 99**: バグ修正・チューニング (AIの最適化提案を適宜採用)  
-100. [ ] **Step 100**: フロントエンドのドキュメント整理 (README, wiki)
+### 2.3 バックエンド
+| フェーズ | ステップ範囲 | 要点 |
+|----------|--------------|------|
+| 初期化 | 101‑110 | Express + TypeScript 雛形 |
+| DB & マイグレーション | 111‑120 | Supabase スキーマ & RLS ポリシー |
+| ルーティング & 認証 | 121‑140 | `/api/v1/*` REST & JWT ミドルウェア |
+| CRUD / AI API | 141‑170 | タスク & AI エンドポイント実装 |
+| テスト / デプロイ | 171‑200 | Jest/Supertest → Docker → Fly.io |
 
 ---
 
-## 3. バックエンド開発フロー (Step 101～200)
+## 3. 付録 A — **詳細ステップ一覧 (0‑200)**
 
-### 3.1. プロジェクト初期化 (Step 101～110)
+> **使い方**  
+> * チェック完了 → `[x]` に変更し末尾に PR 番号 or commit SHA を追記。  
+> * 数字は一意。未使用番号は予約し再利用しない。  
+> * 旧版からの差分（`react‑beautiful‑dnd` → `dnd‑kit` など）は反映済み。
 
-101. [x] **Step 101**: `backend/` ディレクトリ作成  
-102. [x] **Step 102**: `npm init -y` → Node.js プロジェクト初期化  
-103. [x] **Step 103**: TypeScript, ESLint, Prettier, cursorrules 等を設定  
-104. [x] **Step 104**: フレームワーク選択 (Express / Nest.js / Fastify など) → インストール  
-105. [x] **Step 105**: `tsconfig.json` でターゲット/モジュールを調整  
-106. [x] **Step 106**: `npm run dev` / `npm run build` スクリプトを `package.json` に登録  
-107. [x] **Step 107**: **Gitコミット**: "feat(backend): initial setup"  
-108. [x] **Step 108**: 環境変数 (`.env`) で DB接続文字列やポート番号を管理  
-109. [x] **Step 109**: AIを活用して初期設計ドキュメントを生成 (API方針, アーキテクチャ)  
-110. [x] **Step 110**: サーバ起動時に "Hello from Backend" 等を返すテストルート
+```markdown
+### 共通基盤 (Step 0‑20)
+- [ ] **0**  Node.js 20.x と pnpm 9 インストール
+- [x] **1**  `pnpm init` – ルート workspace package.json 生成
+- [x] **2**  共有ツール (eslint, prettier, husky, lint‑staged) 導入
+- [x] **3**  `pnpm dlx create-next-app` → apps/frontend 初期化
+- [x] **4**  Express + TypeScript テンプレ apps/backend 作成
+- [x] **5**  packages/shared-types 作成し Zod & tsup 設定
+- [x] **6**  `pnpm-workspace.yaml` で apps/* & packages/* を登録
+- [ ] **7**  ルート ESLint / Prettier / cursorrules 設定
+- [ ] **8**  Husky + lint‑staged (`pre-commit` で fmt & lint)
+- [ ] **9**  GitHub Actions: install → lint → test を PR ごとに実行
+- [ ] **10** 初回コミット `feat: bootstrap monorepo`
+- [ ] **11** apps/frontend `tsconfig.json` 最適化
+- [ ] **12** Tailwind `tailwind.config.js` カスタムテーマ拡張
+- [ ] **13** 共通 VSCode workspace 設定追加
+- [ ] **14** README に開発コンテナ手順追加
+- [ ] **15** Conventional Commits チェックツール導入
+- [ ] **16** Dependabot or Renovate 設定
+- [ ] **17** `.editorconfig` 追加
+- [ ] **18** issue / PR テンプレート配置
+- [ ] **19** CODEOWNERS 追加
+- [ ] **20** GitHub discussion / wiki 有効化
 
-### 3.2. Supabase / DB 設定 (Step 111～120)
+### フロントエンド (Step 21‑100)
+#### 3.1 認証 & ダッシュボード (21‑40)
+- [x] **21** `/login` ページ作成 (Email+PW フォーム)
+- [x] **22** `useAuth` Context で Supabase 認証状態を保持
+- [x] **23** ログイン成功時に JWT を Cookie 保存
+- [x] **24** ログアウト処理 (`supabase.auth.signOut`)
+- [x] **25** 未認証ガード (Next.js middleware)
+- [x] **26** `/register` & `/password/reset` ページ実装
+- [x] **27** フォームバリデーション (react-hook‑form + zod)
+- [x] **28** エラーハンドリング & ローディング UI
+- [x] **29** Git commit `feat(frontend): auth flow`
+- [x] **30** RTL ユニットテストでフォーム検証
+- [x] **31** `/dashboard` ページ骨格
+- [x] **32** AIチャットパネル仮実装
+- [x] **33** 今日のタスク / 期限間近カード UI
+- [x] **34** 時計 & 簡易カレンダー表示
+- [x] **35** レスポンシブ調整 (mobile → 縦)
+- [x] **36** モックデータフェッチ (SWR + fake api)
+- [x] **37** UI アニメーション追加
+- [x] **38** Git commit `feat(frontend): dashboard`
+- [ ] **39** (reserved)
+- [ ] **40** (reserved)
 
-111. [ ] **Step 111**: Supabase プロジェクト作成 or ローカルPostgreSQL を準備  
-112. [ ] **Step 112**: `@supabase/supabase-js` をインストール (BaaS的利用)  
-113. [ ] **Step 113**: **DB マイグレーション**: Supabase CLI か Prisma/TypeORM でスキーマ管理  
-114. [ ] **Step 114**: テーブル定義: `users`, `projects`, `task_groups`, `tasks`, `subtasks`, `ai_messages`  
-115. [ ] **Step 115**: **RLS (Row Level Security)** を検討 (Supabaseでのセキュリティ)  
-116. [ ] **Step 116**: テーブルリレーション (projects - tasks など) 確認  
-117. [ ] **Step 117**: `supabase/migrations` に SQL or Prismaファイルを用意 → DB作成  
-118. [ ] **Step 118**: 接続テスト (SupabaseのAnonKey, URLを `.env` に設定)  
-119. [ ] **Step 119**: DBトランザクション処理やエラーハンドリングの方針決定  
-120. [ ] **Step 120**: **Gitコミット**: "chore(backend): supabase DB & migrations"
+#### 3.2 UI リファクタ & DnD (41‑60)
+- [ ] **41** `TaskGroup.tsx` などコンポーネント分割
+- [ ] **42** `useTaskManagement`／`useDragAndDrop` hooks 実装
+- [ ] **43** 型定義強化 (タスク, プロジェクト)
+- [ ] **44** RTL + Cypress テスト追加
+- [ ] **45** Git commit `refactor(frontend): split dashboard`
+- [ ] **46** `/projects` 一覧ページ雛形
+- [ ] **47** フィルタ／検索バー実装
+- [ ] **48** pagination / infinite scroll 検討
+- [ ] **49** `/projects/[id]` へ遷移リンク
+- [ ] **50** プロジェクト詳細画面骨格
+- [ ] **51** カンバン UI コンテナ作成
+- [ ] **52** **dnd‑kit** でドラッグ＆ドロップ実装
+- [ ] **53** タスク詳細モーダル (`Dialog` from shadcn/ui)
+- [ ] **54** サブタスク折りたたみ UI
+- [ ] **55** 期限・完了ステータス UI
+- [ ] **56** AI「タスク分解」ボタン (モック)
+- [ ] **57** 期限切れ警告スタイル
+- [ ] **58** API モック → 本 API へ切替準備
+- [ ] **59** Git commit `feat(frontend): kanban & subtasks`
+- [ ] **60** レスポンシブ最終確認 + ユニットテスト
 
-### 3.3. ルーティング設計 (Step 121～130)
+#### 3.3 AIチャット & 設定 (61‑80)
+- [ ] **61** `/ai` ルート or サイドチャット UI
+- [ ] **62** メッセージ送信 → state へ即時反映
+- [ ] **63** システムメッセージ表示トグル
+- [ ] **64** OpenAI 応答を表示 (モック)
+- [ ] **65** タブ切替 (分解 / モチベーション)
+- [ ] **66** (reserved: 音声入力)
+- [ ] **67** 無限スクロール or 仮想リスト
+- [ ] **68** `/api/v1/ai/coach` と接続
+- [ ] **69** Git commit `feat(frontend): ai chat`
+- [ ] **70** localStorage にチャットログ保存
 
-121. [x] **Step 121**: `src/routes/` にルート定義  
-122. [x] **Step 122**: `/api/v1/users`, `/api/v1/projects`, `/api/v1/tasks` 等  
-123. [x] **Step 123**: メソッド別に `GET`, `POST`, `PUT`, `DELETE` を用意  
-124. [x] **Step 124**: リクエストバリデーション (Zod/JOI/class-validatorなど) 導入  
-125. [x] **Step 125**: [GET] `/api/v1/projects` でプロジェクト一覧を取得する実装  
-126. [x] **Step 126**: [POST] `/api/v1/projects` で新規プロジェクト作成  
-127. [x] **Step 127**: [GET] `/api/v1/tasks` でタスク一覧  
-128. [x] **Step 128**: エラーレスポンス形式 (JSON { error: {code, message} }) 統一  
-129. [x] **Step 129**: **Gitコミット**: "feat(backend): basic routes implementation"  
-130. [x] **Step 130**: CORS, ログ出力(Morgan等)の設定
+#### 3.4 品質 & デプロイ (81‑100)
+- [ ] **81** Jest 単体テスト追加 (>80% カバレッジ)
+- [ ] **82** スナップショットテスト
+- [ ] **83** 入力フォーム異常値テスト
+- [ ] **84** Cypress E2E (login→dashboard)
+- [ ] **85** Visual diff (Percy) 導入
+- [ ] **86** モバイルレスポンシブ screenshot
+- [ ] **87** GitHub Actions で CI 緑化
+- [ ] **88** Git commit `test(frontend): coverage`
+- [ ] **89** Lint / 型エラー 0
+- [ ] **90** Storybook ドキュメント追加
+- [ ] **91** `next build` 本番ビルド確認
+- [ ] **92** Vercel プロジェクト作成 & 環境変数登録
+- [ ] **93** `.env.production` 整備
+- [ ] **94** 初回デプロイ
+- [ ] **95** ダークモード最終調整
+- [ ] **96** a11y 追加 (aria‑label 等)
+- [ ] **97** GitHub Actions で Vercel デプロイ自動化
+- [ ] **98** Git commit `build(frontend): production ready`
+- [ ] **99** バグフィックス／パフォチューン
+- [ ] **100** README / wiki 更新
 
-### 3.4. 認証・セキュリティ (Step 131～140)
+### バックエンド (Step 101‑200)
+#### 4.1 初期化 (101‑110)
+- [x] **101** apps/backend 生成
+- [x] **102** `npm init -y`
+- [x] **103** TypeScript, ESLint, Prettier 設定
+- [x] **104** Express インストール
+- [x] **105** tsconfig 設定
+- [x] **106** nodemon / ts-node-dev スクリプト
+- [x] **107** Git commit `feat(backend): init`
+- [x] **108** .env テンプレ追加
+- [x] **109** API 方針ドキュメント生成
+- [x] **110** "Hello from Backend" テストルート
 
-131. [ ] **Step 131**: Supabase Auth もしくは JWT 認証を採用  
-132. [ ] **Step 132**: `authMiddleware.ts` or `authHandler.ts` でトークン検証ロジック  
-133. [ ] **Step 133**: ログインAPI: [POST] `/api/v1/auth/login` → 成功時にJWT or Supabaseセッション発行  
-134. [ ] **Step 134**: ユーザー登録 (Supabase Auth.signUp) or 手動 (パスワードハッシュ化)  
-135. [ ] **Step 135**: ログアウト (フロントでトークン破棄 or セッション無効化)  
-136. [ ] **Step 136**: 認可 (ProjectのownerId とリクエストユーザーが一致するかチェック)  
-137. [ ] **Step 137**: ロール (admin, user) がある場合はアクセス権を制限  
-138. [ ] **Step 138**: エラーメッセージを共通化 (401: unauthorized, 403: forbidden)  
-139. [ ] **Step 139**: **Gitコミット**: "feat(backend): add supabase/jwt auth & role-based guard"  
-140. [ ] **Step 140**: E2Eテストで認証が正しく動くか検証
+#### 4.2 DB & マイグレーション (111‑120)
+- [ ] **111** Supabase プロジェクト作成
+- [ ] **112** `@supabase/supabase-js` 導入
+- [ ] **113** Prisma schema → `supabase db push`
+- [ ] **114** `users` `projects` `tasks` 他テーブル定義
+- [ ] **115** RLS ポリシー `auth.uid() = user_id`
+- [ ] **116** 外部キー & インデックス作成
+- [ ] **117** `supabase/migrations` ディレクトリコミット
+- [ ] **118** 接続テスト (local .env)
+- [ ] **119** トランザクション方針決定
+- [ ] **120** Git commit `chore(backend): supabase schema`
 
-### 3.5. コントローラ・サービス (Step 141～150)
+#### 4.3 ルーティング & 認証 (121‑140)
+- [ ] **121** `src/routes/index.ts` で Router 統合
+- [ ] **122** `/api/v1/users` CRUD
+- [ ] **123** `/api/v1/projects` CRUD
+- [ ] **124** Zod バリデーション middleware
+- [ ] **125** GET `/projects` 実装
+- [ ] **126** POST `/projects` 実装
+- [ ] **127** GET `/tasks` 実装
+- [ ] **128** 共通エラーハンドラ JSON 形式
+- [ ] **129** Git commit `feat(backend): basic routes`
+- [ ] **130** morgan ログ & CORS 設定
+- [ ] **131** JWT ミドルウェア (`supabase.jwt.verify`)
+- [ ] **132** ログイン API `/auth/login`
+- [ ] **133** signup API (Supabase Auth)
+- [ ] **134** ログアウト処理
+- [ ] **135** 認可チェック (ownerId === req.user.id)
+- [ ] **136** 役割ベース guard
+- [ ] **137** 401/403 エラー統一
+- [ ] **138** テストトークンで E2E テスト
+- [ ] **139** Git commit `feat(backend): auth`
+- [ ] **140** 認証 E2E テスト pass
 
-141. [x] **Step 141**: `projectController.ts`, `taskController.ts` など用意  
-142. [x] **Step 142**: `projectService.ts`, `taskService.ts` でビジネスロジック (DB呼び出し) 分離  
-143. [x] **Step 143**: 例: `createProject(userId, data)` → DB挿入, `updateTaskStatus(taskId, status)` など  
-144. [x] **Step 144**: コントローラはルーティングから呼ばれ、サービスを使って結果を返す  
-145. [x] **Step 145**: `/api/v1/projects` → GET でユーザーの所有プロジェクトを返す  
-146. [x] **Step 146**: `/api/v1/tasks/:id` → PUT でタスク更新 (タイトル, 期限, 状態 等)  
-147. [x] **Step 147**: エラーハンドリングは try-catch で行い、共通レスポンスへ集約  
-148. [x] **Step 148**: バリデーション/アクセスチェックの追加 (自己のタスクのみ更新可等)  
-149. [x] **Step 149**: **Gitコミット**: "feat(backend): implement controllers & services (projects, tasks)"  
-150. [x] **Step 150**: 簡単なユニットテスト (service単位) でロジック確認
+#### 4.4 CRUD & AI API (141‑170)
+- [ ] **141** projectController.ts 実装
+- [ ] **142** taskService.ts 実装
+- [ ] **143** createProject(userId, data)
+- [ ] **144** controller ↔ service 分離
+- [ ] **145** GET `/projects` (owner only)
+- [ ] **146** PUT `/tasks/:id`
+- [ ] **147** try‑catch → errorHandler
+- [ ] **148** アクセス権チェック追加
+- [ ] **149** Git commit `feat(backend): controllers`
+- [ ] **150** Service ユニットテスト
+- [ ] **151** POST `/ai/coach` (OpenAI 代理問い合わせ)
+- [ ] **152** ユーザー別モデル設定取得
+- [ ] **153** OpenAI API 呼び出し実装
+- [ ] **154** タスク分解エンドポイント
+- [ ] **155** RateLimiter (redis‑rate‑limit)
+- [ ] **156** OpenAI エラー時リトライ
+- [ ] **157** ai_messages テーブルにログ保存
+- [ ] **158** レスポンスフォーマット決定
+- [ ] **159** Git commit `feat(backend): ai endpoints`
+- [ ] **160** AI API ユニットテスト
+- [ ] **161** `task_groups` CRUD
+- [ ] **162** `/task-groups` ルート実装
+- [ ] **163** `/tasks` CRUD 完了
+- [ ] **164** `/subtasks` CRUD 完了
+- [ ] **165** 並び順更新 API (DnD 連携)
+- [ ] **166** 期限/完了更新 API
+- [ ] **167** タスク bulk 更新トランザクション
+- [ ] **168** 所有権チェック
+- [ ] **169** Git commit `feat(backend): task crud`
+- [ ] **170** CRUD 結合テスト pass
 
-### 3.6. AIコーチングAPI (Step 151～160)
+#### 4.5 テスト & デプロイ (171‑200)
+- [ ] **171** Supertest で統合テスト雛形
+- [ ] **172** 認証フロー統合テスト
+- [ ] **173** CRUD 正常/異常系テスト
+- [ ] **174** AI API モックテスト
+- [ ] **175** 共通レスポンス型テスト
+- [ ] **176** Jest カバレッジ > 85%
+- [ ] **177** pino ロガー導入
+- [ ] **178** DB & 未知例外ハンドリングテ
 
-151. [ ] **Step 151**: `/api/v1/ai/coach` → POST で { prompt, context } を受け、AI問い合わせ (OpenAI API等)  
-152. [ ] **Step 152**: AI設定 (model, temperature) はユーザー単位 or グローバル設定から取得  
-153. [ ] **Step 153**: 試験的に OpenAI/GPT へのリクエスト (API KEY は .env に保存)  
-154. [ ] **Step 154**: タスク分解 (goal, constraints) のリクエストを受けてサブタスク提案を返すAPI  
-155. [ ] **Step 155**: **Rate limit** 設定 (AI問い合わせが過剰にならないように)  
-156. [ ] **Step 156**: エラー処理 (OpenAI エラー時にリトライ or エラーJSON応答)  
-157. [ ] **Step 157**: **ai_messages** テーブルにログを記録 (ユーザーのpromptとAI応答を保存)  
-158. [ ] **Step 158**: AIコーチングのレスポンス形式をフロントと協議 (assistantMessage, tokensUsedなど)  
-159. [ ] **Step 159**: **Gitコミット**: "feat(backend): AI coaching endpoints (chat, breakdown)"  
-160. [ ] **Step 160**: 簡易テストでAIリクエストが成功するか確認 (APIキー有効時)
-
-### 3.7. タスク / サブタスク管理 (Step 161～170)
-
-161. [x] **Step 161**: `task_groups` + `tasks` + `subtasks` のCRUDをサービス層に用意  
-162. [x] **Step 162**: `/api/v1/task-groups` → GET/POST/PUT/DELETE  
-163. [x] **Step 163**: `/api/v1/tasks` → GET/POST/PUT/DELETE  
-164. [x] **Step 164**: `/api/v1/subtasks` → GET/POST/PUT/DELETE  
-165. [x] **Step 165**: 並び順 (order_index) の更新API (D&D対応)  
-166. [x] **Step 166**: 期限/完了状態の更新API (タスクがdone→AIコーチに通知など発火ロジック検討)  
-167. [x] **Step 167**: トランザクション (サブタスク一括更新時) が必要か検討  
-168. [x] **Step 168**: 全APIに認証・所有権チェックを適用  
-169. [x] **Step 169**: **Gitコミット**: "feat(backend): tasks & subtasks CRUD implementation"  
-170. [x] **Step 170**: 各エンドポイントのユニットテスト・結合テスト (Supertest 等)
-
-### 3.8. テスト・品質向上 (Step 171～180)
-
-171. [ ] **Step 171**: Jest + Supertest でルートレベルのインテグレーションテスト  
-172. [ ] **Step 172**: ユーザーの認証テスト (正しいJWT → 200, 間違いJWT → 401)  
-173. [ ] **Step 173**: Projects/Tasks CRUDの正常系・異常系テスト  
-174. [ ] **Step 174**: AIコーチングAPIのテスト (モックOpenAIクライアント)  
-175. [ ] **Step 175**: レスポンス形式 (ApiResponse<T>) が想定通りかチェック  
-176. [ ] **Step 176**: カバレッジレポートを確認し、不足部分を追加  
-177. [ ] **Step 177**: ロギング (pino or Winston) を導入し、重要な操作を記録  
-178. [ ] **Step 178**: エラー/例外処理: DBエラー, 未知例外 などの試験  
-179. [ ] **Step 179**: **Gitコミット**: "test(backend): add coverage for main endpoints"  
-180. [ ] **Step 180**: コードリファクタリング (AI提案によるクリーンアップ) 実施
-
-### 3.9. デプロイ・運用 (Step 181～190)
-
-181. [ ] **Step 181**: `npm run build` (tsc) で dist/ フォルダ生成  
-182. [ ] **Step 182**: Dockerfile 作成 → `docker build` → ローカル実行確認  
-183. [ ] **Step 183**: Supabaseへの接続: `.env.production` にURLやKEYを設定  
-184. [ ] **Step 184**: CI/CD (GitHub Actions 等) で ビルド + テスト + Docker push  
-185. [ ] **Step 185**: リアルタイム機能 (Supabase Realtime) 使う場合は設定 (オプション)  
-186. [ ] **Step 186**: 本番環境 (AWS ECS, Render, Fly.io 等) にデプロイ  
-187. [ ] **Step 187**: ログ/アラートの監視 (Supabaseダッシュボード, CloudWatch等)  
-188. [ ] **Step 188**: Post-deployment ヘルスチェック (主要エンドポイントが200返すか)  
-189. [ ] **Step 189**: **Gitコミット**: "chore(backend): production deployment config"  
-190. [ ] **Step 190**: 環境差異 (dev/staging/production) やスケール戦略 (autoscaling) 検討
-
-### 3.10. 運用・メンテナンス (Step 191～200)
-
-191. [ ] **Step 191**: 運用監視 (Datadog, Sentry等) を導入  
-192. [ ] **Step 192**: DBバックアップスケジュール (Supabaseの自動バックアップ or 手動)  
-193. [ ] **Step 193**: 定期的なセキュリティパッチ (npm依存パッケージ更新, Node.js LTSアップデート)  
-194. [ ] **Step 194**: アップタイム監視 (Pingdom, UptimeRobot)  
-195. [ ] **Step 195**: 運用ドキュメント (障害対応手順, SLA) 整備  
-196. [ ] **Step 196**: 新機能 (GitHub連携, Slack通知, チーム機能 など) 追加時の影響調査  
-197. [ ] **Step 197**: コードやDBスキーマのリファクタリング (AI提案を取り入れ継続改善)  
-198. [ ] **Step 198**: 不要データのアーカイブやレポート生成 (定期的にAIを活用したデータ分析を検討)  
-199. [ ] **Step 199**: まとめ・レトロスペクティブで改善点をチーム共有  
-200. [ ] **Step 200**: **Gitコミット**: "chore(backend): finalize ops & maintenance tasks"
-
----
-
-## 4. 総合チェックポイント
-
-- **フロントエンド (1～100)** + **バックエンド (101～200)** で計 200 ステップ超  
-- 適宜 **並行開発** 可能。APIモック/スタブでフロント先行実装 → 後ほど本APIと連携  
-- **AI駆動開発**:  
-  - コード生成（コンポーネントやAPIのテンプレ）  
-  - テスト作成（単体/E2E）  
-  - リファクタリング提案  
-  - ドキュメント自動生成  
-- 要件変更やスケジュール短縮に合わせて **ステップ取捨選択** や優先度付け
-
----
-
-## 5. まとめ
-
-- **コミットコーチ**では、タスク管理・AIコーチングを中核とするため、  
-  - **フロントエンド**: 直感的なカンバンUI、AIチャットUI  
-  - **バックエンド**: Supabase, Node.js, AI (OpenAI API)  
-- **全200ステップ** の手順をチェックリスト化し、AIツールを活用しながら開発を進める  
-- 運用フェーズでは RLS, レートリミット, ログ監視, バックアップ等の体制を整える  
-- 必要に応じて **GitHub連携**, **カレンダー連携**, **通知機能** などを拡張し、次のステップへ
-
-この一連の手順を参照して、**コミットコーチ**の開発を効率的かつ着実に進めましょう。
