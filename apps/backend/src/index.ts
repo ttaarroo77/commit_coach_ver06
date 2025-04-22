@@ -12,8 +12,9 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 
+// Hello from Backend route
 app.get('/', (req, res) => {
-  res.json({ message: 'Hello from Commit Coach API' });
+  res.json({ message: 'Hello from Backend!' });
 });
 
 app.listen(port, () => {

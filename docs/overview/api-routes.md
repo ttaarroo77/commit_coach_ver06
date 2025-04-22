@@ -1,247 +1,194 @@
 ---
-name: "docs/overview/api-routes.md"
-title: "APIルート設計 (API Routes)"
-description: "アプリケーションのAPIエンドポイントの設計と仕様"
+title: "API Routes"
+description: "APIエンドポイントの一覧と仕様"
+version: "1.0"
+last_updated: "2024-04-22"
 ---
 
-# APIルート設計
+# API Routes
 
-## 1. API概要
+## 概要
 
-### 1.1 基本情報
-- **ベースURL**: `/api`
-- **認証方式**: JWT
-- **レスポンス形式**: JSON
-- **エンコーディング**: UTF-8
+このドキュメントでは、Commit CoachのバックエンドAPIの仕様を定義します。
 
-### 1.2 共通仕様
-- **リクエストヘッダー**:
-  ```
-  Authorization: Bearer <token>
-  Content-Type: application/json
-  ```
-- **レスポンス形式**:
-  ```typescript
-  interface ApiResponse<T> {
-    data: T;
-    error: string | null;
-    status: number;
+## 基本情報
+
+- Base URL: `http://localhost:3001` (開発環境)
+- API Version: v1
+- 認証: Bearer Token (JWT)
+- レスポンスフォーマット: JSON
+
+## 共通仕様
+
+### リクエストヘッダー
+```
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+```
+
+### エラーレスポンス
+```json
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "エラーメッセージ"
   }
-  ```
-- **エラーレスポンス**:
-  ```typescript
-  interface ErrorResponse {
-    error: string;
-    status: number;
-    details?: any;
+}
+```
+
+### ページネーション
+```json
+{
+  "data": [],
+  "pagination": {
+    "total": 100,
+    "page": 1,
+    "limit": 10,
+    "hasMore": true
   }
-  ```
+}
+```
 
-## 2. エンドポイント一覧
+## エンドポイント一覧
 
-### 2.1 認証関連
+### 認証
 
-#### POST /api/auth/register
-- **説明**: ユーザー登録
-- **リクエスト**:
-  ```typescript
-  interface RegisterRequest {
-    email: string;
-    password: string;
-    name: string;
+#### POST /api/v1/auth/signup
+新規ユーザー登録
+
+**Request**
+```json
+{
+  "email": "string",
+  "password": "string",
+  "name": "string"
+}
+```
+
+**Response**
+```json
+{
+  "user": {
+    "id": "string",
+    "email": "string",
+    "name": "string"
+  },
+  "token": "string"
+}
+```
+
+#### POST /api/v1/auth/login
+ログイン
+
+**Request**
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+
+**Response**
+```json
+{
+  "user": {
+    "id": "string",
+    "email": "string",
+    "name": "string"
+  },
+  "token": "string"
+}
+```
+
+### プロジェクト
+
+#### GET /api/v1/projects
+プロジェクト一覧取得
+
+**Query Parameters**
+- page (optional): number
+- limit (optional): number
+- status (optional): "active" | "archived"
+
+**Response**
+```json
+{
+  "data": [
+    {
+      "id": "string",
+      "name": "string",
+      "description": "string",
+      "status": "string",
+      "createdAt": "string",
+      "updatedAt": "string"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "page": 1,
+    "limit": 10,
+    "hasMore": true
   }
-  ```
-- **レスポンス**: `ApiResponse<User>`
+}
+```
 
-#### POST /api/auth/login
-- **説明**: ユーザーログイン
-- **リクエスト**:
-  ```typescript
-  interface LoginRequest {
-    email: string;
-    password: string;
-  }
-  ```
-- **レスポンス**: `ApiResponse<{ token: string; user: User }>`
+#### POST /api/v1/projects
+プロジェクト作成
 
-#### POST /api/auth/logout
-- **説明**: ユーザーログアウト
-- **レスポンス**: `ApiResponse<null>`
+**Request**
+```json
+{
+  "name": "string",
+  "description": "string"
+}
+```
 
-#### GET /api/auth/me
-- **説明**: 現在のユーザー情報取得
-- **レスポンス**: `ApiResponse<User>`
+### タスク
 
-### 2.2 プロジェクト関連
+#### GET /api/v1/tasks
+タスク一覧取得
 
-#### GET /api/projects
-- **説明**: プロジェクト一覧取得
-- **クエリパラメータ**:
-  ```typescript
-  interface ProjectsQuery {
-    page?: number;
-    limit?: number;
-    status?: ProjectStatus;
-  }
-  ```
-- **レスポンス**: `ApiResponse<{ projects: Project[]; total: number }>`
+**Query Parameters**
+- projectId (required): string
+- status (optional): "todo" | "in_progress" | "done"
+- priority (optional): "high" | "medium" | "low"
 
-#### POST /api/projects
-- **説明**: プロジェクト作成
-- **リクエスト**:
-  ```typescript
-  interface CreateProjectRequest {
-    name: string;
-    description?: string;
-  }
-  ```
-- **レスポンス**: `ApiResponse<Project>`
+#### POST /api/v1/tasks
+タスク作成
 
-#### GET /api/projects/:id
-- **説明**: プロジェクト詳細取得
-- **レスポンス**: `ApiResponse<Project>`
+**Request**
+```json
+{
+  "projectId": "string",
+  "title": "string",
+  "description": "string",
+  "priority": "string",
+  "dueDate": "string"
+}
+```
 
-#### PUT /api/projects/:id
-- **説明**: プロジェクト更新
-- **リクエスト**:
-  ```typescript
-  interface UpdateProjectRequest {
-    name?: string;
-    description?: string;
-    status?: ProjectStatus;
-  }
-  ```
-- **レスポンス**: `ApiResponse<Project>`
+### AIコーチ
 
-#### DELETE /api/projects/:id
-- **説明**: プロジェクト削除
-- **レスポンス**: `ApiResponse<null>`
+#### POST /api/v1/ai/coach
+AIコーチからのアドバイス取得
 
-### 2.3 タスク関連
+**Request**
+```json
+{
+  "taskId": "string",
+  "message": "string"
+}
+```
 
-#### GET /api/tasks
-- **説明**: タスク一覧取得
-- **クエリパラメータ**:
-  ```typescript
-  interface TasksQuery {
-    projectId?: string;
-    status?: TaskStatus;
-    priority?: TaskPriority;
-    page?: number;
-    limit?: number;
-  }
-  ```
-- **レスポンス**: `ApiResponse<{ tasks: Task[]; total: number }>`
+## レート制限
 
-#### POST /api/tasks
-- **説明**: タスク作成
-- **リクエスト**:
-  ```typescript
-  interface CreateTaskRequest {
-    title: string;
-    description?: string;
-    projectId: string;
-    priority?: TaskPriority;
-    dueDate?: string;
-  }
-  ```
-- **レスポンス**: `ApiResponse<Task>`
+- 認証済みユーザー: 100リクエスト/15分
+- 未認証ユーザー: 20リクエスト/15分
 
-#### GET /api/tasks/:id
-- **説明**: タスク詳細取得
-- **レスポンス**: `ApiResponse<Task>`
+## エラーコード
 
-#### PUT /api/tasks/:id
-- **説明**: タスク更新
-- **リクエスト**:
-  ```typescript
-  interface UpdateTaskRequest {
-    title?: string;
-    description?: string;
-    status?: TaskStatus;
-    priority?: TaskPriority;
-    dueDate?: string;
-    assigneeId?: string;
-  }
-  ```
-- **レスポンス**: `ApiResponse<Task>`
-
-#### DELETE /api/tasks/:id
-- **説明**: タスク削除
-- **レスポンス**: `ApiResponse<null>`
-
-### 2.4 サブタスク関連
-
-#### GET /api/tasks/:taskId/subtasks
-- **説明**: サブタスク一覧取得
-- **レスポンス**: `ApiResponse<Subtask[]>`
-
-#### POST /api/tasks/:taskId/subtasks
-- **説明**: サブタスク作成
-- **リクエスト**:
-  ```typescript
-  interface CreateSubtaskRequest {
-    title: string;
-  }
-  ```
-- **レスポンス**: `ApiResponse<Subtask>`
-
-#### PUT /api/subtasks/:id
-- **説明**: サブタスク更新
-- **リクエスト**:
-  ```typescript
-  interface UpdateSubtaskRequest {
-    title?: string;
-    isCompleted?: boolean;
-  }
-  ```
-- **レスポンス**: `ApiResponse<Subtask>`
-
-#### DELETE /api/subtasks/:id
-- **説明**: サブタスク削除
-- **レスポンス**: `ApiResponse<null>`
-
-### 2.5 AIコーチング関連
-
-#### POST /api/ai/chat
-- **説明**: AIとのチャット
-- **リクエスト**:
-  ```typescript
-  interface AIChatRequest {
-    taskId: string;
-    message: string;
-  }
-  ```
-- **レスポンス**: `ApiResponse<AIMessage>`
-
-#### GET /api/ai/history
-- **説明**: チャット履歴取得
-- **クエリパラメータ**:
-  ```typescript
-  interface AIChatHistoryQuery {
-    taskId: string;
-    page?: number;
-    limit?: number;
-  }
-  ```
-- **レスポンス**: `ApiResponse<{ messages: AIMessage[]; total: number }>`
-
-#### DELETE /api/ai/history/:id
-- **説明**: チャット履歴削除
-- **レスポンス**: `ApiResponse<null>`
-
-## 3. エラーコード
-
-### 3.1 共通エラー
-- **400**: リクエストが不正
-- **401**: 認証が必要
-- **403**: アクセス権限なし
-- **404**: リソースが見つからない
-- **500**: サーバーエラー
-
-### 3.2 カスタムエラー
-- **1001**: メールアドレスが既に使用されている
-- **1002**: パスワードが弱い
-- **1003**: プロジェクトメンバーでない
-- **1004**: タスクのステータスが不正
-- **1005**: AIコーチングの制限に達した
+- AUTH_001: 認証エラー
+- AUTH_002: 認可エラー
+- VAL_001: バリデーションエラー
+- REQ_001: 不正なリクエスト
+- SRV_001: サーバーエラー
