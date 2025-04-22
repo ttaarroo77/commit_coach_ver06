@@ -6,53 +6,53 @@ version: "3.0"
 last_updated: "2025-04-22"
 ---
 
-# 開発手順書 – 要約＋付録詳細方式 (v3.0)
+# 開発手順書 – 要約＋付録詳細方式 (v3.0)
 
-この文書は **分離型モノレポ (Next.js × Express) 方針の正式版** です。旧版との差分を完全に吸収し、200 Step チェックリストを再整備しました。
+この文書は **分離型モノレポ (Next.js × Express) 方針の正式版** です。旧版との差分を完全に吸収し、200 Step チェックリストを再整備しました。
 
 ---
 
 ## 1. 進捗サマリ（毎週更新）
 | レイヤ | 完了 | 直近 TODO |
 |--------|------|-----------|
-| **共通基盤** | Step 0‑6 完了 | Step 7‑10: ESLint/Husky/CI 初回コミット |
-| **Frontend** | Step 1‑38 完了 | Step 41‑60: Kanban (dnd‑kit) & UI リファクタ |
-| **Backend** | Step 101‑110 完了 | Step 111‑120: Supabase スキーマ & RLS |
+| **共通基盤** | Step 0‑6 完了 | Step 7‑10: ESLint/Husky/CI 初回コミット |
+| **Frontend** | Step 1‑38 完了 | Step 41‑60: Kanban (dnd‑kit) & UI リファクタ |
+| **Backend** | Step 101‑110 完了 | Step 111‑120: Supabase スキーマ & RLS |
 | **品質/CI** | lint ✅ | unit/E2E テスト → CI グリーン化 |
-| **デプロイ** | 未着手 | Step 181‑190: Docker & Fly.io |
+| **デプロイ** | 未着手 | Step 181‑190: Docker & Fly.io |
 
 > **更新方法**: Step を達成した PR で該当行を `[x]` に変更し、末尾に `(#PR番号)` を追記してください。
 
 ---
 
 ## 2. 作業フェーズ概要
-### 2.1 共通基盤 (Step 0‑20)
+### 2.1 共通基盤 (Step 0‑20)
 モノレポ雛形・共有ツール・CI を整える段階。
 
-### 2.2 フロントエンド (Step 21‑100)
-認証 → ダッシュボード → Kanban & AI チャット → 品質・デプロイの 4 フェーズ。
+### 2.2 フロントエンド (Step 21‑100)
+認証 → ダッシュボード → Kanban & AI チャット → 品質・デプロイの 4 フェーズ。
 
-### 2.3 バックエンド (Step 101‑200)
-初期化 → DB/RLS → ルーティング&認証 → CRUD+AI → テスト → デプロイ → 運用。
+### 2.3 バックエンド (Step 101‑200)
+初期化 → DB/RLS → ルーティング&認証 → CRUD+AI → テスト → デプロイ → 運用。
 
 ---
 
-## 3. 付録 A — **200 Step チェックリスト**
+## 3. 付録 A — **200 Step チェックリスト**
 <details><summary>クリックして展開</summary>
 
 ```markdown
-### 共通基盤 (0‑20)
-- [ ] **0**  Node.js 20.x & pnpm 9 インストール
-- [ ] **1**  `pnpm init` – ルート workspace package.json 生成
-- [ ] **2**  共有ツール (eslint, prettier, husky, lint‑staged) 導入
-- [ ] **3**  `pnpm dlx create-next-app` → apps/frontend 初期化
-- [ ] **4**  `pnpm create @express/api` → apps/backend 初期化
-- [ ] **5**  packages/shared-types で Zod スキーマ & tsup 設定
-- [ ] **6**  `pnpm-workspace.yaml` に apps/* & packages/* を登録
-- [ ] **7**  ルート ESLint / Prettier / CursorRules 設定
-- [ ] **8**  Husky & lint‑staged (`pre-commit`: fmt+lint)
-- [ ] **9**  GitHub Actions: install → lint → test ワークフロー
-- [ ] **10** 初回コミット `feat: bootstrap monorepo`
+### 共通基盤 (0‑20)
+- [x] **0**  Node.js 20.x & pnpm 9 インストール
+- [x] **1**  `pnpm init` – ルート workspace package.json 生成
+- [x] **2**  共有ツール (eslint, prettier, husky, lint‑staged) 導入
+- [x] **3**  `pnpm dlx create-next-app` → apps/frontend 初期化
+- [x] **4**  `pnpm create @express/api` → apps/backend 初期化
+- [x] **5**  packages/shared-types で Zod スキーマ & tsup 設定
+- [x] **6**  `pnpm-workspace.yaml` に apps/* & packages/* を登録
+- [x] **7**  ルート ESLint / Prettier / CursorRules 設定
+- [x] **8**  Husky & lint‑staged (`pre-commit`: fmt+lint)
+- [x] **9**  GitHub Actions: install → lint → test ワークフロー
+- [x] **10** 初回コミット `feat: bootstrap monorepo`
 - [ ] **11** apps/frontend `tsconfig.json` 調整
 - [ ] **12** Tailwind `tailwind.config.js` カスタムテーマ
 - [ ] **13** VSCode workspace 設定
@@ -64,9 +64,9 @@ last_updated: "2025-04-22"
 - [ ] **19** CODEOWNERS 追加
 - [ ] **20** GitHub Discussions / Wiki 有効化
 
-### フロントエンド (21‑100)
-#### 3.1 認証 & ダッシュボード (21‑40)
-- [ ] **21** `/login` ページ – Email/PW フォーム
+### フロントエンド (21‑100)
+#### 3.1 認証 & ダッシュボード (21‑40)
+- [ ] **21** `/login` ページ – Email/PW フォーム
 - [ ] **22** `useAuth` Context (Supabase)
 - [ ] **23** JWT を Cookie 保存
 - [ ] **24** `/logout` 処理
@@ -87,7 +87,7 @@ last_updated: "2025-04-22"
 - [ ] **39** (空き)
 - [ ] **40** (空き)
 
-#### 3.2 Kanban & リファクタ (41‑60)
+#### 3.2 Kanban & リファクタ (41‑60)
 - [ ] **41** ダッシュボードコンポーネント分割
 - [ ] **42** `useTaskManagement` / `useDragAndDrop` hooks
 - [ ] **43** 型定義強化 (Task, Project)
@@ -109,7 +109,7 @@ last_updated: "2025-04-22"
 - [ ] **59** commit `feat(frontend): kanban`
 - [ ] **60** レスポンシブ & ユニットテスト最終
 
-#### 3.3 AIチャット & 設定 (61‑80)
+#### 3.3 AIチャット & 設定 (61‑80)
 - [ ] **61** サイドチャット UI
 - [ ] **62** メッセージ送信即時描画
 - [ ] **63** システムメッセージ表示
@@ -121,7 +121,7 @@ last_updated: "2025-04-22"
 - [ ] **69** commit `feat(frontend): ai chat`
 - [ ] **70** localStorage ログ保存
 
-#### 3.4 品質 & デプロイ (81‑100)
+#### 3.4 品質 & デプロイ (81‑100)
 - [ ] **81** Jest 単体テスト >80%
 - [ ] **82** スナップショットテスト
 - [ ] **83** フォーム異常値テスト
@@ -143,8 +143,8 @@ last_updated: "2025-04-22"
 - [ ] **99** バグ修正／パフォチューン
 - [ ] **100** README / wiki 更新
 
-### バックエンド (101‑200)
-#### 4.1 初期化 (101‑110)
+### バックエンド (101‑200)
+#### 4.1 初期化 (101‑110)
 - [ ] **101** apps/backend 生成
 - [ ] **102** `npm init -y`
 - [ ] **103** TypeScript, ESLint, Prettier 設定
@@ -154,9 +154,9 @@ last_updated: "2025-04-22"
 - [ ] **107** commit `feat(backend): init`
 - [ ] **108** .env.example 追加
 - [ ] **109** API 方針ドキュメント
-- [ ] **110** “Hello from Backend” ルート
+- [ ] **110** "Hello from Backend" ルート
 
-#### 4.2 DB & マイグレーション (111‑120)
+#### 4.2 DB & マイグレーション (111‑120)
 - [ ] **111** Supabase プロジェクト作成
 - [ ] **112** `@supabase/supabase-js` 導入
 - [ ] **113** Prisma schema → `supabase db push`
@@ -168,7 +168,7 @@ last_updated: "2025-04-22"
 - [ ] **119** トランザクション方針
 - [ ] **120** commit `chore(backend): db schema`
 
-#### 4.3 ルーティング & 認証 (121‑140)
+#### 4.3 ルーティング & 認証 (121‑140)
 - [ ] **121** `src/routes/index.ts` Router
 - [ ] **122** `/api/v1/users` CRUD
 - [ ] **123** `/api/v1/projects` CRUD
@@ -190,7 +190,7 @@ last_updated: "2025-04-22"
 - [ ] **139** commit `feat(backend): auth`
 - [ ] **140** 認証テスト pass
 
-#### 4.4 CRUD & AI API (141‑170)
+#### 4.4 CRUD & AI API (141‑170)
 - [ ] **141** projectController 実装
 - [ ] **142** taskService 実装
 - [ ] **143** createProject(userId, data)
@@ -222,7 +222,7 @@ last_updated: "2025-04-22"
 - [ ] **169** commit `feat(backend): task crud`
 - [ ] **170** CRUD 結合テスト pass
 
-#### 4.5 テスト・デプロイ・運用 (171‑200)
+#### 4.5 テスト・デプロイ・運用 (171‑200)
 - [ ] **171** Supertest 統合テスト雛形
 - [ ] **172** 認証フロー統合テスト
 - [ ] **173** CRUD 正常/異常系テスト
@@ -262,5 +262,5 @@ last_updated: "2025-04-22"
 ## 4. 改訂履歴
 | Ver | 日付 | 変更概要 | 編集者 |
 |-----|------|----------|--------|
-| 3.0 | 2025‑04‑22 | docs を全面再生成。フロント dnd‑kit & 分離型構成を正式反映、200 Step を完備 | ChatGPT |
+| 3.0 | 2025‑04‑22 | docs を全面再生成。フロント dnd‑kit & 分離型構成を正式反映、200 Step を完備 | ChatGPT |
 
