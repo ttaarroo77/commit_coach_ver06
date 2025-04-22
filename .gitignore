@@ -29,6 +29,9 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+.env.development.local
+.env.test.local
+.env.production.local
 
 # vercel
 .vercel
@@ -90,3 +93,9 @@ coverage.xml
 *.bak
 *.tmp
 *.temp
+
+# turbo
+.turbo
+
+# backup
+backup_frontend/
