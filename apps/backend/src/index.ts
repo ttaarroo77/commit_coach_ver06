@@ -1,20 +1,16 @@
 import express from 'express';
-import cors from 'cors';
-import morgan from 'morgan';
-import dotenv from 'dotenv';
+import { config } from 'dotenv';
 
-dotenv.config();
+config();
 
 const app = express();
 const port = process.env.PORT || 3001;
 
-app.use(cors());
-app.use(morgan('dev'));
 app.use(express.json());
 
 // Hello from Backend route
 app.get('/', (req, res) => {
-  res.json({ message: 'Hello from Backend!' });
+  res.json({ message: 'Hello from Backend' });
 });
 
 app.listen(port, () => {
