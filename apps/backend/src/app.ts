@@ -7,7 +7,6 @@ import authRoutes from './routes/auth';
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3001;
 
 // ミドルウェア
 app.use(cors());
