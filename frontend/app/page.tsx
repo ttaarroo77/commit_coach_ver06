@@ -22,8 +22,8 @@ export default function LandingPage() {
       </header>
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32">
-          <div className="container mx-auto max-w-7xl px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
+          <div className="container px-4 md:px-6">
+            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12">
               <div className="flex flex-col justify-center space-y-4">
                 <div className="inline-block rounded-lg bg-blue-100 px-3 py-1 text-sm text-blue-800">
                   先延ばし撃退ツール
@@ -61,7 +61,7 @@ export default function LandingPage() {
           </div>
         </section>
         <section className="w-full bg-gray-50 py-12 md:py-24 lg:py-32">
-          <div className="container mx-auto max-w-7xl px-4 md:px-6">
+          <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">先延ばしを撃退する3つの機能</h2>
               <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
@@ -106,8 +106,8 @@ export default function LandingPage() {
           </div>
         </section>
         <section className="w-full py-12 md:py-24 lg:py-32">
-          <div className="container mx-auto max-w-7xl px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
+          <div className="container px-4 md:px-6">
+            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12">
               <div className="flex items-center justify-center">
                 <div className="relative h-[400px] w-[500px] overflow-hidden rounded-lg bg-gray-100 p-4">
                   <div className="absolute left-8 top-8 flex h-10 w-10 items-center justify-center rounded-full bg-[#31A9B8] text-white">
