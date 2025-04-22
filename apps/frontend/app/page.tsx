@@ -22,10 +22,10 @@ export default function LandingPage() {
       </header>
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-2xl">
             <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center justify-items-center">
-              <div className="flex flex-col justify-center space-y-4 lg:pr-8">
-                <div className="inline-block rounded-lg bg-blue-100 px-3 py-1 text-sm text-blue-800 w-fit">
+              <div className="flex flex-col items-start justify-center space-y-6 w-full max-w-xl mx-auto lg:mx-0">
+                <div className="inline-block rounded-lg bg-blue-100 px-3 py-1 text-sm text-blue-800">
                   先延ばし撃退ツール
                 </div>
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl">
@@ -35,17 +35,17 @@ export default function LandingPage() {
                   <br />
                   次のレベルへ
                 </h1>
-                <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed lg:text-lg/relaxed xl:text-xl/relaxed">
+                <p className="text-gray-500 md:text-xl/relaxed lg:text-lg/relaxed xl:text-xl/relaxed">
                   GitHubリポジトリをTrello風カンバンで可視化し、AIコーチング機能でタスクコミットを支援する生産性向上ツール。
                 </p>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row pt-4">
+                <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Link href="/register">
                     <Button size="lg" className="bg-[#31A9B8] hover:bg-[#2a8f9c] px-8">無料で始める</Button>
                   </Link>
                 </div>
               </div>
-              <div className="flex items-center lg:justify-end">
-                <div className="relative aspect-[4/3] w-full max-w-md overflow-hidden rounded-xl bg-gray-100 p-6 shadow-lg">
+              <div className="flex items-center justify-center w-full">
+                <div className="relative aspect-[16/9] w-full max-w-xl overflow-hidden rounded-xl bg-gray-100 p-6 shadow-lg">
                   <div className="absolute right-6 top-6 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-md">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#31A9B8] text-white text-lg font-semibold">
                       AI
@@ -61,43 +61,43 @@ export default function LandingPage() {
           </div>
         </section>
         <section className="w-full bg-gray-50 py-12 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-2xl">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">先延ばしを撃退する3つの機能</h2>
               <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                 コミットコーチは、あなたの生産性を最大化するための強力な機能を提供します
               </p>
             </div>
-            <div className="mx-auto grid max-w-5xl gap-6 py-12 lg:grid-cols-3">
-              <Card>
+            <div className="mx-auto grid max-w-5xl items-start gap-8 py-12 lg:grid-cols-3">
+              <Card className="h-full">
                 <CardContent className="flex flex-col items-center space-y-4 p-6">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-900">
                     <span className="text-xl font-bold">1</span>
                   </div>
                   <h3 className="text-xl font-bold">タスク可視化</h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-center text-sm text-gray-500">
                     Trello風カンバンボードでタスクを直感的に管理。ドラッグ＆ドロップで簡単に進捗状況を更新できます。
                   </p>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="h-full">
                 <CardContent className="flex flex-col items-center space-y-4 p-6">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-900">
                     <span className="text-xl font-bold">2</span>
                   </div>
                   <h3 className="text-xl font-bold">AIコーチング</h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-center text-sm text-gray-500">
                     AIがあなたの進捗を分析し、モチベーションを維持するためのアドバイスを提供。特に壁にぶつかったときに頼りになります。
                   </p>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="h-full">
                 <CardContent className="flex flex-col items-center space-y-4 p-6">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-900">
                     <span className="text-xl font-bold">3</span>
                   </div>
                   <h3 className="text-xl font-bold">コミット管理</h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-center text-sm text-gray-500">
                     日次コミットメントで目標達成をサポート。タスク完了率を向上させ、プロジェクト期間を短縮します。
                   </p>
                 </CardContent>
@@ -106,10 +106,10 @@ export default function LandingPage() {
           </div>
         </section>
         <section className="w-full py-12 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-2xl">
             <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center justify-items-center">
-              <div className="flex items-center lg:justify-start order-2 lg:order-1">
-                <div className="relative aspect-[4/3] w-full max-w-lg overflow-hidden rounded-xl bg-gray-100 p-6 shadow-lg">
+              <div className="flex items-center justify-center w-full order-2 lg:order-1">
+                <div className="relative aspect-[16/9] w-full max-w-xl overflow-hidden rounded-xl bg-gray-100 p-6 shadow-lg">
                   <div className="absolute left-8 top-8 flex h-12 w-12 items-center justify-center rounded-full bg-[#31A9B8] text-white">
                     <span className="text-base font-semibold">AI</span>
                   </div>
@@ -124,13 +124,13 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col justify-center space-y-6 lg:pl-8 order-1 lg:order-2">
+              <div className="flex flex-col items-start justify-center space-y-6 w-full max-w-xl mx-auto lg:mx-0 order-1 lg:order-2">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl lg:text-5xl">
                   先延ばしを徹底的に
                   <br />
                   撃退するAIコーチ
                 </h2>
-                <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed lg:text-lg/relaxed xl:text-xl/relaxed">
+                <p className="text-gray-500 md:text-xl/relaxed lg:text-lg/relaxed xl:text-xl/relaxed">
                   コミットコーチのAIは、あなたの状況に合わせて叱咤と励ましを織り交ぜます。時には厳しく、時には優しく、あなたのタスク完了をサポートします。
                 </p>
                 <ul className="grid gap-3 pt-2">
