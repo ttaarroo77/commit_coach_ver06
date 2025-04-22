@@ -1,159 +1,196 @@
 ---
-name: "docs/overview_0/database.md"
-title: "データベース概要 (Database)"
-description: "[プロジェクト名] - [簡単な説明]"
+name: "docs/overview/database.md"
+title: "データベース設計 (Database Design)"
+description: "Supabaseを使用したデータベースの設計とスキーマ定義"
 ---
 
-以下は、**要件定義書のサンプル**です。先に提示されていた内容を参考としつつも、新規の要件追加や構成の変更を織り交ぜて作成しています。  
-実際の開発プロジェクトに応じて、必要な項目・内容を調整してください。
+# データベース設計
 
----
+## 1. データベース概要
 
-# データベース要件定義書 (ドラフト)
+### 1.1 使用技術
+- **プラットフォーム**: Supabase
+- **データベース**: PostgreSQL
+- **認証**: Supabase Auth
+- **ストレージ**: Supabase Storage
 
-## 1. 概要
-- 本要件定義書は、**コミットコーチ (仮称)** プロダクトのデータベースに関する要件を整理したものです。
-- データベースとしては、開発・本番環境ともに **Supabase (PostgreSQL)** を標準利用とする想定で、将来的に他のRDBMSに切り替えても対応できるよう、ORM (Prisma / TypeORM 等) で抽象化する方針とします。
+### 1.2 設計方針
+- 正規化されたスキーマ設計
+- 適切なインデックス設定
+- セキュリティ考慮
+- パフォーマンス最適化
 
-## 2. 運用ポリシー
-1. **開発環境**  
-   - Supabase の無料プランまたはローカルで動作する PostgreSQL を利用。  
-   - 開発メンバー全員が開発 DB にアクセス可能とし、定期的に初期化やテストデータの投入を行う。
+## 2. テーブル定義
 
-2. **本番環境**  
-   - Supabase の商用プラン (有料プラン) にホスティングされた PostgreSQL を利用。  
-   - リアルタイムポリシー適用 (RLS) やバックアップ機構、高可用性など、セキュリティ・耐障害性を重視。
+### 2.1 ユーザー関連
 
-3. **他RDBMSへの移行**  
-   - 将来的に MySQL / MariaDB / Oracle / MS SQL Server 等へ移行する可能性を考慮。  
-   - 移行コストを低減するため、プロバイダ固有の機能 (拡張メソッド, 型など) の利用は最小限に留める。
+#### users
+```sql
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  avatar_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
 
-## 3. 機能要件
-### 3.1. 管理対象データ
-- **ユーザー情報**  
-  - メールアドレス, 表示名, プロフィール画像, 認証情報(外部認証連携含む) 等  
-- **プロジェクト情報**  
-  - 作成ユーザー, プロジェクト名, 説明文, ステータス (active / paused / archived など)  
-- **コミット情報**  
-  - 紐づくプロジェクトID, コミットハッシュ, メッセージ, 作成ユーザー, 登録日時 等  
-- **拡張 (オプション)**  
-  - コメント (コミットやプロジェクトへのコメント), 通知, タスク/マイルストーン管理 など
+#### user_settings
+```sql
+CREATE TABLE user_settings (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  theme TEXT DEFAULT 'system',
+  notifications JSONB DEFAULT '{"email": true, "push": true}',
+  language TEXT DEFAULT 'ja',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
 
-### 3.2. 主要ユースケース
-1. **ユーザーの登録・認証**  
-   - ユーザー登録、ログイン時にレコードを参照・作成/更新  
-   - 外部プロバイダ (GitHub, Google 等) の OAuth 連携含む  
-2. **プロジェクト作成・編集**  
-   - ユーザーが新規にプロジェクトを作成して管理  
-   - ステータス変更や名前変更、説明文の更新など  
-3. **コミット一覧表示・検索**  
-   - 指定のプロジェクトに属するコミットを一覧取得  
-   - コミットハッシュやメッセージなどで検索  
-4. **コミットコメントの投稿・閲覧 (拡張)**  
-   - コミットに対するコメント付与・返信  
-   - 関連プロジェクトのユーザーのみ閲覧・投稿可能
+### 2.2 プロジェクト関連
 
-## 4. 非機能要件
-1. **可用性**  
-   - 障害時にもデータの永続性を担保 (1日1回以上の定期バックアップ)。  
-   - 必要に応じて Supabase の高可用プランを利用し、RPO/RTO 要件を満たす。
-2. **セキュリティ**  
-   - Row Level Security (RLS) を利用し、ログイン中ユーザー以外のレコード参照を制限。  
-   - アクセスログを保存し、監査証跡を残す (可能であれば Supabase のAudit機能を活用)。
-3. **パフォーマンス**  
-   - コミット数やプロジェクト数が増加しても、検索性能を維持するために適切なインデックスを設定。  
-   - 大規模利用を想定し、シャーディングやパーティショニングの選択肢を将来検討。
+#### projects
+```sql
+CREATE TABLE projects (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  description TEXT,
+  status TEXT DEFAULT 'active',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  owner_id UUID REFERENCES users(id) ON DELETE CASCADE
+);
+```
 
-## 5. テーブル定義
-以下は**暫定案**であり、今後のスプリントや設計フェーズで変更される可能性があります。
+#### project_members
+```sql
+CREATE TABLE project_members (
+  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  role TEXT DEFAULT 'member',
+  joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  PRIMARY KEY (project_id, user_id)
+);
+```
 
-### 5.1. `users` テーブル
-| カラム      | 型                           | 必須 | 説明                                          | 補足                                             |
-|-------------|------------------------------|-----:|-----------------------------------------------|--------------------------------------------------|
-| id          | UUID (PK)                   |  ○  | ユーザーを一意に識別                         | Supabase の Auth ユーザーIDと同期                |
-| email       | VARCHAR(255) (UNIQUE)       |  ○  | メールアドレス                                |                                                 |
-| display_name| VARCHAR(100)                |  ○  | 表示名                                        | 文字数上限等は要検討                              |
-| avatar_url  | VARCHAR(255)                |  -  | プロフィール画像URL                           | 外部ストレージ (Supabase Storage, S3等) へのリンク|
-| created_at  | TIMESTAMP WITH TIME ZONE    |  -  | レコード作成時刻                              | デフォルト値 `now()` 等                          |
-| updated_at  | TIMESTAMP WITH TIME ZONE    |  -  | レコード更新時刻                              | レコード更新トリガーにより自動更新               |
+### 2.3 タスク関連
 
-### 5.2. `projects` テーブル
-| カラム       | 型                           | 必須 | 説明                                     | 補足                                                |
-|--------------|------------------------------|-----:|------------------------------------------|-----------------------------------------------------|
-| id           | UUID (PK)                   |  ○  | プロジェクトを一意に識別                 |                                                     |
-| owner_id     | UUID (FK → users.id)        |  ○  | プロジェクト作成ユーザー                 | Supabase Policy により参照制限                     |
-| name         | VARCHAR(255)                |  ○  | プロジェクト名                           | インデックス検討可                                  |
-| description  | TEXT                        |  -  | プロジェクトの説明文                     | 長文になる可能性があるため TEXT                    |
-| status       | VARCHAR(50)                 |  ○  | ステータス (active/paused/archived 等)   |                                                     |
-| created_at   | TIMESTAMP WITH TIME ZONE    |  -  | レコード作成時刻                         | デフォルト `now()`                                  |
-| updated_at   | TIMESTAMP WITH TIME ZONE    |  -  | レコード更新時刻                         | レコード更新トリガー等                              |
+#### tasks
+```sql
+CREATE TABLE tasks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  description TEXT,
+  status TEXT DEFAULT 'todo',
+  priority TEXT DEFAULT 'medium',
+  due_date TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+  assignee_id UUID REFERENCES users(id) ON DELETE SET NULL
+);
+```
 
-### 5.3. `commits` テーブル
-| カラム       | 型                           | 必須 | 説明                                                    | 補足                                                       |
-|--------------|------------------------------|-----:|---------------------------------------------------------|------------------------------------------------------------|
-| id           | UUID (PK)                   |  ○  | レコード識別用PK                                       | (GitのSHAをそのままIDにするか別途カラムにするか検討の余地あり) |
-| project_id   | UUID (FK → projects.id)     |  ○  | 紐づくプロジェクトID                                    |                                                            |
-| commit_hash  | VARCHAR(255)                |  -  | GitのSHA                                               | UNIQUE 制約を設けるか要件次第                              |
-| message      | TEXT                        |  ○  | コミットメッセージ                                     |                                                            |
-| created_by   | UUID (FK → users.id)        |  ○  | だれがこのコミットを登録・管理したか (作者情報)         | Git上の作者とアプリの登録ユーザーが異なる可能性があるため注意 |
-| commit_date  | TIMESTAMP WITH TIME ZONE    |  -  | 実際のGitコミット日時 (API取得値)                       |                                                            |
-| inserted_at  | TIMESTAMP WITH TIME ZONE    |  -  | アプリに登録した日時 (DBレコードとしての作成タイミング) | デフォルト `now()`                                          |
+#### subtasks
+```sql
+CREATE TABLE subtasks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  is_completed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  task_id UUID REFERENCES tasks(id) ON DELETE CASCADE
+);
+```
 
-### 5.4. `comments` テーブル (拡張)
-| カラム       | 型                            | 必須 | 説明                                          | 補足                                |
-|--------------|-------------------------------|-----:|-----------------------------------------------|-------------------------------------|
-| id           | UUID (PK)                    |  ○  | 一意に識別                                    |                                     |
-| commit_id    | UUID (FK → commits.id)       |  ○  | 対象のコミットID                              |                                     |
-| author_id    | UUID (FK → users.id)         |  ○  | コメント投稿者                                |                                     |
-| content      | TEXT                         |  ○  | コメント内容                                  | リッチテキストやMarkdown対応の場合は別途検討 |
-| created_at   | TIMESTAMP WITH TIME ZONE     |  -  | コメント投稿日時                              | デフォルト `now()`                  |
-| parent_id    | UUID (FK → comments.id)      |  -  | 親コメントID (スレッド形式実現に利用)         | 自己参照外部キー                      |
+### 2.4 AIコーチング関連
 
-> ※ 仕様により、コミットに対するレビュー機能やディスカッション機能を実装する場合に利用
+#### ai_messages
+```sql
+CREATE TABLE ai_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  content TEXT NOT NULL,
+  role TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  task_id UUID REFERENCES tasks(id) ON DELETE CASCADE
+);
+```
 
-## 6. セキュリティ要件
-1. **Row Level Security (RLS) の利用**  
-   - `projects.owner_id = auth.uid()` のみ操作を許可。  
-   - `commits.project_id` が、ユーザーが所有または参加権限を持つ `projects.id` である場合のみ参照許可。  
-2. **ポリシー設定**  
-   - Supabase の Policy で、読み取りと書き込みの条件を分けて定義 (読み取りはプロジェクト参加者全員に許可するが、書き込みは作者およびプロジェクト管理者のみ など)。  
-3. **管理者ロール**  
-   - ユーザーテーブルに `role` (admin, user, viewer 等) を追加し、管理者は全プロジェクトや全コミットを閲覧可能にするなど、柔軟な制御を実施。
+## 3. インデックス設定
 
-## 7. パフォーマンス要件
-1. **インデックス設計**  
-   - `projects(name)` に部分的なトリグラムインデックスを貼り、あいまい検索を高速化する可能性を検討。  
-   - `commits(commit_hash)` にユニークインデックスを設定するか、要件を確認。  
-2. **スケーラビリティ**  
-   - 将来的にコミット数が極めて多くなる場合 (1億件規模など) は、パーティショニングやアーカイブテーブルを利用。  
-   - Supabaseの制限に抵触する場合、別インスタンスへ水平分割 (Sharding) を検討。  
-3. **キャッシュ活用**  
-   - 読み込み頻度が高いデータ (最新コミット一覧など) は、Redis などのインメモリキャッシュとの連携も視野に。
+### 3.1 主要インデックス
+```sql
+-- ユーザー関連
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_created_at ON users(created_at);
 
-## 8. 将来拡張
-1. **通知管理**:  
-   - 新たに `notifications` テーブルを追加し、コメント追加やプロジェクト更新の通知をユーザーに送る機能を拡張。  
-2. **リアルタイム連携**:  
-   - Supabase のリアルタイムフィーチャを活用し、コミット一覧やコメントが更新された際にクライアントへ即時反映。  
-3. **外部連携 (CI/CD, Issue Tracker)**:  
-   - GitLab や GitHub Actions でのビルドステータスなどを取り込むテーブル。  
-   - Jira, Redmine 等のIssueとプロジェクトを紐づける外部キーを持つ拡張テーブル。
+-- プロジェクト関連
+CREATE INDEX idx_projects_owner_id ON projects(owner_id);
+CREATE INDEX idx_projects_status ON projects(status);
+CREATE INDEX idx_project_members_user_id ON project_members(user_id);
 
-## 9. 移行プランと運用
-1. **リリース前フェーズ**  
-   - マイグレーションツール (Prisma Migrate, Flyway, etc.) を利用し、スキーマの定義とバージョン管理を行う。  
-2. **運用開始後**  
-   - スキーマ変更が発生する場合は、データ移行手順 (バックフィル・ダウンタイム要否 等) を事前に検討。  
-   - 定期的なバックアップ取得を自動化 (Supabase での自動バックアップ設定、ローカルへのスナップショット保存など)。  
-3. **障害対策**  
-   - Supabase の自動フェイルオーバー機能活用、あるいはマルチリージョン構成を検討。
+-- タスク関連
+CREATE INDEX idx_tasks_project_id ON tasks(project_id);
+CREATE INDEX idx_tasks_assignee_id ON tasks(assignee_id);
+CREATE INDEX idx_tasks_status ON tasks(status);
+CREATE INDEX idx_tasks_due_date ON tasks(due_date);
+CREATE INDEX idx_subtasks_task_id ON subtasks(task_id);
 
-## 10. 参考資料
-- [Supabase Docs - PostgreSQL & Policy](https://supabase.com/docs/guides/database)
-- [PostgreSQL Official Docs](https://www.postgresql.org/docs/)
-- [Prisma Migrate](https://www.prisma.io/docs/concepts/components/prisma-migrate)
+-- AIメッセージ関連
+CREATE INDEX idx_ai_messages_task_id ON ai_messages(task_id);
+CREATE INDEX idx_ai_messages_created_at ON ai_messages(created_at);
+```
 
----
+## 4. セキュリティ設定
 
-以上が、コミットコーチにおける **データベース要件定義書(ドラフト)** です。  
-開発の進行や要件追加に合わせて、構成やテーブル定義を適宜アップデートしていく運用を想定しています。  
+### 4.1 RLS (Row Level Security)
+```sql
+-- ユーザー関連
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view their own data" ON users
+  FOR SELECT USING (auth.uid() = id);
+
+-- プロジェクト関連
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Project members can view projects" ON projects
+  FOR SELECT USING (
+    auth.uid() = owner_id OR
+    EXISTS (
+      SELECT 1 FROM project_members
+      WHERE project_id = projects.id AND user_id = auth.uid()
+    )
+  );
+
+-- タスク関連
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Project members can view tasks" ON tasks
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM projects
+      WHERE id = tasks.project_id AND
+      (owner_id = auth.uid() OR
+       EXISTS (
+         SELECT 1 FROM project_members
+         WHERE project_id = projects.id AND user_id = auth.uid()
+       ))
+    )
+  );
+```
+
+## 5. データベース管理
+
+### 5.1 バックアップ
+- 自動バックアップ: 日次
+- バックアップ保持期間: 30日
+- バックアップストレージ: Supabase Storage
+
+### 5.2 マイグレーション
+- マイグレーションツール: Supabase CLI
+- マイグレーション管理: Gitリポジトリ
+- デプロイメント: CI/CDパイプライン
+
+### 5.3 モニタリング
+- パフォーマンスモニタリング
+- クエリ最適化
+- リソース使用状況の監視

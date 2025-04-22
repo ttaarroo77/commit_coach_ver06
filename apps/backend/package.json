@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "migrate": "ts-node scripts/migrate.ts",
+    "migrate:dev": "cross-env NODE_ENV=development ts-node scripts/migrate.ts",
+    "migrate:prod": "cross-env NODE_ENV=production ts-node scripts/migrate.ts"
+  }
+}
