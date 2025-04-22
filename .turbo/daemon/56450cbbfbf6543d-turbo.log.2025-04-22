@@ -1,0 +1,26 @@
+2025-04-22T04:10:40.067355Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo/cookies/1.cookie")}
+2025-04-22T04:10:40.067371Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-04-22T04:10:40.464662Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo/cookies/2.cookie"), AnchoredSystemPathBuf("apps/backend/.turbo")}
+2025-04-22T04:10:40.464678Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }, WorkspacePackage { name: Other("@commit-coach/backend"), path: AnchoredSystemPathBuf("apps/backend") }}))
+2025-04-22T04:11:31.764408Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backend/.eslintrc.json")}
+2025-04-22T04:11:31.764432Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@commit-coach/backend"), path: AnchoredSystemPathBuf("apps/backend") }}))
+2025-04-22T04:11:37.764780Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backend/.eslintrc.json")}
+2025-04-22T04:11:37.764798Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@commit-coach/backend"), path: AnchoredSystemPathBuf("apps/backend") }}))
+2025-04-22T04:11:53.365554Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backend/.prettierrc")}
+2025-04-22T04:11:53.365596Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@commit-coach/backend"), path: AnchoredSystemPathBuf("apps/backend") }}))
+2025-04-22T04:12:00.377747Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backend/.prettierrc")}
+2025-04-22T04:12:00.377791Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@commit-coach/backend"), path: AnchoredSystemPathBuf("apps/backend") }}))
+2025-04-22T04:12:00.464801Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backend/.prettierrc")}
+2025-04-22T04:12:00.464822Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@commit-coach/backend"), path: AnchoredSystemPathBuf("apps/backend") }}))
+2025-04-22T04:12:22.465251Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backend/jest.config.js")}
+2025-04-22T04:12:22.465290Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@commit-coach/backend"), path: AnchoredSystemPathBuf("apps/backend") }}))
+2025-04-22T04:12:25.966314Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backend/jest.config.js")}
+2025-04-22T04:12:25.966332Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@commit-coach/backend"), path: AnchoredSystemPathBuf("apps/backend") }}))
+2025-04-22T04:12:26.065064Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backend/jest.config.js")}
+2025-04-22T04:12:26.065076Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@commit-coach/backend"), path: AnchoredSystemPathBuf("apps/backend") }}))
+2025-04-22T04:12:47.665100Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backend/src/__tests__"), AnchoredSystemPathBuf("apps/backend/src/__tests__/sample.test.ts")}
+2025-04-22T04:12:47.665129Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@commit-coach/backend"), path: AnchoredSystemPathBuf("apps/backend") }}))
+2025-04-22T04:12:51.064513Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backend/src/__tests__/sample.test.ts")}
+2025-04-22T04:12:51.064527Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@commit-coach/backend"), path: AnchoredSystemPathBuf("apps/backend") }}))
+2025-04-22T04:12:51.265120Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/backend/src/__tests__/sample.test.ts")}
+2025-04-22T04:12:51.265135Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@commit-coach/backend"), path: AnchoredSystemPathBuf("apps/backend") }}))
