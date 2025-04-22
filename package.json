@@ -1,21 +1,22 @@
 {
   "name": "commit-coach",
-  "version": "1.0.0",
-  "description": "AI駆動のタスク管理アプリケーション",
+  "private": true,
   "scripts": {
-    "dev": "concurrently \"cd frontend && npm run dev\" \"cd backend && npm run dev\"",
-    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
-    "build": "cd frontend && npm run build && cd ../backend && npm run build",
-    "start": "cd backend && npm start"
-  },
-  "dependencies": {
-    "concurrently": "^8.2.2"
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
-    "@types/react-beautiful-dnd": "^13.1.8",
-    "css-loader": "^7.1.2",
-    "mini-css-extract-plugin": "^2.9.2",
-    "postcss-preset-env": "^10.1.6",
-    "ts-node": "^10.9.2"
-  }
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.2",
+    "prettier": "^3.1.1",
+    "turbo": "^1.11.3"
+  },
+  "packageManager": "pnpm@8.9.0"
 }
