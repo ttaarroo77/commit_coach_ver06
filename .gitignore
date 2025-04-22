@@ -1,19 +1,20 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules/
+.pnp
 .pnp.js
 
 # testing
-/coverage
+coverage/
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
 # production
-/build
+build/
+dist/
 
 # misc
 .DS_Store
@@ -23,9 +24,11 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
 # local env files
 .env*.local
+.env
 
 # vercel
 .vercel
@@ -37,23 +40,14 @@ next-env.d.ts
 # knowledge logs
 /knowledge_logs/
 
-# OS generated files
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Node.js - 特定のディレクトリを除外
-!frontend/node_modules/@next/swc-darwin-arm64/
-.pnpm-debug.log*
-
-# Environment variables
-.env
-.env.development.local
-.env.test.local
-.env.production.local
+# Monorepo specific
+/backend/dist/
+/backend/node_modules/
+/frontend/.next/
+/frontend/node_modules/
+/frontend/build/
+/packages/*/dist/
+/packages/*/node_modules/
 
 # IDE specific files
 .idea/
