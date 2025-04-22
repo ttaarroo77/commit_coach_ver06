@@ -10,7 +10,10 @@ async function runMigration() {
     await execAsync('supabase --version');
 
     // マイグレーションファイルのパス
-    const migrationPath = path.join(__dirname, '../supabase/migrations/20240422_initial_schema.sql');
+    const migrationPath = path.join(
+      __dirname,
+      '../supabase/migrations/20240422_initial_schema.sql'
+    );
 
     // マイグレーションを実行
     const { stdout, stderr } = await execAsync(
@@ -29,4 +32,4 @@ async function runMigration() {
   }
 }
 
-runMigration(); 
+runMigration();

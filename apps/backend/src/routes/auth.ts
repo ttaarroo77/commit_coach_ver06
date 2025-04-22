@@ -79,7 +79,10 @@ router.post('/logout', authMiddleware, async (req, res) => {
 // ユーザー情報取得
 router.get('/me', authMiddleware, async (req, res) => {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
     if (error || !user) {
       return res.status(401).json({ error: 'ユーザー情報の取得に失敗しました' });
@@ -92,4 +95,4 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
-export default router; 
+export default router;

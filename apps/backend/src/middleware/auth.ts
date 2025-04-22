@@ -8,11 +8,7 @@ interface AuthRequest extends Request {
   };
 }
 
-export const authMiddleware = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
+export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -26,7 +22,10 @@ export const authMiddleware = async (
     }
 
     // SupabaseでJWTを検証
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(token);
 
     if (error || !user) {
       return res.status(401).json({ error: '無効な認証トークンです' });
@@ -43,4 +42,4 @@ export const authMiddleware = async (
     console.error('認証エラー:', error);
     return res.status(500).json({ error: '認証処理中にエラーが発生しました' });
   }
-}; 
+};

@@ -8,10 +8,7 @@ if (!process.env.SUPABASE_ANON_KEY) {
   throw new Error('SUPABASE_ANON_KEY is not defined');
 }
 
-export const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+export const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 // テーブル名の定数
 export const TABLES = {
@@ -20,4 +17,4 @@ export const TABLES = {
   TASKS: 'tasks',
   SUBTASKS: 'subtasks',
   AI_MESSAGES: 'ai_messages',
-} as const; 
+} as const;
