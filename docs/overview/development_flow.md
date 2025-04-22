@@ -1,69 +1,189 @@
 ---
-name: "docs/overview_0/development_flow.md"
-title: "開発フロー概要 (Development Flow) – 分離型モノレポ版"
-description: "[コミットコーチ] – モノレポで管理する Next.js(フロント) + Express(バック) 二層構成の詳細 200‑Step 作業計画表"
-version: "2.0"
-last_updated: "2025-04-22"
----
-
----
-name: "docs/overview_0/development_flow.md"
+name: "docs/overview/development_flow.md"
 title: "開発フロー概要 (Development Flow) – 分離型モノレポ版"
 description: "[コミットコーチ] – Next.js(フロント) + Express(バック) を pnpm モノレポで開発するためのロードマップ。本文=要約、付録=200ステップの詳細チェックリスト。"
 version: "2.1"
 last_updated: "2025-04-22"
 ---
 
-# 開発手順書 – **要約＋付録詳細方式**
+# 開発手順書 – 要約＋付録詳細方式
 
-> 本文は “いつでも俯瞰できる” 粒度に抑え、**付録 A** に旧版と同等の **全 200 ステップの詳細一覧** を残しています。チェックボックスは付録側に集約。
+このドキュメントは、**フロントエンド = Next.js / バックエンド = Express** を分離し、**pnpm ワークスペースによるモノレポ** 管理で開発を進めるための詳細手順書です。
+
+## 目次
+1. [進捗・議事録](#1-進捗議事録)
+2. [共通作業 (Step 0‑20)](#2-共通作業--モノレポ基盤-step-0-20)
+3. [フロントエンド開発 (Step 21‑100)](#3-フロントエンド開発フロー-step-21-100)
+4. [バックエンド開発 (Step 101‑200)](#4-バックエンド開発フロー-step-101-200)
+5. [総合チェックリスト](#5-総合チェックリスト)
+6. [付録](#6-付録)
+
+## 1. 進捗・議事録
+
+### 1.1 最新の進捗状況 (2025‑04‑22 時点)
+| レイヤ | 進捗 | 備考 |
+|--------|------|------|
+| Frontend | **Step 1‑38 完了** | 基本 UI & 認証まで実装 |
+| Backend  | **Step 101‑110 完了** | Express プロジェクト初期化完了 |
+| 課題    | API 実装 + テスト | Step 121‑130 着手中 |
+
+### 1.2 次回アクション
+- [ ] **Step 131‑140:** 認証 (Supabase JWT) ミドルウェア実装
+- [ ] **Step 113‑120:** Supabase マイグレーション実行
+- [ ] **Step 171‑180:** テスト自動化 (Jest/Supertest)
+
+> 以降の進捗は PR マージ時に **progress.yml** から自動生成される予定。
+
+<details>
+<summary>付録 A — 200 Step 詳細</summary>
+
+## 2. 共通作業 – モノレポ基盤 (Step 0‑20)
+
+| Step | 完了 | 内容 |
+|------|------|------|
+| 0 | [ ] | Node.js 20.x & **pnpm >=9** インストール |
+| 1 | [x] | `pnpm init` – ルート `package.json` (workspace 設定のみ) |
+| 2 | [x] | `pnpm add -w eslint prettier husky lint-staged` 共有ツール導入 |
+| 3 | [x] | `pnpm dlx create-next-app apps/frontend --ts --tailwind --eslint` |
+| 4 | [x] | `pnpm create @express/api apps/backend --ts` (もしくは手動セットアップ) |
+| 5 | [x] | `packages/shared-types` 追加 → Zod & tsup 設定 |
+| 6 | [x] | `pnpm-workspace.yaml` に `apps/*` と `packages/*` を追加 |
+| 7 | [ ] | ルート ESLint / Prettier / **cursorrules** 設定 |
+| 8 | [ ] | Husky & lint‑staged 設定 (`pre-commit` で fmt+lint) |
+| 9 | [ ] | GitHub Actions: `pnpm install && pnpm lint && pnpm test` を PR ごとに実行 |
+| 10 | [ ] | 初回コミット `feat: bootstrap monorepo` |
+| 11‑20 | [ ] | 旧 v1 の Step 1‑20 に相当 (frontend 内設定) |
+
+## 3. フロントエンド開発フロー (Step 21‑100)
+
+### 3.1 認証・ダッシュボードまで (Step 21‑40)
+| Step | 完了 | 内容 |
+|------|------|------|
+| 21‑38 | [x] | 旧手順通り (認証・ダッシュボードまで実装済) |
+| 39 | [ ] | <!-- reserved: ダッシュボードのパフォーマンス最適化 --> |
+| 40 | [ ] | <!-- reserved: アクセシビリティ対応 --> |
+
+### 3.2 UI リファクタ & DnD 置換 (Step 41‑60)
+| Step | 完了 | 内容 |
+|------|------|------|
+| 41 | [ ] | ダッシュボードコンポーネント分割 |
+| 42 | [ ] | `useTaskManagement` 等カスタムフック |
+| 43 | [ ] | 型定義強化 |
+| 44 | [ ] | ユニット/統合テスト追加 |
+| 45 | [ ] | **Git**: `refactor(frontend): split dashboard` |
+| 51 | [ ] | カンバン UI (`@dnd-kit/core`)   ← ✨ **NEW** |
+| 52 | [ ] | ドラッグ&ドロップ実装 (`@dnd-kit/core` + `@dnd-kit/sortable`) |
+| 53‑60 | [ ] | タスク詳細モーダル等の実装 |
+
+### 3.3 AI チャット & 設定画面 (Step 61‑80)
+| Step | 完了 | 内容 |
+|------|------|------|
+| 61‑65 | [ ] | AIチャットUI実装 |
+| 66 | [ ] | <!-- reserved: 音声入力/読み上げ機能 --> |
+| 67‑80 | [ ] | 設定画面とAI設定の実装 |
+
+### 3.4 テスト / CI / デプロイ (Step 81‑100)
+| Step | 完了 | 内容 |
+|------|------|------|
+| 81‑94 | [ ] | テスト実装とCI/CD設定 |
+| 95 | [ ] | ダークモード最終調整 |
+| 96 | [ ] | アクセシビリティ対応完了 |
+| 97 | [ ] | デプロイ後のバグ修正 |
+| 98 | [ ] | パフォーマンス最適化 |
+| 99 | [ ] | ドキュメント更新 |
+| 100 | [ ] | フロントエンド開発完了 |
+
+## 4. バックエンド開発フロー (Step 101‑200)
+
+### 4.1 初期化 (Step 101‑110) ✅ 完了
+
+### 4.2 DB & マイグレーション (Step 111‑120)
+| Step | 完了 | 内容 |
+|------|------|------|
+| 111 | [ ] | Supabase プロジェクト作成 |
+| 112 | [ ] | `@supabase/supabase-js` 導入 |
+| 113 | [ ] | SQL / Prisma でスキーマ定義 & `supabase db push` |
+| 114‑120 | [ ] | RLS ポリシー設定、Git コミット `chore(backend): supabase schema` |
+
+### 4.3 ルーティング & 認証 (Step 121‑140)
+| Step | 完了 | 内容 |
+|------|------|------|
+| 121‑130 | [ ] | Express Router実装 |
+| 131‑140 | [ ] | JWT認証実装 |
+
+### 4.4 CRUD & AI API (Step 141‑170)
+| Step | 完了 | 内容 |
+|------|------|------|
+| 141‑160 | [ ] | CRUD API実装 |
+| 161‑170 | [ ] | AI API実装 |
+
+### 4.5 テスト / デプロイ (Step 171‑200)
+| Step | 完了 | 内容 |
+|------|------|------|
+| 171‑176 | [ ] | Jest + Supertestでのテスト実装 |
+| 177 | [ ] | pinoログ導入 |
+| 178 | [ ] | DB & 未知例外ハンドリングテスト |
+| 179 | [ ] | テストカバレッジ改善 |
+| 180 | [ ] | コードリファクタリング |
+| 181 | [ ] | Dockerfile作成 |
+| 182 | [ ] | ローカルでのDocker動作確認 |
+| 183 | [ ] | 本番環境用の環境変数設定 |
+| 184 | [ ] | CI/CDパイプライン構築 |
+| 185 | [ ] | Supabase Realtime設定 |
+| 186 | [ ] | Fly.ioへのデプロイ |
+| 187 | [ ] | ログ/アラート監視設定 |
+| 188 | [ ] | ヘルスチェック実装 |
+| 189 | [ ] | 本番環境でのテスト |
+| 190 | [ ] | スケーリング設定 |
+| 191 | [ ] | Datadog/Sentry導入 |
+| 192 | [ ] | DBバックアップ設定 |
+| 193 | [ ] | セキュリティパッチ適用 |
+| 194 | [ ] | アップタイム監視設定 |
+| 195 | [ ] | 運用ドキュメント作成 |
+| 196 | [ ] | 新機能追加の影響調査 |
+| 197 | [ ] | コード/DBスキーマのリファクタリング |
+| 198 | [ ] | 不要データのアーカイブ設定 |
+| 199 | [ ] | 最終レビュー・改善点共有 |
+| 200 | [ ] | バックエンド開発完了 |
+
+</details>
+
+## 5. 総合チェックリスト
+
+- [ ] モノレポ基盤 (Step 0‑20) 完了
+- [ ] Frontend Step 21‑60 完了
+- [ ] Backend Step 111‑140 完了
+- [ ] API ↔ UI 結合テスト通過
+- [ ] CI (lint + unit) グリーン
+- [ ] Storybook & ドキュメント更新
+- [ ] デプロイ (Vercel + Fly.io) 成功
+
+## 6. 付録
+### 6.1 ディレクトリ早見表
+```
+commit_coach/
+├── apps/
+│   ├── frontend/   # Next.js
+│   └── backend/    # Express
+├── packages/
+│   └── shared-types/
+└── docs/
+```
+
+### 6.2 ポート & URL
+| アプリ | ローカル | 本番 |
+|--------|---------|------|
+| Frontend | http://localhost:3000 | https://commit‑coach.vercel.app |
+| Backend  | http://localhost:4000 | https://api.commit‑coach.com |
+| Supabase |        | https://xyz.supabase.co |
 
 ---
 
-## 1. 進捗・次アクション（要約）
-| レイヤ | 完了 | 直近 TODO |
-|--------|------|-----------|
-| **共通基盤** | 0‑6 完了 | 7‑10 の CI/Husky 設定<br>初回コミット作成 |
-| **Frontend** | 1‑38 完了 | 41‑60 (Dashboard リファクタ & DnD 置換) |
-| **Backend** | 101‑110 完了 | 111‑120 (Supabase スキーマと RLS) |
-| **品質/CI** | lint OK | 30 までに unit test & CI 緑化 |
-| **デプロイ** | 未着手 | 181‑190 Fly.io セットアップ |
-
----
-
-## 2. 作業フェーズ概要
-### 2.1 共通基盤 (Step 0‑20)
-- **目的**: モノレポ (pnpm workspaces) の骨格と開発ツール共有を整備。
-- **キーポイント**: ESLint/Prettier/CursorRules のルート共有、GitHub Actions を早期導入。
-
-### 2.2 フロントエンド
-| フェーズ | ステップ範囲 | 要点 |
-|----------|--------------|------|
-| 認証 & ダッシュボード | 21‑40 | UI 骨格と Supabase 認証フロー確立 |
-| UI リファクタ & DnD | 41‑60 | **dnd‑kit** 採用 / テスト追加 |
-| AI チャット & 設定 | 61‑80 | `/ai` チャット UI + ユーザ設定画面 |
-| 品質 & デプロイ | 81‑100 | 単体/E2E テスト→Vercel デプロイ |
-
-### 2.3 バックエンド
-| フェーズ | ステップ範囲 | 要点 |
-|----------|--------------|------|
-| 初期化 | 101‑110 | Express + TypeScript 雛形 |
-| DB & マイグレーション | 111‑120 | Supabase スキーマ & RLS ポリシー |
-| ルーティング & 認証 | 121‑140 | `/api/v1/*` REST & JWT ミドルウェア |
-| CRUD / AI API | 141‑170 | タスク & AI エンドポイント実装 |
-| テスト / デプロイ | 171‑200 | Jest/Supertest → Docker → Fly.io |
-
----
-
-## 3. 付録 A — **詳細ステップ一覧 (0‑200)**
-
-> **使い方**  
-> * チェック完了 → `[x]` に変更し末尾に PR 番号 or commit SHA を追記。  
-> * 数字は一意。未使用番号は予約し再利用しない。  
-> * 旧版からの差分（`react‑beautiful‑dnd` → `dnd‑kit` など）は反映済み。
+### Last words
+> **案 B (分離型) による改訂はこれで完了です。** 以降はこの計画表を唯一の正として開発を進めてください。質問・追加要望があれば Issue / Discord で連絡を！
 
 ```markdown
-### 共通基盤 (Step 0‑20)
+### 共通基盤 (Step 0‑20)
 - [ ] **0**  Node.js 20.x と pnpm 9 インストール
 - [x] **1**  `pnpm init` – ルート workspace package.json 生成
 - [x] **2**  共有ツール (eslint, prettier, husky, lint‑staged) 導入
@@ -86,7 +206,7 @@ last_updated: "2025-04-22"
 - [ ] **19** CODEOWNERS 追加
 - [ ] **20** GitHub discussion / wiki 有効化
 
-### フロントエンド (Step 21‑100)
+### フロントエンド (Step 21‑100)
 #### 3.1 認証 & ダッシュボード (21‑40)
 - [x] **21** `/login` ページ作成 (Email+PW フォーム)
 - [x] **22** `useAuth` Context で Supabase 認証状態を保持
@@ -102,7 +222,7 @@ last_updated: "2025-04-22"
 - [x] **32** AIチャットパネル仮実装
 - [x] **33** 今日のタスク / 期限間近カード UI
 - [x] **34** 時計 & 簡易カレンダー表示
-- [x] **35** レスポンシブ調整 (mobile → 縦)
+- [x] **35** レスポンシブ調整 (mobile → 縦)
 - [x] **36** モックデータフェッチ (SWR + fake api)
 - [x] **37** UI アニメーション追加
 - [x] **38** Git commit `feat(frontend): dashboard`
@@ -165,7 +285,7 @@ last_updated: "2025-04-22"
 - [ ] **99** バグフィックス／パフォチューン
 - [ ] **100** README / wiki 更新
 
-### バックエンド (Step 101‑200)
+### バックエンド (Step 101‑200)
 #### 4.1 初期化 (101‑110)
 - [x] **101** apps/backend 生成
 - [x] **102** `npm init -y`
