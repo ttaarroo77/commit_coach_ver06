@@ -876,7 +876,7 @@ export default function DashboardPage() {
 
                     {group.expanded && (
                       <CardContent className="p-4">
-                        <Droppable droppableId={group.id} type="task" isDropDisabled={false}>
+                        <Droppable droppableId={group.id} type="task" isDropDisabled={false} isCombineEnabled={false} ignoreContainerClipping={false}>
                           {(provided, snapshot) => (
                             <div
                               ref={provided.innerRef}
@@ -908,7 +908,12 @@ export default function DashboardPage() {
                                                 isOverdue={isDateOverdue(task.dueDate)}
                                               />
                                             </div>
-                                            <div className="flex items-center space-x-2">
+                                            <div className="flex items-center gap-4">
+                                              {task.startTime && task.endTime && (
+                                                <span className="text-sm text-gray-500">
+                                                  {task.startTime} - {task.endTime}
+                                                </span>
+                                              )}
                                               {task.project && (
                                                 <span className={`px-2 py-1 rounded-full text-xs ${getProjectColor(task.project)}`}>
                                                   {task.project}

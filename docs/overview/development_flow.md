@@ -15,8 +15,8 @@ last_updated: "2025-04-22"
 ## 1. 進捗サマリ（毎週更新）
 | レイヤ | 完了 | 直近 TODO |
 |--------|------|-----------|
-| **共通基盤** | Step 0‑6 完了 | Step 7‑10: ESLint/Husky/CI 初回コミット |
-| **Frontend** | Step 1‑38 完了 | Step 41‑60: Kanban (dnd‑kit) & UI リファクタ |
+| **共通基盤** | Step 0‑10 完了 | Step 11‑13: 設定ファイル整備 |
+| **Frontend** | Step 31‑38 完了 | Step 41‑43: コンポーネント分割 & 型定義強化 |
 | **Backend** | Step 101‑110 完了 | Step 111‑120: Supabase スキーマ & RLS |
 | **品質/CI** | lint ✅ | unit/E2E テスト → CI グリーン化 |
 | **デプロイ** | 未着手 | Step 181‑190: Docker & Fly.io |
@@ -76,14 +76,14 @@ last_updated: "2025-04-22"
 - [ ] **28** ローディング & エラーメッセージ
 - [ ] **29** commit `feat(frontend): auth flow`
 - [ ] **30** RTL ユニットテスト(Auth)
-- [ ] **31** `/dashboard` 骨格
-- [ ] **32** AIチャットプレースホルダ
-- [ ] **33** 今日のタスク / 期限間近カード
-- [ ] **34** 時計 & mini‑calendar
-- [ ] **35** レスポンシブ調整
-- [ ] **36** モックデータ (SWR)
-- [ ] **37** UI アニメーション
-- [ ] **38** commit `feat(frontend): dashboard`
+- [x] **31** `/dashboard` 骨格
+- [x] **32** AIチャットプレースホルダ
+- [x] **33** 今日のタスク / 期限間近カード
+- [x] **34** 時計 & mini‑calendar
+- [x] **35** レスポンシブ調整
+- [x] **36** モックデータ (SWR)
+- [x] **37** UI アニメーション
+- [x] **38** commit `feat(frontend): dashboard`
 - [ ] **39** (空き)
 - [ ] **40** (空き)
 
