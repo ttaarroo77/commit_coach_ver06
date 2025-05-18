@@ -27,8 +27,6 @@
 - [x] サイドバーコンポーネントの実装
 - [x] AIコーチサイドバーの実装
 - [x] shadcn/ui コンポーネントのインストール
-
-https://github.com/ttaarroo77/commit_coach_ver03/
   - [x] Button
   - [x] Card
   - [x] Textarea
