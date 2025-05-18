@@ -400,8 +400,8 @@ export default function DashboardPage() {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {group.projects.map((project) => (
-                          <Card key={project.id} className="overflow-hidden">
+                        {group.projects.map((project, index) => (
+                          <Card key={`${group.id}-${project.id}-${index}`} className="overflow-hidden">
                             <CardHeader
                               className="py-2 px-4 cursor-pointer flex flex-row items-center justify-between bg-muted/50"
                               onClick={() => toggleProject(group.id, project.id)}
