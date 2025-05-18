@@ -1,128 +1,161 @@
-# レイアウト非対称問題 最終分析レポート
+# コミットコーチ リファクタリング計画
 
-## 1. 問題のあるファイル特定
+## 概要：
+  - 今の作業：v0で作ったfrontendのファイルを、アプリに実装している。
+  - 見本：v0/commit-coach
+  - 実装先：apps/frontend
 
-### 1.1 主要ファイル
-- **`/apps/frontend/app/page.tsx`**（最重要・主要な問題箇所）
-- `/apps/frontend/styles/globals.css`
-- `/apps/frontend/components/ui/button.tsx`
-- `/apps/frontend/components/ui/card.tsx`
+## フロントエンド実装計画
 
-### 1.2 設定ファイル
-- `/apps/frontend/tailwind.config.js`（コンテナ設定に関連）
+### 基本構造
+- [x] モノレポ構造のセットアップ
+- [x] 基本設定ファイルの移行 (package.json, next.config.mjs, tsconfig.json)
+- [x] スタイル設定の移行 (tailwind.config.ts, postcss.config.mjs)
+- [x] コンポーネント設定の移行 (components.json)
 
-## 2. 具体的な問題箇所
+### コア機能
+- [x] 認証コンテキストの実装
+- [x] Supabaseクライアントの設定
+- [x] 認証機能の実装 (signIn, signUp, signOut)
+- [x] ダッシュボードユーティリティの実装
 
-### 2.1 ヒーローセクション
-1. **テキストカラムの問題**
-   - 「先延ばし撃退ツール」バッジの左寄せ
-   - テキストブロックの不安定な配置
-   - `lg:pr-8`による非対称なパディング
+### UI コンポーネント
+- [x] グローバルスタイルの実装
+- [x] レイアウトコンポーネントの実装
+- [x] ダッシュボードページの実装
+- [x] ユーティリティ関数の実装
+- [x] サイドバーコンポーネントの実装
+- [x] AIコーチサイドバーの実装
+- [x] shadcn/ui コンポーネントのインストール
+  - [x] Button
+  - [x] Card
+  - [x] Textarea
+  - [x] Dialog
+  - [x] Input
+  - [x] Label
+  - [x] Dropdown Menu
+  - [x] Checkbox
+- [x] タスク項目コンポーネントの実装
 
-2. **AIチャットカードの問題**
-   - `max-w-md`による過度な幅制限
-   - `lg:justify-end`による不自然な右寄せ
-   - アスペクト比（4:3）と可変幅の組み合わせによる不安定さ
+### 今後の実装予定
+- [ ] タスク項目とメニュー付きコンポーネントの実装
+  - [ ] 編集可能なテキストコンポーネント
+  - [ ] ドラッグ&ドロップ機能
+  - [ ] タスクの階層構造管理
+- [ ] プロジェクト管理機能
+  - [ ] プロジェクト作成フォーム
+  - [ ] プロジェクト編集機能
+  - [ ] プロジェクト削除機能
+- [ ] タスク管理機能
+  - [ ] タスク作成フォーム
+  - [ ] タスク編集機能
+  - [ ] タスク削除機能
+  - [ ] タスクステータス管理
+  - [ ] タスク分解機能
+- [ ] AIコーチ機能の拡張
+  - [ ] OpenAI APIとの連携
+  - [ ] コンテキスト対応の応答生成
+  - [ ] タスク分解の提案機能
 
-### 2.2 機能説明（3つの特徴）セクション
-- カード間の不均一な間隔
-- コンテンツの垂直位置ずれ
-- アイコンとテキストの整列不良
+## バックエンド実装計画
+- [ ] APIルートの設計
+  - [ ] 認証API
+  - [ ] プロジェクトAPI
+  - [ ] タスクAPI
+- [ ] データベース設計
+  - [ ] ユーザーテーブル
+  - [ ] プロジェクトテーブル
+  - [ ] タスクテーブル
+- [ ] Supabase連携
+  - [ ] RLS (行レベルセキュリティ) の設定
+  - [ ] データ検証ロジック
 
-## 3. 原因と対策の統合仮説
+## テスト計画
+- [ ] ユニットテスト
+  - [ ] コンポーネントテスト
+  - [ ] ユーティリティ関数テスト
+- [ ] 統合テスト
+  - [ ] ページレンダリングテスト
+  - [ ] APIテスト
+- [ ] E2Eテスト
+  - [ ] ユーザーフロー検証
 
-### 仮説A：水平方向の制約の非対称性
-```tsx
-// 問題
-- 左カラム：lg:pr-8のみ
-- 右カラム：max-w-md制限
+## デプロイ計画
+- [ ] CI/CD設定
+  - [ ] GitHub Actions設定
+  - [ ] ビルド自動化
+- [ ] 環境設定
+  - [ ] 開発環境
+  - [ ] ステージング環境
+  - [ ] 本番環境
+- [ ] モニタリング設定
+  - [ ] エラートラッキング
+  - [ ] パフォーマンスモニタリング
 
-// 解決策
-+ 両カラム：パディングを対称に（lg:px-8）
-+ max-w制限の撤廃またはバランス調整
-```
+## 引き継ぎ情報
 
-### 仮説B：グリッドシステムの中央寄せ不完全
-```tsx
-// 問題
-- lg:justify-end/startによる端寄せ
+#### フロントエンド
+- `/apps/frontend/` - フロントエンドのルートディレクトリ
+  - `/app/` - Next.js アプリケーションのページとレイアウト
+    - `/dashboard/page.tsx` - ダッシュボードページ（主要機能）
+    - `/layout.tsx` - 全体レイアウト
+    - `/globals.css` - グローバルスタイル
+  - `/components/` - 再利用可能なコンポーネント
+    - `/ui/` - shadcn/ui コンポーネント
+    - `/sidebar.tsx` - サイドバーコンポーネント
+    - `/ai-coach-sidebar.tsx` - AIコーチサイドバー
+    - `/task-item.tsx` - タスク項目コンポーネント
+  - `/context/` - Reactコンテキスト
+    - `/auth-context.tsx` - 認証コンテキスト
+  - `/lib/` - ユーティリティ関数
+    - `/supabase.ts` - Supabaseクライアント初期化
+    - `/auth.ts` - 認証関連関数
+    - `/dashboard-utils.ts` - ダッシュボード関連ユーティリティ
+    - `/utils.ts` - 汎用ユーティリティ関数
 
-// 解決策
-+ mx-auto + justify-centerの採用
-+ コンテナ幅の最適化
-```
+#### 設定ファイル
+- `/apps/frontend/package.json` - 依存関係と設定
+- `/apps/frontend/next.config.mjs` - Next.js設定
+- `/apps/frontend/tsconfig.json` - TypeScript設定
+- `/apps/frontend/tailwind.config.ts` - Tailwind CSS設定
+- `/apps/frontend/components.json` - shadcn/ui設定
 
-### 仮説C：レスポンシブ設計の不整合
-```tsx
-// 問題
-- アスペクト比固定 + 可変幅の組み合わせ
-- コンテナ幅の制約不足
+### 注意点・潜在的な問題
 
-// 解決策
-+ より柔軟なアスペクト比設定
-+ コンテナのブレークポイント拡張
-```
+1. **認証処理**
+   - Supabaseの認証キーが環境変数に設定されていることを確認
+   - 開発環境と本番環境で異なる認証設定が必要
+   - **対処法**: `.env.local`ファイルに`NEXT_PUBLIC_SUPABASE_URL`と`NEXT_PUBLIC_SUPABASE_ANON_KEY`を設定
 
-## 4. 具体的な修正手順
+2. **コンポーネント依存関係**
+   - shadcn/uiコンポーネントの依存関係が正しく解決されているか確認
+   - **対処法**: 依存関係エラーが発生した場合は`npx shadcn@latest add [コンポーネント名]`で再インストール
 
-### 優先度1：基本レイアウトの修正
-```tsx
-<div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-2xl">
-  <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center justify-items-center">
-    <div className="flex flex-col items-start justify-center space-y-6 w-full max-w-xl">
-      {/* テキストコンテンツ */}
-    </div>
-    <div className="flex items-center justify-center w-full">
-      <div className="relative aspect-[16/9] w-full max-w-xl overflow-hidden rounded-xl bg-gray-100 shadow-lg">
-        {/* カードコンテンツ */}
-      </div>
-    </div>
-  </div>
-</div>
-```
+3. **タスクデータの永続化**
+   - 現状はローカルストレージを使用しているが、将来的にはバックエンドAPIに移行予定
+   - **対処法**: `dashboard-utils.ts`内のデータ取得・保存関数を将来的にAPI呼び出しに置き換える
 
-### 優先度2：Tailwind設定の最適化
-```js
-// tailwind.config.js
-module.exports = {
-  theme: {
-    container: {
-      center: true,
-      screens: {
-        "2xl": "1440px",
-        "3xl": "1720px",
-      },
-    },
-  },
-}
-```
+4. **レスポンシブデザイン**
+   - モバイル対応が完全には実装されていない
+   - **対処法**: メディアクエリを使用してモバイルビューを最適化
 
-## 5. 実装の注意点
+5. **パフォーマンス最適化**
+   - タスクリストが大きくなった場合の仮想化が未実装
+   - **対処法**: `react-window`や`react-virtualized`などのライブラリを検討
 
-1. **両カラムの対称性確保**
-   - パディングは両側同量か完全になし
-   - max-w制限は両カラムで同じ値を使用
+### 開発環境セットアップ
 
-2. **レスポンシブ対応の統一**
-   - ブレークポイントでの動作を統一
-   - アスペクト比は16:9を検討
+1. リポジトリのクローン後、以下のコマンドを実行：
+   ```bash
+   cd commit_coach
+   pnpm install
+   cd apps/frontend
+   pnpm dev
+   ```
 
-3. **コンテナ設定の最適化**
-   - 大画面での表示を考慮
-   - 適切なmax-width制限の設定
+2. 環境変数の設定：
+   - `/apps/frontend/.env.local`ファイルを作成し、Supabase認証情報を設定
 
-## 6. 期待される改善効果
-
-1. 左右の重心が完全に整列
-2. レスポンシブ時の安定性向上
-3. 大画面での見栄えの改善
-4. メンテナンス性の向上
-
-## 7. 次のステップ
-
-1. 提案した修正の実装
-2. 各画面サイズでのテスト
-3. 必要に応じた微調整
-4. パフォーマンスとアクセシビリティの確認
-
-この分析と提案に基づく修正により、より安定した左右対称のレイアウトが実現できると考えられます。
+3. 開発サーバー起動：
+   - `pnpm dev`コマンドでNext.jsの開発サーバーを起動
+   - デフォルトでは`http://localhost:3000`でアクセス可能
