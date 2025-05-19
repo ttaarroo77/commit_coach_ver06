@@ -61,11 +61,10 @@ export const TaskGroupCard = ({ ctx, group, idx }: Props) => {
               collisionDetection={closestCenter}
               onDragEnd={(event) => {
                 if (event.active && event.over) {
-                  const activeId = event.active.id;
-                  const overId = event.over.id;
+                  const activeId = event.active.id.toString();
+                  const overId = event.over.id.toString();
                   if (activeId !== overId) {
-                    // ここでプロジェクトのドラッグ＆ドロップ処理を呼び出す
-                    // ctx.handleProjectDragEnd({ activeId, overId, groupId: group.id });
+                    ctx.handleProjectDragEnd({ activeId, overId, groupId: group.id });
                   }
                 }
               }}

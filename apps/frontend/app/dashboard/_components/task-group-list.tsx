@@ -18,17 +18,7 @@ export const TaskGroupList = (ctx: DashboardCtx) => {
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={(event) => {
-        // 既存のhandleDragEndを適切に変換して呼び出す必要があります
-        // @dnd-kitとreact-beautiful-dndでは引数の形式が異なるため、
-        // 必要に応じてctx.handleDragEndの実装も修正する必要があります
-        if (event.active && event.over) {
-          const activeId = event.active.id;
-          const overId = event.over.id;
-          if (activeId !== overId) {
-            // ここでctx.handleDragEndに相当する処理を呼び出す
-            // 例: ctx.handleDndKitDragEnd({ activeId, overId });
-          }
-        }
+        ctx.handleDragEnd(event);
       }}
     >
       <SortableContext 
