@@ -9,7 +9,6 @@
 - useEffect の依存配列から `isExpanded` を削除し、タスク数が0から1以上になった場合のみ自動展開するように修正
 - プロジェクトヘッダーの `TaskItemWithMenu` に `expanded={isExpanded}` プロパティを追加
 - `useRef` を使用して前回のタスク数を記録し、タスク数の変化を検出
-
 ### 2. `components/task-item-with-menu.tsx`
 
 - ホバー時のカクつき問題を解決するために、React の状態管理（`isHovered`）を削除

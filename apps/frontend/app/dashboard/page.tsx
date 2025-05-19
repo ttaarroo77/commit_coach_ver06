@@ -1,525 +1,1067 @@
-"use client"
+// apps/frontend/app/dashboard/page.tsx
 
-import { useState, useEffect } from "react"
-import { DragDropContext, Droppable, Draggable, type DropResult } from "react-beautiful-dnd"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+"use client"
 import { Sidebar } from "@/components/sidebar"
-import { Plus, ChevronDown, ChevronRight } from "lucide-react"
-import { HierarchicalTaskItem } from "@/components/hierarchical-task-item"
 import { AICoachSidebar } from "@/components/ai-coach-sidebar"
-import {
-  getDashboardData,
-  saveDashboardData,
-  addProjectToDashboard,
-  addTaskToProject,
-  addSubtaskToTask,
-  calculateProgress,
-  type TaskGroup,
-  type SubTask,
-}  from "@/lib/dashboard-utils"
+import { HeaderSection } from "./_components/header-section"
+import { TaskGroupList } from "./_components/task-group-list"
+import { useDashboard } from "./_hooks/use-dashboard"
+import { Button } from "@/components/ui/button"
 
 export default function DashboardPage() {
-  const [taskGroups, setTaskGroups] = useState<TaskGroup[]>([])
-  const [currentTime, setCurrentTime] = useState(new Date())
-  const [isLoading, setIsLoading] = useState(true)
-  const { toast } = useToast()
+  const ctx = useDashboard()
 
-  // ダッシュボードデータを読み込む
-  useEffect(() => {
-    const data = getDashboardData()
-    setTaskGroups(data)
-    setIsLoading(false)
-
-    // 現在時刻を更新
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 60000) // 1分ごとに更新
-
-    return () => clearInterval(timer)
-  }, [])
-
-  // データが変更されたらローカルストレージに保存
-  useEffect(() => {
-    if (!isLoading) {
-      saveDashboardData(taskGroups)
-    }
-  }, [taskGroups, isLoading])
-
-  // タスクグループの展開/折りたたみを切り替える
-  const toggleTaskGroup = (groupId: string) => {
-    setTaskGroups((prevGroups) =>
-      prevGroups.map((group) => (group.id === groupId ? { ...group, expanded: !group.expanded } : group)),
+  if (ctx.isLoading)
+    return (
+      <div className="flex h-screen">
+        <Sidebar />
+        <div className="flex flex-1 items-center justify-center">
+          <p className="text-gray-500">読み込み中...</p>
+        </div>
+      </div>
     )
-  }
-  
-  // プロジェクトの展開/折りたたみを切り替える
-  const toggleProject = (groupId: string, projectId: string) => {
-    setTaskGroups((prevGroups) =>
-      prevGroups.map((group) => {
-        if (group.id === groupId) {
-          return {
-            ...group,
-            projects: group.projects.map((project) => 
-              project.id === projectId ? { ...project, expanded: !project.expanded } : project
-            )
-          }
-        }
-        return group
-      })
-    )
-  }
-  
-  // プロジェクトの完了状態を切り替える
-  const handleProjectStatusChange = (groupId: string, projectId: string, completed: boolean) => {
-    setTaskGroups((prevGroups) =>
-      prevGroups.map((group) => {
-        if (group.id === groupId) {
-          return {
-            ...group,
-            projects: group.projects.map((project) => {
-              if (project.id === projectId) {
-                const newStatus = completed ? "completed" : "in-progress";
-                // プロジェクト内のすべてのタスクも同じステータスに変更
-                const updatedTasks = project.tasks.map(task => ({
-                  ...task,
-                  completed,
-                  status: newStatus
-                }));
-                
-                return {
-                  ...project,
-                  completed,
-                  status: newStatus,
-                  tasks: updatedTasks
-                };
-              }
-              return project;
-            })
-          }
-        }
-        return group
-      })
-    )
-    
-    toast({
-      title: completed ? "プロジェクトを完了しました" : "プロジェクトを未完了に戻しました",
-      description: "プロジェクト内のすべてのタスクも更新されました",
-    });
-  }
-  
-  // タスクの展開/折りたたみを切り替える
-  const toggleTask = (groupId: string, projectId: string, taskId: string) => {
-    setTaskGroups((prevGroups) =>
-      prevGroups.map((group) => {
-        if (group.id === groupId) {
-          return {
-            ...group,
-            projects: group.projects.map((project) => {
-              if (project.id === projectId) {
-                return {
-                  ...project,
-                  tasks: project.tasks.map((task) =>
-                    task.id === taskId ? { ...task, expanded: !task.expanded } : task
-                  )
-                }
-              }
-              return project
-            })
-          }
-        }
-        return group
-      })
-    )
-  }
-  
-  // タスクのステータスを変更
-  const handleTaskStatusChange = (groupId: string, projectId: string, taskId: string, completed: boolean) => {
-    setTaskGroups((prevGroups) =>
-      prevGroups.map((group) => {
-        if (group.id === groupId) {
-          return {
-            ...group,
-            projects: group.projects.map((project) => {
-              if (project.id === projectId) {
-                return {
-                  ...project,
-                  tasks: project.tasks.map((task) => {
-                    if (task.id === taskId) {
-                      const newStatus = completed ? "completed" : "in-progress"
-                      return { 
-                        ...task, 
-                        completed, 
-                        status: newStatus,
-                        progress: completed ? 100 : calculateProgress(task)
-                      }
-                    }
-                    return task
-                  })
-                }
-              }
-              return project
-            })
-          }
-        }
-        return group
-      })
-    )
-  }
-  
-  // サブタスクのステータスを変更
-  const handleSubtaskToggle = (groupId: string, projectId: string, taskId: string, subtaskId: string, completed: boolean) => {
-    setTaskGroups((prevGroups) =>
-      prevGroups.map((group) => {
-        if (group.id === groupId) {
-          return {
-            ...group,
-            projects: group.projects.map((project) => {
-              if (project.id === projectId) {
-                return {
-                  ...project,
-                  tasks: project.tasks.map((task) => {
-                    if (task.id === taskId) {
-                      const updatedSubtasks = task.subtasks.map((subtask) =>
-                        subtask.id === subtaskId ? { ...subtask, completed } : subtask
-                      )
-                      
-                      // サブタスクの状態に基づいてタスクの進捗を更新
-                      const progress = updatedSubtasks.length > 0
-                        ? Math.round((updatedSubtasks.filter(st => st.completed).length / updatedSubtasks.length) * 100)
-                        : 0
-                        
-                      // すべてのサブタスクが完了したらタスクも完了とする
-                      const allCompleted = updatedSubtasks.every(st => st.completed)
-                      
-                      return { 
-                        ...task, 
-                        subtasks: updatedSubtasks,
-                        completed: allCompleted,
-                        status: allCompleted ? "completed" : progress > 0 ? "in-progress" : "todo",
-                        progress
-                      }
-                    }
-                    return task
-                  })
-                }
-              }
-              return project
-            })
-          }
-        }
-        return group
-      })
-    )
-  }
-  
-  // タスクのメニューを開く
-  const handleTaskMenuOpen = (taskId: string) => {
-    toast({
-      title: "タスクメニュー",
-      description: `タスクID: ${taskId} のメニューを開きます`,
-    })
-  }
-  
-  // サブタスクを追加
-  const handleAddSubtask = (groupId: string, projectId: string, taskId: string) => {
-    const subtaskTitle = prompt("サブタスクのタイトルを入力してください")
-    if (!subtaskTitle) return
-
-    // 新しいサブタスクオブジェクトを作成
-    const newSubtask: DashboardSubTask = {
-      id: `subtask-${Date.now()}`,
-      title: subtaskTitle,
-      completed: false,
-    }
-
-    // タスクグループを更新
-    setTaskGroups((prevGroups) =>
-      prevGroups.map((group) =>
-        group.id === groupId
-          ? {
-              ...group,
-              projects: group.projects.map((project) =>
-                project.id === projectId
-                  ? {
-                      ...project,
-                      tasks: project.tasks.map((task) =>
-                        task.id === taskId
-                          ? {
-                              ...task,
-                              // タスクを展開状態にする
-                              expanded: true,
-                              // サブタスクを追加
-                              subtasks: [...task.subtasks, newSubtask],
-                              // 進捗を更新
-                              progress: calculateProgress({
-                                ...task,
-                                subtasks: [...task.subtasks, newSubtask],
-                              }),
-                            }
-                          : task,
-                      ),
-                      // プロジェクトの進捗を更新
-                      status: "in-progress",
-                    }
-                  : project,
-              ),
-            }
-          : group,
-      ),
-    )
-
-
-    // ローカルストレージにも保存
-    const updatedGroups = taskGroups.map((group) =>
-      group.id === groupId
-        ? {
-            ...group,
-            projects: group.projects.map((project) =>
-              project.id === projectId
-                ? {
-                    ...project,
-                    tasks: project.tasks.map((task) =>
-                      task.id === taskId
-                        ? {
-                            ...task,
-                            subtasks: [...task.subtasks, newSubtask],
-                            progress: calculateProgress({
-                              ...task,
-                              subtasks: [...task.subtasks, newSubtask],
-                            }),
-                          }
-                        : task,
-                    ),
-                  }
-                : project,
-            ),
-          }
-        : group,
-    )
-    saveDashboardData(updatedGroups)
-
-    toast({
-      title: "サブタスクを追加しました",
-      description: `「${subtaskTitle}」を追加しました`,
-    })
-  }
-  
-  // タスクを追加
-  const handleAddTask = (groupId: string, projectId: string) => {
-    const taskTitle = prompt("タスクのタイトルを入力してください")
-    if (taskTitle) {
-      addTaskToProject(taskTitle, projectId, groupId)
-      
-      // 状態を更新
-      const data = getDashboardData()
-      setTaskGroups(data)
-      
-      toast({
-        title: "タスク追加",
-        description: `「${taskTitle}」を追加しました`,
-      })
-    }
-  }
-  
-  // プロジェクトを追加
-  const handleAddProject = (groupId: string) => {
-    const projectTitle = prompt("プロジェクトのタイトルを入力してください")
-    if (projectTitle) {
-      addProjectToDashboard(projectTitle, projectTitle, groupId)
-      
-      // 状態を更新
-      const data = getDashboardData()
-      setTaskGroups(data)
-      
-      toast({
-        title: "プロジェクト追加",
-        description: `「${projectTitle}」を追加しました`,
-      })
-    }
-  }
-  
-  // タスクの並び替え
-  const handleTasksReorder = (groupId: string, projectId: string, reorderedTasks: Task[]) => {
-    setTaskGroups((prevGroups) =>
-      prevGroups.map((group) => {
-        if (group.id === groupId) {
-          return {
-            ...group,
-            projects: group.projects.map((project) => {
-              if (project.id === projectId) {
-                // 型変換の問題を回避するため、IDのみを使用して順序を更新
-                const taskIds = reorderedTasks.map(t => t.id)
-                const reorderedDashboardTasks = taskIds.map(id => 
-                  project.tasks.find(t => t.id === id)
-                ).filter(Boolean) as DashboardTask[]
-                
-                return {
-                  ...project,
-                  tasks: reorderedDashboardTasks
-                }
-              }
-              return project
-            })
-          }
-        }
-        return group
-      })
-    )
-  }
-  
-  // ダッシュボードのタスクをコンポーネント用のタスク型に変換
-  const convertToComponentTask = (dashboardTask: DashboardTask): Task => ({
-    id: dashboardTask.id,
-    title: dashboardTask.title,
-    status: dashboardTask.status,
-    time: dashboardTask.startTime ? `${dashboardTask.startTime} - ${dashboardTask.endTime || ''}` : undefined,
-    tags: dashboardTask.priority ? [dashboardTask.priority] : [],
-    subTasks: dashboardTask.subtasks.map(st => ({
-      id: st.id,
-      title: st.title,
-      completed: st.completed
-    })),
-    progress: dashboardTask.progress,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  })
-  
-  // 日付表示のフォーマット
-  const formatDateDisplay = (date: Date) => {
-    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日${['日', '月', '火', '水', '木', '金', '土'][date.getDay()]}曜日`
-  }
-
-  // 時刻表示のフォーマット
-  const formatTimeDisplay = (date: Date) => {
-    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
-  }
 
   return (
-    <div className="flex min-h-screen">
-      {/* サイドバー */}
+    <div className="flex h-screen">
       <Sidebar />
-
-      <div className="flex-1">
-        <main className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-2xl font-bold">ダッシュボード</h1>
-              <p className="text-sm text-muted-foreground">{formatDateDisplay(currentTime)}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">現在時刻</p>
-              <p className="text-2xl font-bold">{formatTimeDisplay(currentTime)}</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {taskGroups.map((group) => (
-              <Card key={group.id} className="mb-4">
-                <CardHeader
-                  className="py-3 cursor-pointer flex flex-row items-center justify-between"
-                  onClick={() => toggleTaskGroup(group.id)}
-                >
-                  <div className="flex items-center">
-                    {group.expanded ? (
-                      <ChevronDown className="h-4 w-4 mr-2" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 mr-2" />
-                    )}
-                    <CardTitle className="text-lg">{group.title}</CardTitle>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleAddProject(group.id)
-                    }}
-                    className="ml-auto"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    プロジェクト追加
-                  </Button>
-                </CardHeader>
-                
-                {group.expanded && (
-                  <CardContent>
-                    {group.projects.length === 0 ? (
-                      <div className="text-center py-6 text-muted-foreground">
-                        <p>プロジェクトがありません</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => handleAddProject(group.id)}
-                          className="mt-2"
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          プロジェクトを追加
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {group.projects.map((project, index) => (
-                          <Card key={`${group.id}-${project.id}-${index}`} className="overflow-hidden">
-                            <CardHeader
-                              className="py-2 px-4 cursor-pointer flex flex-row items-center justify-between bg-muted/50"
-                              onClick={() => toggleProject(group.id, project.id)}
-                            >
-                              <div className="flex items-center">
-                                <Checkbox 
-                                  checked={project.completed} 
-                                  onCheckedChange={(checked) => {
-                                    handleProjectStatusChange(group.id, project.id, checked === true);
-      </div>
-    ) : (
-      <DraggableTaskList
-        tasks={project.tasks.map(convertToComponentTask)}
-        onTasksReorder={(reorderedTasks) => handleTasksReorder(group.id, project.id, reorderedTasks)}
-        onStatusChange={(taskId, completed) => handleTaskStatusChange(group.id, project.id, taskId, completed)}
-        onMenuOpen={(taskId) => handleTaskMenuOpen(taskId)}
-      >
-        {project.tasks.map((task, index) => (
-          <HierarchicalTaskItem
-            key={task.id}
-            id={task.id}
-            title={task.title}
-            completed={task.completed}
-            level={2}
-            expanded={task.expanded}
-            hasChildren={task.subtasks.length > 0}
-            startTime={task.startTime}
-            endTime={task.endTime}
-            onToggleExpand={() =>
-              toggleTask(group.id, project.id, task.id)
-            }
-            onToggleComplete={() =>
-              toggleTaskComplete(group.id, project.id, task.id)
-            }
-            onDelete={() =>
-              handleDeleteTask(group.id, project.id, task.id)
-            }
-            onAddChild={() =>
-              handleAddSubtask(group.id, project.id, task.id)
-            }
-            dragHandleProps={provided.dragHandleProps}
-            onTimeChange={(startTime, endTime) =>
-              handleTaskTimeChange(
-                group.id,
-                project.id,
-                task.id,
-                startTime,
-                endTime,
-              )
-            }
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 overflow-auto p-6 w-full max-w-5xl mx-auto">
+          <HeaderSection
+            currentTime={ctx.currentTime}
+            formatDateDisplay={ctx.formatDateDisplay}
+            formatTimeDisplay={ctx.formatTimeDisplay}
           />
-        ))}
-      </DraggableTaskList>
-    )}
-  </CardContent>
-)}
-
-// ...
+          <TaskGroupList {...ctx} />
+        </main>
+      </div>
       <AICoachSidebar />
     </div>
   )
 }
+
+
+
+
+
+
+// "use client"
+
+// import { useState, useEffect } from "react"
+// import { DragDropContext, Droppable, Draggable, type DropResult } from "react-beautiful-dnd"
+// import { Button } from "@/components/ui/button"
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+// import { Sidebar } from "@/components/sidebar"
+// import { Plus, ChevronDown, ChevronRight } from "lucide-react"
+// import { HierarchicalTaskItem } from "@/components/hierarchical-task-item"
+// import { AICoachSidebar } from "@/components/ai-coach-sidebar"
+// import {
+//   getDashboardData,
+//   saveDashboardData,
+//   addProjectToDashboard,
+//   addTaskToProject,
+//   addSubtaskToTask,
+//   calculateProgress,
+//   type TaskGroup,
+//   type SubTask,
+// } from "@/lib/dashboard-utils"
+
+// export default function DashboardPage() {
+//   const [taskGroups, setTaskGroups] = useState<TaskGroup[]>([])
+//   const [currentTime, setCurrentTime] = useState(new Date())
+//   const [isLoading, setIsLoading] = useState(true)
+
+//   // ダッシュボードデータを読み込む
+//   useEffect(() => {
+//     const data = getDashboardData()
+//     setTaskGroups(data)
+//     setIsLoading(false)
+
+//     // 現在時刻を更新
+//     const timer = setInterval(() => {
+//       setCurrentTime(new Date())
+//     }, 60000) // 1分ごとに更新
+
+//     return () => clearInterval(timer)
+//   }, [])
+
+//   // データが変更されたらローカルストレージに保存
+//   useEffect(() => {
+//     if (!isLoading) {
+//       saveDashboardData(taskGroups)
+//     }
+//   }, [taskGroups, isLoading])
+
+//   // タスクグループの展開/折りたたみを切り替える
+//   const toggleTaskGroup = (groupId: string) => {
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) => (group.id === groupId ? { ...group, expanded: !group.expanded } : group)),
+//     )
+//   }
+
+//   // プロジェクトの展開/折りたたみを切り替える
+//   const toggleProject = (groupId: string, projectId: string) => {
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) =>
+//         group.id === groupId
+//           ? {
+//               ...group,
+//               projects: group.projects.map((project) =>
+//                 project.id === projectId ? { ...project, expanded: !project.expanded } : project,
+//               ),
+//             }
+//           : group,
+//       ),
+//     )
+//   }
+
+//   // タスクの展開/折りたたみを切り替える
+//   const toggleTask = (groupId: string, projectId: string, taskId: string) => {
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) =>
+//         group.id === groupId
+//           ? {
+//               ...group,
+//               projects: group.projects.map((project) =>
+//                 project.id === projectId
+//                   ? {
+//                       ...project,
+//                       tasks: project.tasks.map((task) =>
+//                         task.id === taskId
+//                           ? {
+//                               ...task,
+//                               expanded: !task.expanded,
+//                               // サブタスクがある場合は、展開時に表示されるようにする
+//                               subtasks: task.subtasks.map((subtask) => ({
+//                                 ...subtask,
+//                               })),
+//                             }
+//                           : task,
+//                       ),
+//                     }
+//                   : project,
+//               ),
+//             }
+//           : group,
+//       ),
+//     )
+//   }
+
+//   // プロジェクトの完了状態を切り替える
+//   const toggleProjectComplete = (groupId: string, projectId: string) => {
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) =>
+//         group.id === groupId
+//           ? {
+//               ...group,
+//               projects: group.projects.map((project) => {
+//                 if (project.id === projectId) {
+//                   const newCompleted = !project.completed
+//                   // プロジェクトが完了したら、すべてのタスクとサブタスも完了にする
+//                   const updatedTasks = project.tasks.map((task) => ({
+//                     ...task,
+//                     completed: newCompleted,
+//                     subtasks: task.subtasks.map((subtask) => ({
+//                       ...subtask,
+//                       completed: newCompleted,
+//                     })),
+//                     progress: newCompleted ? 100 : 0,
+//                     status: newCompleted ? "completed" : "todo",
+//                   }))
+//                   return {
+//                     ...project,
+//                     completed: newCompleted,
+//                     tasks: updatedTasks,
+//                     status: newCompleted ? "completed" : "todo",
+//                   }
+//                 }
+//                 return project
+//               }),
+//             }
+//           : group,
+//       ),
+//     )
+//   }
+
+//   // タスクの完了状態を切り替える
+//   const toggleTaskComplete = (groupId: string, projectId: string, taskId: string) => {
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) =>
+//         group.id === groupId
+//           ? {
+//               ...group,
+//               projects: group.projects.map((project) =>
+//                 project.id === projectId
+//                   ? {
+//                       ...project,
+//                       tasks: project.tasks.map((task) => {
+//                         if (task.id === taskId) {
+//                           const newCompleted = !task.completed
+//                           // タスクが完了したら、すべてのサブタスクも完了にする
+//                           const updatedSubtasks = task.subtasks.map((subtask) => ({
+//                             ...subtask,
+//                             completed: newCompleted,
+//                           }))
+//                           return {
+//                             ...task,
+//                             completed: newCompleted,
+//                             subtasks: updatedSubtasks,
+//                             progress: newCompleted ? 100 : 0,
+//                             status: newCompleted ? "completed" : "todo",
+//                           }
+//                         }
+//                         return task
+//                       }),
+//                     }
+//                   : project,
+//               ),
+//             }
+//           : group,
+//       ),
+//     )
+
+//     // プロジェクトの完了状態を更新
+//     updateProjectCompletionStatus(groupId, projectId)
+//   }
+
+//   // サブタスクの完了状態を切り替える
+//   const toggleSubtaskComplete = (groupId: string, projectId: string, taskId: string, subtaskId: string) => {
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) =>
+//         group.id === groupId
+//           ? {
+//               ...group,
+//               projects: group.projects.map((project) =>
+//                 project.id === projectId
+//                   ? {
+//                       ...project,
+//                       tasks: project.tasks.map((task) =>
+//                         task.id === taskId
+//                           ? {
+//                               ...task,
+//                               subtasks: task.subtasks.map((subtask) =>
+//                                 subtask.id === subtaskId ? { ...subtask, completed: !subtask.completed } : subtask,
+//                               ),
+//                             }
+//                           : task,
+//                       ),
+//                     }
+//                   : project,
+//               ),
+//             }
+//           : group,
+//       ),
+//     )
+
+//     // タスクの進捗状況を更新
+//     updateTaskProgress(groupId, projectId, taskId)
+//   }
+
+//   // タスクの進捗状況を更新
+//   const updateTaskProgress = (groupId: string, projectId: string, taskId: string) => {
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) =>
+//         group.id === groupId
+//           ? {
+//               ...group,
+//               projects: group.projects.map((project) =>
+//                 project.id === projectId
+//                   ? {
+//                       ...project,
+//                       tasks: project.tasks.map((task) => {
+//                         if (task.id === taskId) {
+//                           const progress = calculateProgress(task.subtasks)
+//                           const allCompleted = task.subtasks.length > 0 && task.subtasks.every((st) => st.completed)
+//                           return {
+//                             ...task,
+//                             progress,
+//                             completed: allCompleted,
+//                             status: allCompleted ? "completed" : progress > 0 ? "in-progress" : "todo",
+//                           }
+//                         }
+//                         return task
+//                       }),
+//                     }
+//                   : project,
+//               ),
+//             }
+//           : group,
+//       ),
+//     )
+
+//     // プロジェクトの完了状態を更新
+//     updateProjectCompletionStatus(groupId, projectId)
+//   }
+
+//   // プロジェクトの完了状態を更新
+//   const updateProjectCompletionStatus = (groupId: string, projectId: string) => {
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) =>
+//         group.id === groupId
+//           ? {
+//               ...group,
+//               projects: group.projects.map((project) => {
+//                 if (project.id === projectId) {
+//                   const allTasksCompleted = project.tasks.length > 0 && project.tasks.every((task) => task.completed)
+//                   return {
+//                     ...project,
+//                     completed: allTasksCompleted,
+//                     status: allTasksCompleted
+//                       ? "completed"
+//                       : project.tasks.some((t) => t.status === "in-progress")
+//                         ? "in-progress"
+//                         : "todo",
+//                   }
+//                 }
+//                 return project
+//               }),
+//             }
+//           : group,
+//       ),
+//     )
+//   }
+
+//   // 新しいプロジェクトを追加
+//   const handleAddProject = (groupId: string) => {
+//     const projectTitle = `新しいプロジェクト ${new Date().toLocaleTimeString()}`
+//     addProjectToDashboard(`project-${Date.now()}`, projectTitle, groupId)
+
+//     // 状態を更新
+//     const data = getDashboardData()
+//     setTaskGroups(data)
+//   }
+
+//   // 新しいタスクを追加
+//   const handleAddTask = (groupId: string, projectId: string) => {
+//     const taskTitle = `新しいタスク ${new Date().toLocaleTimeString()}`
+//     addTaskToProject(taskTitle, projectId, groupId)
+
+//     // 状態を更新
+//     const data = getDashboardData()
+//     setTaskGroups(data)
+//   }
+
+//   // 新しいサブタスクを追加
+//   const handleAddSubtask = (groupId: string, projectId: string, taskId: string) => {
+//     const subtaskTitle = `新しいサブタスク ${new Date().toLocaleTimeString()}`
+
+//     // 既存のタスクグループを更新
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) => {
+//         if (group.id === groupId) {
+//           return {
+//             ...group,
+//             projects: group.projects.map((project) => {
+//               if (project.id === projectId) {
+//                 return {
+//                   ...project,
+//                   tasks: project.tasks.map((task) => {
+//                     if (task.id === taskId) {
+//                       // 新しいサブタスクを作成
+//                       const newSubtask: SubTask = {
+//                         id: `subtask-${Date.now()}`,
+//                         title: subtaskTitle,
+//                         completed: false,
+//                       }
+
+//                       // タスクが折りたたまれている場合は展開する
+//                       if (!task.expanded) {
+//                         task.expanded = true
+//                       }
+
+//                       // サブタスクを追加
+//                       return {
+//                         ...task,
+//                         subtasks: [...task.subtasks, newSubtask],
+//                       }
+//                     }
+//                     return task
+//                   }),
+//                 }
+//               }
+//               return project
+//             }),
+//           }
+//         }
+//         return group
+//       }),
+//     )
+
+//     // ローカルストレージにも保存
+//     setTimeout(() => {
+//       const updatedData = getDashboardData()
+//       addSubtaskToTask(subtaskTitle, taskId, projectId, groupId)
+//     }, 0)
+//   }
+
+//   // プロジェクトを削除
+//   const handleDeleteProject = (groupId: string, projectId: string) => {
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) =>
+//         group.id === groupId
+//           ? {
+//               ...group,
+//               projects: group.projects.filter((project) => project.id !== projectId),
+//             }
+//           : group,
+//       ),
+//     )
+//   }
+
+//   // タスクを削除
+//   const handleDeleteTask = (groupId: string, projectId: string, taskId: string) => {
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) =>
+//         group.id === groupId
+//           ? {
+//               ...group,
+//               projects: group.projects.map((project) =>
+//                 project.id === projectId
+//                   ? {
+//                       ...project,
+//                       tasks: project.tasks.filter((task) => task.id !== taskId),
+//                     }
+//                   : project,
+//               ),
+//             }
+//           : group,
+//       ),
+//     )
+
+//     // プロジェクトの完了状態を更新
+//     updateProjectCompletionStatus(groupId, projectId)
+//   }
+
+//   // サブタスクを削除
+//   const handleDeleteSubtask = (groupId: string, projectId: string, taskId: string, subtaskId: string) => {
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) =>
+//         group.id === groupId
+//           ? {
+//               ...group,
+//               projects: group.projects.map((project) =>
+//                 project.id === projectId
+//                   ? {
+//                       ...project,
+//                       tasks: project.tasks.map((task) =>
+//                         task.id === taskId
+//                           ? {
+//                               ...task,
+//                               subtasks: task.subtasks.filter((subtask) => subtask.id !== subtaskId),
+//                             }
+//                           : task,
+//                       ),
+//                     }
+//                   : project,
+//               ),
+//             }
+//           : group,
+//       ),
+//     )
+
+//     // タスクの進捗状況を更新
+//     updateTaskProgress(groupId, projectId, taskId)
+//   }
+
+//   // ドラッグ&ドロップの処理
+//   const handleDragEnd = (result: DropResult) => {
+//     const { source, destination, type } = result
+
+//     // ドロップ先がない場合（ドラッグがキャンセルされた場合）は何もしない
+//     if (!destination) {
+//       return
+//     }
+
+//     // 同じ位置にドロップされた場合は何もしない
+//     if (source.droppableId === destination.droppableId && source.index === destination.index) {
+//       return
+//     }
+
+//     // タスクグループの並び替え
+//     if (type === "taskGroup") {
+//       const reorderedGroups = Array.from(taskGroups)
+//       const [removed] = reorderedGroups.splice(source.index, 1)
+//       reorderedGroups.splice(destination.index, 0, removed)
+//       setTaskGroups(reorderedGroups)
+//       return
+//     }
+
+//     // プロジェクトの並び替え
+//     if (type === "project") {
+//       const sourceGroupId = source.droppableId
+//       const destGroupId = destination.droppableId
+
+//       // 同じグループ内での並び替え
+//       if (sourceGroupId === destGroupId) {
+//         setTaskGroups((prevGroups) =>
+//           prevGroups.map((group) => {
+//             if (group.id === sourceGroupId) {
+//               const newProjects = Array.from(group.projects)
+//               const [removed] = newProjects.splice(source.index, 1)
+//               newProjects.splice(destination.index, 0, removed)
+//               return { ...group, projects: newProjects }
+//             }
+//             return group
+//           }),
+//         )
+//       } else {
+//         // 異なるグループ間での移動
+//         setTaskGroups((prevGroups) => {
+//           const newGroups = [...prevGroups]
+//           const sourceGroup = newGroups.find((g) => g.id === sourceGroupId)
+//           const destGroup = newGroups.find((g) => g.id === destGroupId)
+
+//           if (!sourceGroup || !destGroup) return prevGroups
+
+//           const [movedProject] = sourceGroup.projects.splice(source.index, 1)
+
+//           // 今日のタスクに移動する場合は時間を設定
+//           if (destGroupId === "today" && !movedProject.startTime) {
+//             const now = new Date()
+//             movedProject.startTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`
+//             movedProject.endTime = `${(now.getHours() + 1).toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`
+//           }
+
+//           // 未定のタスクに移動する場合は時間を削除
+//           if (destGroupId === "unscheduled") {
+//             delete movedProject.startTime
+//             delete movedProject.endTime
+//           }
+
+//           destGroup.projects.splice(destination.index, 0, movedProject)
+//           return newGroups
+//         })
+//       }
+//       return
+//     }
+
+//     // タスクの並び替え
+//     if (type === "task") {
+//       const [sourceGroupId, sourceProjectId] = source.droppableId.split(":")
+//       const [destGroupId, destProjectId] = destination.droppableId.split(":")
+
+//       // 同じプロジェクト内での並び替え
+//       if (sourceGroupId === destGroupId && sourceProjectId === destProjectId) {
+//         setTaskGroups((prevGroups) =>
+//           prevGroups.map((group) => {
+//             if (group.id === sourceGroupId) {
+//               return {
+//                 ...group,
+//                 projects: group.projects.map((project) => {
+//                   if (project.id === sourceProjectId) {
+//                     const newTasks = Array.from(project.tasks)
+//                     const [removed] = newTasks.splice(source.index, 1)
+//                     newTasks.splice(destination.index, 0, removed)
+//                     return { ...project, tasks: newTasks }
+//                   }
+//                   return project
+//                 }),
+//               }
+//             }
+//             return group
+//           }),
+//         )
+//       } else {
+//         // 異なるプロジェクト間での移動
+//         setTaskGroups((prevGroups) => {
+//           const newGroups = [...prevGroups]
+//           const sourceGroup = newGroups.find((g) => g.id === sourceGroupId)
+//           const destGroup = newGroups.find((g) => g.id === destGroupId)
+
+//           if (!sourceGroup || !destGroup) return prevGroups
+
+//           const sourceProject = sourceGroup.projects.find((p) => p.id === sourceProjectId)
+//           const destProject = destGroup.projects.find((p) => p.id === destProjectId)
+
+//           if (!sourceProject || !destProject) return prevGroups
+
+//           const [movedTask] = sourceProject.tasks.splice(source.index, 1)
+//           destProject.tasks.splice(destination.index, 0, movedTask)
+
+//           // 完了状態を更新
+//           updateProjectCompletionStatus(sourceGroupId, sourceProjectId)
+//           updateProjectCompletionStatus(destGroupId, destProjectId)
+
+//           return newGroups
+//         })
+//       }
+//       return
+//     }
+
+//     // サブタスクの並び替え
+//     if (type === "subtask") {
+//       const [sourceGroupId, sourceProjectId, sourceTaskId] = source.droppableId.split(":")
+//       const [destGroupId, destProjectId, destTaskId] = destination.droppableId.split(":")
+
+//       // 同じタスク内での並び替え
+//       if (sourceGroupId === destGroupId && sourceProjectId === destProjectId && sourceTaskId === destTaskId) {
+//         setTaskGroups((prevGroups) =>
+//           prevGroups.map((group) => {
+//             if (group.id === sourceGroupId) {
+//               return {
+//                 ...group,
+//                 projects: group.projects.map((project) => {
+//                   if (project.id === sourceProjectId) {
+//                     return {
+//                       ...project,
+//                       tasks: project.tasks.map((task) => {
+//                         if (task.id === sourceTaskId) {
+//                           const newSubtasks = Array.from(task.subtasks)
+//                           const [removed] = newSubtasks.splice(source.index, 1)
+//                           newSubtasks.splice(destination.index, 0, removed)
+//                           return { ...task, subtasks: newSubtasks }
+//                         }
+//                         return task
+//                       }),
+//                     }
+//                   }
+//                   return project
+//                 }),
+//               }
+//             }
+//             return group
+//           }),
+//         )
+//       } else {
+//         // 異なるタスク間での移動
+//         setTaskGroups((prevGroups) => {
+//           const newGroups = [...prevGroups]
+//           const sourceGroup = newGroups.find((g) => g.id === sourceGroupId)
+//           const destGroup = newGroups.find((g) => g.id === destGroupId)
+
+//           if (!sourceGroup || !destGroup) return prevGroups
+
+//           const sourceProject = sourceGroup.projects.find((p) => p.id === sourceProjectId)
+//           const destProject = destGroup.projects.find((p) => p.id === destProjectId)
+
+//           if (!sourceProject || !destProject) return prevGroups
+
+//           const sourceTask = sourceProject.tasks.find((t) => t.id === sourceTaskId)
+//           const destTask = destProject.tasks.find((t) => t.id === destTaskId)
+
+//           if (!sourceTask || !destTask) return prevGroups
+
+//           const [movedSubtask] = sourceTask.subtasks.splice(source.index, 1)
+//           destTask.subtasks.splice(destination.index, 0, movedSubtask)
+
+//           // 進捗状況を更新
+//           updateTaskProgress(sourceGroupId, sourceProjectId, sourceTaskId)
+//           updateTaskProgress(destGroupId, destProjectId, destTaskId)
+
+//           return newGroups
+//         })
+//       }
+//     }
+//   }
+
+//   const formatTimeDisplay = (date: Date) => {
+//     return date.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })
+//   }
+
+//   const formatDateDisplay = (date: Date) => {
+//     return date.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "long" })
+//   }
+
+//   // 時間変更ハンドラーを追加
+//   const handleTimeChange = (groupId: string, projectId: string, startTime: string, endTime: string) => {
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) => {
+//         if (group.id === groupId) {
+//           return {
+//             ...group,
+//             projects: group.projects.map((project) => {
+//               if (project.id === projectId) {
+//                 return {
+//                   ...project,
+//                   startTime,
+//                   endTime,
+//                 }
+//               }
+//               return project
+//             }),
+//           }
+//         }
+//         return group
+//       }),
+//     )
+//   }
+
+//   // タスクの時間変更ハンドラー
+//   const handleTaskTimeChange = (
+//     groupId: string,
+//     projectId: string,
+//     taskId: string,
+//     startTime: string,
+//     endTime: string,
+//   ) => {
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) => {
+//         if (group.id === groupId) {
+//           return {
+//             ...group,
+//             projects: group.projects.map((project) => {
+//               if (project.id === projectId) {
+//                 return {
+//                   ...project,
+//                   tasks: project.tasks.map((task) => {
+//                     if (task.id === taskId) {
+//                       return {
+//                         ...task,
+//                         startTime,
+//                         endTime,
+//                       }
+//                     }
+//                     return task
+//                   }),
+//                 }
+//               }
+//               return project
+//             }),
+//           }
+//         }
+//         return group
+//       }),
+//     )
+//   }
+
+//   /*
+//   // サブタスクの時間変更ハンドラー
+//   // 必要になったら以下のコメントを解除して使用
+//   const handleSubtaskTimeChange = (
+//     groupId: string,
+//     projectId: string,
+//     taskId: string,
+//     subtaskId: string,
+//     startTime: string,
+//     endTime: string,
+//   ) => {
+//     setTaskGroups((prevGroups) =>
+//       prevGroups.map((group) => {
+//         if (group.id === groupId) {
+//           return {
+//             ...group,
+//             projects: group.projects.map((project) => {
+//               if (project.id === projectId) {
+//                 return {
+//                   ...project,
+//                   tasks: project.tasks.map((task) => {
+//                     if (task.id === taskId) {
+//                       return {
+//                         ...task,
+//                         subtasks: task.subtasks.map((subtask) => {
+//                           if (subtask.id === subtaskId) {
+//                             return {
+//                               ...subtask,
+//                               startTime,
+//                               endTime,
+//                             }
+//                           }
+//                           return subtask
+//                         }),
+//                       }
+//                     }
+//                     return task
+//                   }),
+//                 }
+//               }
+//               return project
+//             }),
+//           }
+//         }
+//         return group
+//       }),
+//     )
+//   }
+//   */
+
+//   if (isLoading) {
+//     return (
+//       <div className="flex h-screen">
+//         <Sidebar />
+//         <div className="flex flex-1 items-center justify-center">
+//           <p className="text-gray-500">読み込み中...</p>
+//         </div>
+//       </div>
+//     )
+//   }
+
+//   return (
+//     <div className="flex h-screen">
+//       <Sidebar />
+//       <div className="flex flex-1 flex-col overflow-hidden">
+//         <main className="flex flex-1 overflow-auto p-6">
+//           <div className="w-full max-w-5xl mx-auto">
+//             {/* ヘッダー部分 */}
+//             <div className="mb-6 flex items-center justify-between">
+//               <div>
+//                 <h1 className="text-2xl font-bold">ダッシュボード</h1>
+//                 <p className="text-sm text-gray-500">{formatDateDisplay(currentTime)}</p>
+//               </div>
+//               <div className="flex items-center gap-2">
+//                 <div className="text-right">
+//                   <p className="text-sm font-medium">現在時刻</p>
+//                   <p className="text-2xl font-bold">{formatTimeDisplay(currentTime)}</p>
+//                 </div>
+//               </div>
+//             </div>
+
+//             <DragDropContext onDragEnd={handleDragEnd}>
+//               <Droppable droppableId="taskGroups" type="taskGroup">
+//                 {(provided) => (
+//                   <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-6">
+//                     {taskGroups.map((group, groupIndex) => (
+//                       <Draggable key={group.id} draggableId={group.id} index={groupIndex}>
+//                         {(provided) => (
+//                           <div
+//                             ref={provided.innerRef}
+//                             {...provided.draggableProps}
+//                             {...provided.dragHandleProps}
+//                             className="mb-6"
+//                           >
+//                             <Card>
+//                               <CardHeader className="bg-gray-50 p-4 flex flex-row items-center justify-between">
+//                                 <div className="flex items-center">
+//                                   <Button
+//                                     variant="ghost"
+//                                     size="sm"
+//                                     className="p-0 h-6 w-6 mr-2"
+//                                     onClick={() => toggleTaskGroup(group.id)}
+//                                   >
+//                                     {group.expanded ? (
+//                                       <ChevronDown className="h-5 w-5" />
+//                                     ) : (
+//                                       <ChevronRight className="h-5 w-5" />
+//                                     )}
+//                                   </Button>
+//                                   <CardTitle className="text-lg font-bold">
+//                                     {group.id === "today" ? "### 今日のタスク" : "### 未定のタスク"}
+//                                   </CardTitle>
+//                                 </div>
+//                               </CardHeader>
+
+//                               {group.expanded && (
+//                                 <CardContent className="p-4">
+//                                   <Droppable droppableId={group.id} type="project">
+//                                     {(provided) => (
+//                                       <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
+//                                         {group.projects.map((project, projectIndex) => (
+//                                           <Draggable key={project.id} draggableId={project.id} index={projectIndex}>
+//                                             {(provided) => (
+//                                               <div
+//                                                 ref={provided.innerRef}
+//                                                 {...provided.draggableProps}
+//                                                 className="border rounded-md overflow-hidden"
+//                                               >
+//                                                 {/* プロジェクト */}
+//                                                 <HierarchicalTaskItem
+//                                                   id={project.id}
+//                                                   title={project.title}
+//                                                   completed={project.completed}
+//                                                   level={1}
+//                                                   expanded={project.expanded}
+//                                                   hasChildren={project.tasks.length > 0}
+//                                                   startTime={project.startTime}
+//                                                   endTime={project.endTime}
+//                                                   onToggleExpand={() => toggleProject(group.id, project.id)}
+//                                                   onToggleComplete={() => toggleProjectComplete(group.id, project.id)}
+//                                                   onDelete={() => handleDeleteProject(group.id, project.id)}
+//                                                   onAddChild={() => handleAddTask(group.id, project.id)}
+//                                                   dragHandleProps={provided.dragHandleProps}
+//                                                   className="bg-gray-50"
+//                                                   onTimeChange={(startTime, endTime) =>
+//                                                     handleTimeChange(group.id, project.id, startTime, endTime)
+//                                                   }
+//                                                 />
+
+//                                                 {project.expanded && (
+//                                                   <div>
+//                                                     <Droppable droppableId={`${group.id}:${project.id}`} type="task">
+//                                                       {(provided) => (
+//                                                         <div
+//                                                           {...provided.droppableProps}
+//                                                           ref={provided.innerRef}
+//                                                           className="space-y-1"
+//                                                         >
+//                                                           {project.tasks.map((task, taskIndex) => (
+//                                                             <Draggable
+//                                                               key={task.id}
+//                                                               draggableId={task.id}
+//                                                               index={taskIndex}
+//                                                             >
+//                                                               {(provided) => (
+//                                                                 <div
+//                                                                   ref={provided.innerRef}
+//                                                                   {...provided.draggableProps}
+//                                                                 >
+//                                                                   {/* タスク */}
+//                                                                   <HierarchicalTaskItem
+//                                                                     id={task.id}
+//                                                                     title={task.title}
+//                                                                     completed={task.completed}
+//                                                                     level={2}
+//                                                                     expanded={task.expanded}
+//                                                                     hasChildren={task.subtasks.length > 0}
+//                                                                     startTime={task.startTime}
+//                                                                     endTime={task.endTime}
+//                                                                     onToggleExpand={() =>
+//                                                                       toggleTask(group.id, project.id, task.id)
+//                                                                     }
+//                                                                     onToggleComplete={() =>
+//                                                                       toggleTaskComplete(group.id, project.id, task.id)
+//                                                                     }
+//                                                                     onDelete={() =>
+//                                                                       handleDeleteTask(group.id, project.id, task.id)
+//                                                                     }
+//                                                                     onAddChild={() =>
+//                                                                       handleAddSubtask(group.id, project.id, task.id)
+//                                                                     }
+//                                                                     dragHandleProps={provided.dragHandleProps}
+//                                                                     onTimeChange={(startTime, endTime) =>
+//                                                                       handleTaskTimeChange(
+//                                                                         group.id,
+//                                                                         project.id,
+//                                                                         task.id,
+//                                                                         startTime,
+//                                                                         endTime,
+//                                                                       )
+//                                                                     }
+//                                                                   />
+
+//                                                                   {task.expanded && (
+//                                                                     <Droppable
+//                                                                       droppableId={`${group.id}:${project.id}:${task.id}`}
+//                                                                       type="subtask"
+//                                                                     >
+//                                                                       {(provided) => (
+//                                                                         <div
+//                                                                           {...provided.droppableProps}
+//                                                                           ref={provided.innerRef}
+//                                                                         >
+//                                                                           {task.subtasks.map(
+//                                                                             (subtask, subtaskIndex) => (
+//                                                                               <Draggable
+//                                                                                 key={subtask.id}
+//                                                                                 draggableId={subtask.id}
+//                                                                                 index={subtaskIndex}
+//                                                                               >
+//                                                                                 {(provided) => (
+//                                                                                   <div
+//                                                                                     ref={provided.innerRef}
+//                                                                                     {...provided.draggableProps}
+//                                                                                   >
+//                                                                                     {/* サブタスク */}
+//                                                                                     <HierarchicalTaskItem
+//                                                                                       id={subtask.id}
+//                                                                                       title={subtask.title}
+//                                                                                       completed={subtask.completed}
+//                                                                                       level={3}
+//                                                                                       onToggleComplete={() =>
+//                                                                                         toggleSubtaskComplete(
+//                                                                                           group.id,
+//                                                                                           project.id,
+//                                                                                           task.id,
+//                                                                                           subtask.id,
+//                                                                                         )
+//                                                                                       }
+//                                                                                       onDelete={() =>
+//                                                                                         handleDeleteSubtask(
+//                                                                                           group.id,
+//                                                                                           project.id,
+//                                                                                           task.id,
+//                                                                                           subtask.id,
+//                                                                                         )
+//                                                                                       }
+//                                                                                       dragHandleProps={
+//                                                                                         provided.dragHandleProps
+//                                                                                       }
+//                                                                                       /*
+//                                                                                       // サブタスクの時間管理機能（現在は非表示）
+//                                                                                       // 必要になったら以下のコメントを解除して使用
+//                                                                                       // isSubtask={true}
+//                                                                                       // startTime={subtask.startTime}
+//                                                                                       // endTime={subtask.endTime}
+//                                                                                       // onTimeChange={(startTime, endTime) =>
+//                                                                                       //   handleSubtaskTimeChange(
+//                                                                                       //     group.id,
+//                                                                                       //     project.id,
+//                                                                                       //     task.id,
+//                                                                                       //     subtask.id,
+//                                                                                       //     startTime,
+//                                                                                       //     endTime,
+//                                                                                       //   )
+//                                                                                       // }
+//                                                                                       */
+//                                                                                     />
+//                                                                                   </div>
+//                                                                                 )}
+//                                                                               </Draggable>
+//                                                                             ),
+//                                                                           )}
+//                                                                           {provided.placeholder}
+//                                                                         </div>
+//                                                                       )}
+//                                                                     </Droppable>
+//                                                                   )}
+//                                                                 </div>
+//                                                               )}
+//                                                             </Draggable>
+//                                                           ))}
+//                                                           {provided.placeholder}
+//                                                         </div>
+//                                                       )}
+//                                                     </Droppable>
+
+//                                                     {/* タスク追加ボタン */}
+//                                                     <div className="mt-2 pl-8">
+//                                                       <Button
+//                                                         variant="ghost"
+//                                                         size="sm"
+//                                                         className="text-gray-500 hover:text-gray-700"
+//                                                         onClick={() => handleAddTask(group.id, project.id)}
+//                                                       >
+//                                                         <Plus className="h-4 w-4 mr-1" />
+//                                                         タスクを追加
+//                                                       </Button>
+//                                                     </div>
+//                                                   </div>
+//                                                 )}
+//                                               </div>
+//                                             )}
+//                                           </Draggable>
+//                                         ))}
+//                                         {provided.placeholder}
+
+//                                         {/* プロジェクト追加ボタン */}
+//                                         <div className="mt-4">
+//                                           <Button
+//                                             variant="outline"
+//                                             className="border-dashed w-full"
+//                                             onClick={() => handleAddProject(group.id)}
+//                                           >
+//                                             <Plus className="mr-2 h-4 w-4" />
+//                                             新しいプロジェクトを追加
+//                                           </Button>
+//                                         </div>
+//                                       </div>
+//                                     )}
+//                                   </Droppable>
+//                                 </CardContent>
+//                               )}
+//                             </Card>
+//                           </div>
+//                         )}
+//                       </Draggable>
+//                     ))}
+//                     {provided.placeholder}
+//                   </div>
+//                 )}
+//               </Droppable>
+//             </DragDropContext>
+//           </div>
+//         </main>
+//       </div>
+
+//       {/* AIコーチサイドバー */}
+//       <AICoachSidebar />
+//     </div>
+//   )
+// }
