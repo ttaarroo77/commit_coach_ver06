@@ -5,7 +5,7 @@ import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { DndContext, closestCenter } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
-import { HierarchicalTaskItem } from "@/components/hierarchical-task-item"
+import { HierarchicalTaskItem } from "@/components/dashboard/HierarchicalTaskItem"
 import { DashboardCtx } from "../_hooks/use-dashboard"
 import { TaskItem } from "./task-item"
 

@@ -353,13 +353,17 @@ export const useDashboard = () => {
   }
   
   // 時間変更のハンドラー
-  const handleTimeChange = (gid: string, pid: string, startTime: Date | null, endTime: Date | null) => {
+  const handleTimeChange = (gid: string, pid: string, startTime: string, endTime: string) => {
     setTaskGroups(prev => 
       prev.map(g => 
         g.id === gid ? {
           ...g,
           projects: g.projects.map(p => 
-            p.id === pid ? { ...p, startTime, endTime } : p
+            p.id === pid ? { 
+              ...p, 
+              startTime, 
+              endTime 
+            } : p
           )
         } : g
       )
@@ -367,7 +371,7 @@ export const useDashboard = () => {
   }
   
   // タスクの時間変更ハンドラー
-  const handleTaskTimeChange = (gid: string, pid: string, tid: string, startTime: Date | null, endTime: Date | null) => {
+  const handleTaskTimeChange = (gid: string, pid: string, tid: string, startTime: string, endTime: string) => {
     setTaskGroups(prev => 
       prev.map(g => 
         g.id === gid ? {

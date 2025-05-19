@@ -8,6 +8,10 @@ import { TaskGroupList } from "./_components/task-group-list"
 import { useDashboard } from "./_hooks/use-dashboard"
 import { Button } from "@/components/ui/button"
 
+import { HierarchicalTaskItem } from "@/components/dashboard/HierarchicalTaskItem"
+
+
+
 export default function DashboardPage() {
   const ctx = useDashboard()
 

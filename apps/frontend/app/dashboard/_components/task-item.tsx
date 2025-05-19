@@ -1,15 +1,16 @@
 // apps/frontend/app/dashboard/_components/task-item.tsx
 "use client"
-import { HierarchicalTaskItem } from "@/components/hierarchical-task-item"
+import { HierarchicalTaskItem } from "@/components/dashboard/HierarchicalTaskItem"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { DashboardCtx } from "../_hooks/use-dashboard"
+import { type Task } from "@/lib/dashboard-utils"
 
 interface Props {
   ctx: DashboardCtx
   gid: string
   pid: string
-  task: ReturnType<typeof import("@/lib/dashboard-utils").Task> extends infer T ? T : never
+  task: Task
   idx: number
   dragProps: any
 }
