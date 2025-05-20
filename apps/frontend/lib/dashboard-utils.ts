@@ -4,6 +4,7 @@ export type SubTask = {
   id: string
   title: string
   completed: boolean
+  sort_order: number  // 並び順
   /* 時間欄は後日拡張
   startTime?: string
   endTime?: string
@@ -18,6 +19,7 @@ export type Task = {
   subtasks: SubTask[]
   progress: number
   status: "todo" | "in-progress" | "completed"
+  sort_order: number  // 並び順
   startTime?: string
   endTime?: string
   project?: string
@@ -31,6 +33,7 @@ export type Project = {
   expanded: boolean
   tasks: Task[]
   status: "todo" | "in-progress" | "completed"
+  sort_order: number  // 並び順
   startTime?: string
   endTime?: string
   priority?: string
@@ -292,7 +295,8 @@ export const addProjectToDashboard = (projectId: string, projectTitle: string, g
 }
 
 // タスクをプロジェクトに追加（サブタスクも含めて）
-export const addTaskToProject = (taskTitle: string, projectId: string, groupId: string, sourceTaskData?: any): void => {
+export const addTaskToProject = (taskTitle: string, projectId: string, groupId: string, options?: { sort_order?: number, sourceTaskData?: any }): void => {
+  const sourceTaskData = options?.sourceTaskData;
   const dashboardData = getDashboardData()
   const updatedData = dashboardData.map((group) => {
     if (group.id === groupId) {
@@ -343,6 +347,7 @@ export const addTaskToProject = (taskTitle: string, projectId: string, groupId: 
                 status: "todo",
                 priority: "中",
                 progress: 0,
+                sort_order: options?.sort_order || 0,
               }
             }
 
@@ -369,7 +374,7 @@ export const addTaskToProject = (taskTitle: string, projectId: string, groupId: 
 }
 
 // サブタスクをタスクに追加
-export const addSubtaskToTask = (subtaskTitle: string, taskId: string, projectId: string, groupId: string): void => {
+export const addSubtaskToTask = (subtaskTitle: string, taskId: string, projectId: string, groupId: string, sort_order: number = 0): void => {
   const dashboardData = getDashboardData()
   const updatedData = dashboardData.map((group) => {
     if (group.id === groupId) {
@@ -385,6 +390,7 @@ export const addSubtaskToTask = (subtaskTitle: string, taskId: string, projectId
                     id: `subtask-${Date.now()}`,
                     title: subtaskTitle,
                     completed: false,
+                    sort_order: sort_order,
                   }
                   return {
                     ...task,
@@ -409,6 +415,46 @@ export const addSubtaskToTask = (subtaskTitle: string, taskId: string, projectId
 // ===========================================================
 // 🛠 ここから下を new Hook 仕様に合わせて修正
 // ===========================================================
+
+// --- 並び替え関連関数 -------------------------------------------
+
+// 並び替え処理用のAPI関数
+export const reorderItems = async <T extends { id: string; sort_order: number }>(items: T[], startIndex: number, endIndex: number): Promise<T[]> => {
+  const result = Array.from(items);
+  const [removed] = result.splice(startIndex, 1);
+  result.splice(endIndex, 0, removed);
+
+  // sort_orderを更新
+  const updatedItems = result.map((item, index) => ({
+    ...item,
+    sort_order: index
+  }));
+
+  return updatedItems;
+};
+
+// データのsort_order順でソート
+export const sortByOrder = <T extends { sort_order: number }>(items: T[]): T[] => {
+  return [...items].sort((a, b) => a.sort_order - b.sort_order);
+};
+
+// 並び替えAPIを呼び出すための関数
+export const callReorderApi = async (path: string, ids: string[], order: number[]): Promise<boolean> => {
+  try {
+    const response = await fetch(`/api/tasks/reorder${path}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ ids, order })
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('並び替えAPI呼び出しエラー:', error);
+    return false;
+  }
+};
 
 /**
  * 新仕様：SubTask[] を受け取って進捗(%)を返す

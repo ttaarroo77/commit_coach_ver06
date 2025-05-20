@@ -8,7 +8,12 @@ import {
   addTaskToProject,
   addSubtaskToTask,
   calculateProgress,
+  reorderItems,
+  sortByOrder,
+  callReorderApi,
   type TaskGroup,
+  type Project,
+  type Task,
   type SubTask,
 } from "@/lib/dashboard-utils"
 import type { DragEndEvent } from "@dnd-kit/core"
@@ -221,11 +226,38 @@ export const useDashboard = () => {
     setTaskGroups(getDashboardData())
   }
   const handleAddTask = (gid: string, pid: string) => {
-    addTaskToProject(`新しいタスク ${new Date().toLocaleTimeString()}`, pid, gid)
+    // 既存タスクの最大sort_orderを取得
+    const group = taskGroups.find(g => g.id === gid);
+    if (!group) return;
+    
+    const project = group.projects.find(p => p.id === pid);
+    if (!project) return;
+    
+    const maxOrder = project.tasks.length > 0 
+      ? Math.max(...project.tasks.map(t => t.sort_order)) 
+      : -1;
+    
+    // 新しいsort_orderは最大値+1
+    addTaskToProject(`新しいタスク #${Date.now().toString().slice(-4)}`, pid, gid, { sort_order: maxOrder + 1 });
     setTaskGroups(getDashboardData())
   }
   const handleAddSubtask = (gid: string, pid: string, tid: string) => {
-    addSubtaskToTask(`新しいサブタスク ${new Date().toLocaleTimeString()}`, tid, pid, gid)
+    // 既存サブタスクの最大sort_orderを取得
+    const group = taskGroups.find(g => g.id === gid);
+    if (!group) return;
+    
+    const project = group.projects.find(p => p.id === pid);
+    if (!project) return;
+    
+    const task = project.tasks.find(t => t.id === tid);
+    if (!task) return;
+    
+    const maxOrder = task.subtasks.length > 0 
+      ? Math.max(...task.subtasks.map(s => s.sort_order)) 
+      : -1;
+    
+    // 新しいsort_orderは最大値+1
+    addSubtaskToTask(`サブタスク #${Date.now().toString().slice(-4)}`, tid, pid, gid, maxOrder + 1);
     setTaskGroups(getDashboardData())
   }
 
@@ -389,6 +421,157 @@ export const useDashboard = () => {
     );
   }
 
+    // プロジェクトのタイトル編集
+  const handleProjectTitleChange = (gid: string, pid: string, newTitle: string) => {
+    setTaskGroups((prev) =>
+      prev.map((g) =>
+        g.id === gid
+          ? {
+              ...g,
+              projects: g.projects.map((p) =>
+                p.id === pid ? { ...p, title: newTitle } : p
+              ),
+            }
+          : g
+      )
+    );
+  };
+
+  // タスクのタイトル編集
+  const handleTaskTitleChange = (gid: string, pid: string, tid: string, newTitle: string) => {
+    setTaskGroups((prev) =>
+      prev.map((g) =>
+        g.id === gid
+          ? {
+              ...g,
+              projects: g.projects.map((p) =>
+                p.id === pid
+                  ? {
+                      ...p,
+                      tasks: p.tasks.map((t) =>
+                        t.id === tid ? { ...t, title: newTitle } : t
+                      ),
+                    }
+                  : p
+              ),
+            }
+          : g
+      )
+    );
+  };
+
+  // サブタスクのタイトル編集
+  const handleSubtaskTitleChange = (gid: string, pid: string, tid: string, sid: string, newTitle: string) => {
+    setTaskGroups((prev) =>
+      prev.map((g) =>
+        g.id === gid
+          ? {
+              ...g,
+              projects: g.projects.map((p) =>
+                p.id === pid
+                  ? {
+                      ...p,
+                      tasks: p.tasks.map((t) =>
+                        t.id === tid
+                          ? {
+                              ...t,
+                              subtasks: t.subtasks.map((s) =>
+                                s.id === sid ? { ...s, title: newTitle } : s
+                              ),
+                            }
+                          : t
+                      ),
+                    }
+                  : p
+              ),
+            }
+          : g
+      )
+    );
+    updateTaskProgress(gid, pid, tid);
+  };
+
+  // プロジェクトの並べ替え（sort_order 使用）
+  const handleReorderProjects = async (gid: string, startIndex: number, endIndex: number) => {
+    const group = taskGroups.find((g) => g.id === gid);
+    if (!group) return;
+    
+    const projects = [...group.projects];
+    const updatedProjects = await reorderItems(projects, startIndex, endIndex);
+    
+    // データを更新
+    setTaskGroups(taskGroups.map((g) =>
+      g.id === gid ? { ...g, projects: updatedProjects } : g
+    ));
+    
+    // API呼び出し（バックエンド同期）
+    const ids = updatedProjects.map(p => p.id);
+    const orders = updatedProjects.map(p => p.sort_order);
+    callReorderApi('/projects', ids, orders);
+  };
+
+  // タスクの並べ替え（sort_order 使用）
+  const handleReorderTasks = async (gid: string, pid: string, startIndex: number, endIndex: number) => {
+    const group = taskGroups.find((g) => g.id === gid);
+    if (!group) return;
+    
+    const project = group.projects.find((p) => p.id === pid);
+    if (!project) return;
+    
+    const tasks = [...project.tasks];
+    const updatedTasks = await reorderItems(tasks, startIndex, endIndex);
+    
+    // データを更新
+    setTaskGroups(taskGroups.map((g) =>
+      g.id === gid ? {
+        ...g,
+        projects: g.projects.map((p) =>
+          p.id === pid ? { ...p, tasks: updatedTasks } : p
+        )
+      } : g
+    ));
+    
+    // API呼び出し（バックエンド同期）
+    const ids = updatedTasks.map(t => t.id);
+    const orders = updatedTasks.map(t => t.sort_order);
+    callReorderApi(`/tasks?groupId=${gid}&projectId=${pid}`, ids, orders);
+  };
+
+  // サブタスクの並べ替え（sort_order 使用）
+  const handleReorderSubtasks = async (gid: string, pid: string, tid: string, startIndex: number, endIndex: number) => {
+    const group = taskGroups.find((g) => g.id === gid);
+    if (!group) return;
+    
+    const project = group.projects.find((p) => p.id === pid);
+    if (!project) return;
+    
+    const task = project.tasks.find((t) => t.id === tid);
+    if (!task) return;
+    
+    const subtasks = [...task.subtasks];
+    const updatedSubtasks = await reorderItems(subtasks, startIndex, endIndex);
+    
+    // データを更新
+    setTaskGroups(taskGroups.map((g) =>
+      g.id === gid ? {
+        ...g,
+        projects: g.projects.map((p) =>
+          p.id === pid ? {
+            ...p,
+            tasks: p.tasks.map((t) =>
+              t.id === tid ? { ...t, subtasks: updatedSubtasks } : t
+            )
+          } : p
+        )
+      } : g
+    ));
+    
+    // API呼び出し（バックエンド同期）
+    const ids = updatedSubtasks.map(s => s.id);
+    const orders = updatedSubtasks.map(s => s.sort_order);
+    callReorderApi(`/subtasks?groupId=${gid}&projectId=${pid}&taskId=${tid}`, ids, orders);
+  };
+
   return {
     /* state */
     taskGroups,
@@ -415,5 +598,12 @@ export const useDashboard = () => {
     handleTaskDragEnd,
     handleTimeChange,
     handleTaskTimeChange,
+    /* 新機能：編集と並び替え */
+    handleProjectTitleChange,
+    handleTaskTitleChange,
+    handleSubtaskTitleChange,
+    handleReorderProjects,
+    handleReorderTasks,
+    handleReorderSubtasks
   }
 }
