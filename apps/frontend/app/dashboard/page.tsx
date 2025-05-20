@@ -6,38 +6,29 @@ import { AICoachSidebar } from "@/components/ai-coach-sidebar"
 import { HeaderSection } from "./_components/header-section"
 import { TaskGroupList } from "./_components/task-group-list"
 import { useDashboard } from "./_hooks/use-dashboard"
-import { Button } from "@/components/ui/button"
-
-import { HierarchicalTaskItem } from "@/components/dashboard/HierarchicalTaskItem"
-
-
 
 export default function DashboardPage() {
   const ctx = useDashboard()
 
-  if (ctx.isLoading)
-    return (
-      <div className="flex h-screen">
-        <Sidebar />
-        <div className="flex flex-1 items-center justify-center">
-          <p className="text-gray-500">読み込み中...</p>
-        </div>
-      </div>
-    )
+  if (ctx.isLoading) return (<div className="p-6">読み込み中...</div>)
 
   return (
     <div className="flex h-screen">
+      {/* 左サイドバー */}
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 overflow-auto p-6 w-full max-w-5xl mx-auto">
-          <HeaderSection
-            currentTime={ctx.currentTime}
-            formatDateDisplay={ctx.formatDateDisplay}
-            formatTimeDisplay={ctx.formatTimeDisplay}
-          />
-          <TaskGroupList {...ctx} />
-        </main>
-      </div>
+
+      {/* メインコンテンツ */}
+      <main className="flex-1 flex flex-col overflow-y-auto p-4 space-y-4">
+        <HeaderSection
+          currentTime={ctx.currentTime}
+          formatDateDisplay={ctx.formatDateDisplay}
+          formatTimeDisplay={ctx.formatTimeDisplay}
+        />
+        {/* タスク一覧 */}
+        <TaskGroupList {...ctx} />
+      </main>
+
+      {/* 右の AI コーチ */}
       <AICoachSidebar />
     </div>
   )
