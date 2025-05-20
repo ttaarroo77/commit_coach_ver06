@@ -6,28 +6,19 @@
 
 ## Scratchpadの基本入力項目 – 開発タスク & エラーログ
 
-### Backlog
+### Backlog // まだ着手していない実装タスク。優先度順に並べる
 
-### In Progress
+### In Progress // 作業中のタスク。Composer がここを中心に処理
 
-### Blockers / Errors
+### Blockers / Errors // エラー・技術的課題。最優先で解決する
 
-### Done
+### Done // 完了タスク。週次でアーカイブへ移動
 
-### Ideas / Icebox
+### Ideas & Icebox // 将来やるかもしれないアイデア・メモ
 
-### Meta
+### Meta // Scratchpad 運用ルールのメモ
 
-````
 
-| セクション          | 用途                                        |
-|--------------------|-------------------------------------------|
-| **Backlog**        | まだ着手していない実装タスク。優先度順に並べる |
-| **In Progress**    | 作業中のタスク。Composer がここを中心に処理   |
-| **Blockers / Errors** | エラー・技術的課題。最優先で解決する         |
-| **Done**           | 完了タスク。週次でアーカイブへ移動            |
-| **Ideas / Icebox** | 将来やるかもしれないアイデア・メモ            |
-| **Meta**           | Scratchpad 運用ルールのメモ                  |
 
 ## エントリ書式
 ```markdown
@@ -41,35 +32,9 @@
 * ラベル例: `feature`, `bug`, `chore`, `idea`
 * 期日は `YYYY-MM-DD` 固定表記
 
-## 使い方フロー
 
-1. **タスク追加**
-   `Backlog` へエントリを追記。Composer へは「Backlog を見て計画して」と指示。
-2. **着手**
-   作業開始時に `- [ ]` を `In Progress` へ移動。
-3. **ブロッカー発生**
-   エラーが出たら同じフォーマットで `Blockers / Errors` へ移動。
-4. **完了**
-   `- [x]` に変えて `Done` へ。週次で `archive/scratchpad_YYYYMM.md` へ切り出す。
-5. **アイデアメモ**
-   閃きや将来タスクは `Ideas / Icebox` に置き、定期レビューで採用可否を判断。
 
-## Composer / Claude との連携例
-
-```text
-@scratchpad-management.mdc に従い、
-## In Progress と ## Blockers / Errors だけを抽出して
-優先度順に解決策を提案してください。
-```
-
-* セクション限定で渡すと応答高速化
-* `Confidence` が低い行は質問を促して精度を高める
-
-````
-
----
-
-### 2. 注意点（例: `caveats.md`）
+# scratchpad.md の 注意点（例: `caveats.md`）
 
 ```markdown
 # Scratchpad 運用時の注意点
@@ -109,3 +74,33 @@ $ cp templates/scratchpad_base.md skratchpad.md
 * 履歴を残すことで検索性を担保
 * memories.md にはアーカイブを参照するリンクを追記しておく
 
+
+
+
+## 使い方フロー
+
+1. **タスク追加**
+   `Backlog` へエントリを追記。Composer へは「Backlog を見て計画して」と指示。
+2. **着手**
+   作業開始時に `- [ ]` を `In Progress` へ移動。
+3. **ブロッカー発生**
+   エラーが出たら同じフォーマットで `Blockers / Errors` へ移動。
+4. **完了**
+   `- [x]` に変えて `Done` へ。週次で `archive/scratchpad_YYYYMM.md` へ切り出す。
+5. **アイデアメモ**
+   閃きや将来タスクは `Ideas / Icebox` に置き、定期レビューで採用可否を判断。
+
+## Composer / Claude との連携例
+
+```text
+@scratchpad-management.mdc に従い、
+## In Progress と ## Blockers / Errors だけを抽出して
+優先度順に解決策を提案してください。
+```
+
+* セクション限定で渡すと応答高速化
+* `Confidence` が低い行は質問を促して精度を高める
+
+````
+
+---
