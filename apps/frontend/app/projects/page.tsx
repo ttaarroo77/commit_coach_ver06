@@ -199,41 +199,45 @@ export default function ProjectsPage() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <main className="flex flex-1 overflow-auto">
           <div className="w-full max-w-5xl mx-auto p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center">
-                <h1 className="text-2xl font-bold"># プロジェクト一覧</h1>
+            <div className="max-w-[900px] mx-auto">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <h1 className="text-2xl font-bold"># プロジェクト一覧</h1>
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-4">
-              {/* プロジェクトリスト */}
-              {projects.map((project) => (
-                <Card key={project.id} className="shadow-sm">
-                  <CardContent className="p-0">
-                    <TaskGroup
-                      id={project.id}
-                      title={project.title}
-                      tasks={project.tasks || []}
-                      defaultExpanded={project.expanded}
-                      onDelete={() => handleDeleteProject(project.id)}
-                      onAddTask={() => handleAddTask(project.id)}
-                      onToggleExpand={() => toggleProjectExpanded(project.id)}
-                      onAddSubtask={(taskId) => handleAddSubtask(project.id, taskId)}
-                      onToggleTaskExpand={(taskId) => toggleTaskExpanded(project.id, taskId)}
-                      onTitleChange={(newTitle) => handleProjectTitleChange(project.id, newTitle)}
-                      onTaskTitleChange={(taskId, newTitle) => handleTaskTitleChange(project.id, taskId, newTitle)}
-                      onSubtaskTitleChange={(taskId, subtaskId, newTitle) =>
-                        handleSubtaskTitleChange(project.id, taskId, subtaskId, newTitle)
-                      }
-                      onBreakdown={() => console.log(`プロジェクト分解: ${project.id}`)}
-                    />
-                  </CardContent>
-                </Card>
-              ))}
+              <div className="space-y-4">
+                {/* プロジェクトリスト */}
+                {projects.map((project) => (
+                  <Card key={project.id} className="border border-gray-300 rounded-lg">
+                    <CardContent className="p-0">
+                      <TaskGroup
+                        id={project.id}
+                        title={project.title}
+                        tasks={project.tasks || []}
+                        defaultExpanded={project.expanded}
+                        onDelete={() => handleDeleteProject(project.id)}
+                        onAddTask={() => handleAddTask(project.id)}
+                        onToggleExpand={() => toggleProjectExpanded(project.id)}
+                        onAddSubtask={(taskId) => handleAddSubtask(project.id, taskId)}
+                        onToggleTaskExpand={(taskId) => toggleTaskExpanded(project.id, taskId)}
+                        onTitleChange={(newTitle) => handleProjectTitleChange(project.id, newTitle)}
+                        onTaskTitleChange={(taskId, newTitle) => handleTaskTitleChange(project.id, taskId, newTitle)}
+                        onSubtaskTitleChange={(taskId, subtaskId, newTitle) =>
+                          handleSubtaskTitleChange(project.id, taskId, subtaskId, newTitle)
+                        }
+                        onBreakdown={() => console.log(`プロジェクト分解: ${project.id}`)}
+                      />
+                    </CardContent>
+                  </Card>
+                ))}
 
-              {/* 新しいプロジェクトを追加ボタン */}
-              <div className="flex justify-center mt-6">
-                <Button variant="outline" className="border-dashed w-full max-w-sm" onClick={handleAddProject}>
+                {/* 新しいプロジェクトを追加ボタン */}
+                <Button
+                  variant="outline"
+                  className="border-dashed w-full text-sm"
+                  onClick={handleAddProject}
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   新しいプロジェクトを追加
                 </Button>
@@ -244,7 +248,7 @@ export default function ProjectsPage() {
       </div>
 
       {/* AIコーチサイドバー */}
-      <AICoachSidebar />
+      <AICoachSidebar defaultOpen={false} />
     </div>
   )
 }

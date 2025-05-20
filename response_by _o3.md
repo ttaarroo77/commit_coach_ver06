@@ -1,102 +1,221 @@
-### “v0 の見た目” と **feature/project-management** ブランチとの差分チェック
-
-| UIエリア       | v0（理想）                          | 現在                 | ズレ原因                                                                  |
-| ----------- | ------------------------------- | ------------------ | --------------------------------------------------------------------- |
-| プロジェクト‐カード  | **Card** コンポーネントで<br>影・余白・枠線あり  | プレーンな div          | Card を外した／クラス未付与                                                      |
-| インデント       | `pl-4 / pl-8 / pl-12` で階層       | すべて同じ left-padding | **TaskGroup → TaskItem → SubtaskItem** の<br>階層コンポーネントを使わず flat レンダリング |
-| 先頭アイコン      | `ChevronDown / Right` (18 px)   | “＞” が大きめ           | lucide-react アイコン → `>` 文字列へ誤置換                                       |
-| 行ホバー        | 行背景 `hover:bg-gray-50`          | なし                 | Tailwind クラスが抜けた                                                      |
-| 追加ボタン       | dotted-border の **＋ 新しいプロジェクト** | 実線ボタン              | `variant="outline"` + `border-dashed` が消えた                            |
-| AI コーチサイドバー | 横幅 320 px                       | 固定 360 px          | Sidebar の固定幅が変更                                                       |
+````markdown
+# 🎨 “v0 見本” と同じレイアウトに戻すパッチ
+（feature/project-management ブランチに適用）
 
 ---
 
-## 最短で **v0 の UI** に戻すパッチ
+## 0. ゴールを画像で再確認
+- **白カード + 薄い枠線／角丸**
+- カード内は **階層インデント** だけで余計な影は無し
+- 各行は `Chevron ▾ / ▸` + `Checkbox` + タイトル
+- 行ホバーで `bg-gray-50`
+- 追加ボタンは **破線** ボーダー
 
-### 1. Card レイアウトを復活
+---
 
-```diff
-- <div className="space-y-4">
-+ <div className="space-y-4">
-+   {/* プロジェクトカード */}
-+   {projects.map((project) => (
-+     <Card key={project.id} className="shadow-sm">
-+       <CardContent className="p-0">
-+         <TaskGroup ... />   {/* ← 中身はそのまま */}
-+       </CardContent>
-+     </Card>
-+   ))}
-+   …
-```
-
-### 2. TaskGroup / TaskItem 階層を再利用
-
-feature ブランチでは **`EditableTaskGroup`** に置き換わっていますが
-`TaskGroup → TaskItem → SubtaskItem` をそのまま import すれば
-v0 の **padding / インデント / ホバー色** が丸ごと戻ります。
+## 1. Project ラッパー = Card
+`TaskGroup` を包むだけで OK。Card は shadcn/ui のものを利用。
 
 ```diff
-- import { EditableTaskGroup } from "@/components/…"
-+ import { TaskGroup } from "@/components/task-group"
-…
-- <EditableTaskGroup … />
-+ <TaskGroup …/>
-```
-
-### 3. アイコンを文字列から lucide-react へ戻す
+-import { TaskGroup } from "@/components/task-group"
++import { Card, CardContent } from "@/components/ui/card"
++import { TaskGroup } from "@/components/task-group"
+````
 
 ```diff
-- <span className="text-lg mr-1">{project.expanded ? "▾" : "▸"}</span>
-+ <Button variant="ghost" size="icon" onClick={onToggle}>
-+   {project.expanded
-+     ? <ChevronDown size={18} className="text-blue-500"/>
-+     : <ChevronRight size={18} className="text-blue-500"/>}
-+ </Button>
+{projects.map((project) => (
+-  <TaskGroup … />
++  <Card key={project.id} className="border border-gray-300 rounded-lg">
++    <CardContent className="p-0">
++      <TaskGroup … />
++    </CardContent>
++  </Card>
+))}
 ```
 
-### 4. 行ホバーとインデント
+---
 
-各行コンテナに
+## 2. `TaskGroup` / `TaskItem` / `SubtaskItem` 共通スタイル
+
+> すべて **階層レベルで左パディングを変える**だけ。高さは 36 px に固定。
 
 ```tsx
-className="flex items-center py-1 pl-4 hover:bg-gray-50"
+/* apps/frontend/components/task-row.tsx ─ 新規 */
+import { ChevronDown, ChevronRight } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { cn } from "@/lib/utils"
+
+interface TaskRowProps {
+  level: 1 | 2 | 3
+  expanded?: boolean
+  hasChildren?: boolean
+  checked?: boolean
+  title: string
+  onToggle?: () => void
+  onCheck?: () => void
+  children?: React.ReactNode
+}
+
+export const TaskRow = ({
+  level,
+  expanded,
+  hasChildren,
+  checked,
+  title,
+  onToggle,
+  onCheck,
+  children,
+}: TaskRowProps) => {
+  const pad = level === 1 ? "pl-4" : level === 2 ? "pl-8" : "pl-12"
+
+  return (
+    <>
+      <div
+        className={cn(
+          "group flex items-center h-9 pr-4",
+          pad,
+          "hover:bg-gray-50"
+        )}
+      >
+        {/* Chevron */}
+        {hasChildren ? (
+          <button
+            onClick={onToggle}
+            className="mr-1 w-4 h-4 text-gray-600 hover:text-blue-600"
+          >
+            {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          </button>
+        ) : (
+          <span className="mr-1 w-4 h-4" />
+        )}
+
+        {/* Checkbox */}
+        <Checkbox checked={checked} onCheckedChange={onCheck} className="mr-2 h-4 w-4" />
+
+        {/* Title */}
+        <span
+          className={cn(
+            "truncate",
+            level === 1 && "font-semibold text-base",
+            level === 2 && "font-medium text-sm",
+            level === 3 && "text-sm"
+          )}
+        >
+          {title}
+        </span>
+      </div>
+
+      {/* 子階層 */}
+      {expanded && children}
+    </>
+  )
+}
 ```
 
-を付け、下位階層では **`pl-8`**, **`pl-12`** とずらして下さい
-（v0 の `TaskItem` / `SubtaskItem` コンポーネントと同じ）。
+### 2-1. `TaskGroup.tsx` に組み込む
 
-### 5. 「＋ 新しいプロジェクト」ボタン
+トップレベル（プロジェクト）・タスク・サブタスクの 3 レベルで再帰描画。
 
 ```diff
-- <Button variant="secondary" onClick={handleAddProject}>…
-+ <Button variant="outline" className="border-dashed" onClick={handleAddProject}>
-```
+-import { ChevronDown … } from "lucide-react"   // 不要
++import { TaskRow } from "./task-row"
 
-### 6. AI コーチサイドバーの幅
+export function TaskGroup(props: …) {
+  const { id, title, tasks, defaultExpanded, … } = props
+  const [expanded, setExpanded] = useState(defaultExpanded)
 
-```css
-/* apps/frontend/components/ai-coach-sidebar.tsx */
-.w-[320px]    /* ← v0 と同じ固定幅 */
+  return (
+    <>
+-     {/* 旧実装を全部削除 */}
++     <TaskRow
++       level={1}
++       title={`## ${title}`}
++       expanded={expanded}
++       hasChildren={tasks.length > 0}
++       onToggle={() => setExpanded(!expanded)}
++       checked={false}
++     />
++
++     {/* 子タスク一覧 */}
++     {expanded &&
++       tasks.map((task) => (
++         <TaskRow
++           key={task.id}
++           level={2}
++           title={`### ${task.title}`}
++           expanded={task.expanded}
++           hasChildren={task.subtasks.length > 0}
++           onToggle={() => props.onToggleTaskExpand?.(task.id)}
++           checked={task.completed}
++           onCheck={() => props.onTaskCheck?.(task.id)}
++         >
++           {/* サブタスク */}
++           {task.expanded &&
++             task.subtasks.map((st) => (
++               <TaskRow
++                 key={st.id}
++                 level={3}
++                 title={st.title}
++                 checked={st.completed}
++                 onCheck={() => props.onSubtaskCheck?.(task.id, st.id)}
++               />
++             ))}
++         </TaskRow>
++       ))}
+    </>
+  )
+}
 ```
 
 ---
 
-## もし **TaskGroup.tsx** を削除してしまった場合
+## 3. “＋ 新しいプロジェクト” ボタン
 
-`v0/commit-coach` ディレクトリに元の実装が残っているので
-**そのまま apps/frontend/components にコピー** → import パスを書き換えるだけで動きます。
-（型の衝突があれば `SharedTypes` に合わせて interface 名だけ直せば OK）
+既に `variant="outline" className="border-dashed"` になっているため OK
+→ 文字サイズを合わせたい場合は `text-sm` を追加。
+
+```diff
+<Button … className="border-dashed text-sm">
+```
 
 ---
 
-## 仕上げチェックリスト
+## 4. 余白と親レイアウト
 
-1. Card の枠 + 影が付いている
-2. プロジェクト／タスク／サブタスクが段階的にインデント
-3. 先頭の三角アイコンが 18 px & blue
-4. 行ホバーで薄灰色の背景
-5. 「＋ 新しいプロジェクト」ボタンが破線
-6. AI コーチバーが 320 px 幅
+スクリーンショット同様 **左右 200 px** 程度空けたい場合：
 
-これで **v0 のデザインとほぼ同一**になります。
-実装してみてズレが残る場合はスクショをもう一度送ってください 🙌
+```diff
+<div className="w-full max-w-5xl mx-auto p-6">
++  <div className="max-w-[900px] mx-auto">
+     … 既存コンテンツ …
++  </div>
+</div>
+```
+
+---
+
+## 5. AI コーチサイドバーを畳むボタン
+
+見本では閉じた状態になっているだけなので、
+`<AICoachSidebar defaultOpen={false}/>` を渡せば初期非表示になります
+（prop が無ければ実装追加）。
+
+---
+
+## ✅ チェックリスト
+
+| 完了                                        | 項目 |
+| ----------------------------------------- | -- |
+| \[ ] プロジェクト枠に **薄い境界線 & 角丸**              |    |
+| \[ ] 行高 ≒ 36 px、ホバーで `bg-gray-50`         |    |
+| \[ ] `▾ / ▸` アイコンは 14 px & 暗灰             |    |
+| \[ ] インデント: プロジェクト 4 px／タスク 8 px／サブ 12 px |    |
+| \[ ] サブタスクにさらに子要素は無い                      |    |
+| \[ ] 追加ボタンが破線・中央配置                        |    |
+| \[ ] AI サイドバーは初期閉じ／開閉ボタンで展開               |    |
+
+これで添付スクリーンショットと同じトーン&レイアウトに揃うはずです。
+実装してみてズレがあれば再キャプチャをください 🔧✨
+
+```
+```

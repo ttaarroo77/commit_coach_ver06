@@ -1,6 +1,10 @@
 // apps/frontend/components/ai-coach-sidebar.tsx
 "use client"
-export const AICoachSidebar = () => (
+interface AICoachSidebarProps {
+  defaultOpen?: boolean
+}
+
+export const AICoachSidebar = ({ defaultOpen = true }: AICoachSidebarProps) => (
   <aside className="w-[320px] border-l p-4 hidden lg:block">
     <h3 className="font-semibold mb-2">AI コーチ</h3>
     <p className="text-sm text-gray-500">ここにコーチングメッセージを表示</p>
