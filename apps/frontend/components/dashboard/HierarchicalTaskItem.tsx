@@ -57,15 +57,15 @@ export const HierarchicalTaskItem = ({
       {/* 展開 / 折りたたみ */}
       {hasChildren ? (
         <Button
-          variant="secondary"
+          variant="ghost"
           size="icon"
-          className="h-7 w-7 mr-2 text-white bg-blue-600 hover:bg-blue-700 border-0 shadow-sm"
+          className="h-12 w-12 mr-2 p-1 text-blue-600 hover:bg-blue-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
           onClick={onToggleExpand}
         >
-          {expanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+          {expanded ? <ChevronDown size={44} /> : <ChevronRight size={44} />}
         </Button>
       ) : (
-        <div className="w-7 mr-2" /> /* アイコン位置を合わせるためのダミー */
+        <div className="w-8 mr-2" /> /* アイコン位置を合わせるためのダミー */
       )}
 
       {/* 完了チェック */}
@@ -100,26 +100,26 @@ export const HierarchicalTaskItem = ({
       {/* 子要素追加（サブタスクには表示しない） */}
       {onAddChild && level !== 3 && (
         <Button
-          variant="secondary"
+          variant="ghost"
           size="icon"
-          className="h-7 w-7 mr-2 text-white bg-green-600 hover:bg-green-700 border-0 shadow-sm"
+          className="h-12 w-12 mr-2 p-1 text-green-600 hover:bg-green-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
           onClick={onAddChild}
           aria-label="add child"
         >
-          <Plus size={18} strokeWidth={2.5} />
+          <Plus size={44} strokeWidth={2.25} />
         </Button>
       )}
 
       {/* 削除 */}
       {onDelete && (
         <Button
-          variant="secondary"
+          variant="ghost"
           size="icon"
-          className="h-7 w-7 text-white bg-red-600 hover:bg-red-700 border-0 shadow-sm" 
+          className="h-11 w-11 p-1 text-red-600 hover:bg-red-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
           onClick={onDelete}
           aria-label="delete"
         >
-          <Trash2 size={18} />
+          <Trash2 size={44} />
         </Button>
       )}
 
