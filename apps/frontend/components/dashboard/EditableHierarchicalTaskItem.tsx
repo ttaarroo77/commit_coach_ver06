@@ -55,13 +55,16 @@ export const EditableHierarchicalTaskItem = ({
 
   return (
     <div
-      className={`flex items-center bg-white ${
+      className={`group flex items-center bg-white ${
         level === 1 ? "px-3 py-2" : level === 2 ? "pl-8 pr-3 py-2" : "pl-16 pr-3 py-1.5"
       } border-b last:border-b-0 ${level === 3 ? "bg-gray-50" : ""}`}
     >
       {/* ドラッグハンドル */}
       {dragHandleProps && (
-        <div {...dragHandleProps} className="cursor-move p-1 text-gray-400 hover:text-gray-600">
+        <div {...dragHandleProps} className="cursor-move p-1 text-gray-400 hover:text-gray-600
+                                  opacity-0 pointer-events-none
+                                  group-hover:opacity-100 group-hover:pointer-events-auto
+                                  transition-opacity duration-150">
           <GripVertical size={16} />
         </div>
       )}
@@ -120,7 +123,10 @@ export const EditableHierarchicalTaskItem = ({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 mr-2 p-1 text-green-600 hover:bg-green-100/70"
+          className="h-8 w-8 mr-2 p-1 text-green-600 hover:bg-green-100/70
+                     opacity-0 pointer-events-none
+                     group-hover:opacity-100 group-hover:pointer-events-auto
+                     transition-opacity duration-150"
           onClick={onAddChild}
           aria-label="add child"
         >
@@ -133,7 +139,10 @@ export const EditableHierarchicalTaskItem = ({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 p-1 text-red-600 hover:bg-red-100/70"
+          className="h-8 w-8 p-1 text-red-600 hover:bg-red-100/70
+                     opacity-0 pointer-events-none
+                     group-hover:opacity-100 group-hover:pointer-events-auto
+                     transition-opacity duration-150"
           onClick={onDelete}
           aria-label="delete"
         >

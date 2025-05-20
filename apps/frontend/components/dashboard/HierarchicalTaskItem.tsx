@@ -67,7 +67,7 @@ export const HierarchicalTaskItem = ({
 
   return (
     <div
-      className={`flex items-center bg-white ${
+      className={`group flex items-center bg-white ${
         level === 1 ? "px-3 py-2" : level === 2 ? "pl-8 pr-3 py-2" : "pl-16 pr-3 py-1.5"
       } border-b last:border-b-0 ${level === 3 ? "bg-gray-50" : ""}`}
     >
@@ -134,7 +134,11 @@ export const HierarchicalTaskItem = ({
         <Button
           variant="ghost"
           size="sm"
-          className="h-10 w-10 mr-2 p-1 text-green-600 hover:bg-green-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
+          className="h-10 w-10 mr-2 p-1 text-green-600 hover:bg-green-100/70
+                     opacity-0 pointer-events-none
+                     group-hover:opacity-100 group-hover:pointer-events-auto
+                     transition-opacity duration-150
+                     [&>svg]:h-[66px] [&>svg]:w-[66px]"
           onClick={onAddChild}
           aria-label="add child"
         >
@@ -163,7 +167,11 @@ export const HierarchicalTaskItem = ({
       ) : (
         <Button
           variant="ghost" size="sm"
-          className="h-10 w-10 mr-2 p-1 text-blue-600 hover:bg-blue-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
+          className="h-10 w-10 mr-2 p-1 text-blue-600 hover:bg-blue-100/70
+                     opacity-0 pointer-events-none
+                     group-hover:opacity-100 group-hover:pointer-events-auto
+                     transition-opacity duration-150
+                     [&>svg]:h-[66px] [&>svg]:w-[66px]"
           onClick={beginEdit} aria-label="edit"
         >
           <Pen size={44} strokeWidth={2.25}/>
@@ -175,7 +183,11 @@ export const HierarchicalTaskItem = ({
         <Button
           variant="ghost"
           size="sm"
-          className="h-10 w-10 p-1 text-red-600 hover:bg-red-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
+          className="h-10 w-10 p-1 text-red-600 hover:bg-red-100/70
+                     opacity-0 pointer-events-none
+                     group-hover:opacity-100 group-hover:pointer-events-auto
+                     transition-opacity duration-150
+                     [&>svg]:h-[66px] [&>svg]:w-[66px]"
           onClick={onDelete}
           aria-label="delete"
         >
