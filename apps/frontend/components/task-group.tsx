@@ -60,7 +60,7 @@ export function TaskGroup({
     <>
       <TaskRow
         level={1}
-        title={title}
+        title={`## ${title}`}
         expanded={expanded}
         hasChildren={tasks.length > 0}
         onToggle={() => {
@@ -76,12 +76,12 @@ export function TaskGroup({
           <TaskRow
             key={task.id}
             level={2}
-            title={task.title}
+            title={`### ${task.title}`}
             expanded={task.expanded}
             hasChildren={task.subtasks.length > 0}
             onToggle={() => onToggleTaskExpand(task.id)}
             checked={task.completed}
-            onCheck={() => {}}
+            onCheck={() => console.log(`タスク完了状態を変更: ${task.id}`)}
           >
             {/* サブタスク */}
             {task.expanded &&
@@ -91,7 +91,7 @@ export function TaskGroup({
                   level={3}
                   title={st.title}
                   checked={st.completed}
-                  onCheck={() => {}}
+                  onCheck={() => { /* サブタスクの完了状態をトグルする処理を追加 */ }}
                 />
               ))}
           </TaskRow>
