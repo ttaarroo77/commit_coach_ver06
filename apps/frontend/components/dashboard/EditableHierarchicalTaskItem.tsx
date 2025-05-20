@@ -83,7 +83,11 @@ export const EditableHierarchicalTaskItem = ({
       {/* 完了チェック */}
       <Checkbox
         checked={completed}
-        onCheckedChange={onToggleComplete}
+        onCheckedChange={(checked) => {
+          // Radix-style Checkboxは「checked = true | false | "indeterminate"」という型
+          if (checked !== "indeterminate") onToggleComplete?.();
+        }}
+        onClick={(e) => e.stopPropagation()}  // クリックイベントの伝播を停止
         className="h-4 w-4 mr-3"
         id={`chk-${id}`}
       />
@@ -93,6 +97,7 @@ export const EditableHierarchicalTaskItem = ({
         <EditableText 
           value={title}
           onChange={(newValue) => onTitleChange?.(newValue)}
+          onClick={(e) => e.stopPropagation()}  // クリックイベントの伝播を停止
           className={completed ? "line-through text-gray-400" : "text-gray-800"}
           placeholder="タスク名を入力"
         />

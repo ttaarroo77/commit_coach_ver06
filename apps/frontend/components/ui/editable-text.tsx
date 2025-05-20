@@ -10,6 +10,7 @@ interface EditableTextProps {
   placeholder?: string
   onBlur?: () => void
   onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void
 }
 
 export const EditableText = ({
@@ -19,6 +20,7 @@ export const EditableText = ({
   placeholder = "タスク名を入力",
   onBlur,
   onKeyDown,
+  onClick,
 }: EditableTextProps) => {
   const [isEditing, setIsEditing] = useState(false)
   const [localValue, setLocalValue] = useState(value)
@@ -47,7 +49,9 @@ export const EditableText = ({
     }
   }, [isEditing])
 
-  const handleDoubleClick = () => {
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    // イベントの伝播を停止（親要素のクリックイベントを発火させない）
+    e.stopPropagation()
     setIsEditing(true)
   }
 
@@ -84,13 +88,14 @@ export const EditableText = ({
       className={cn(
         "outline-none transition-colors",
         isEditing
-          ? "bg-blue-50 px-2 py-1 rounded border border-blue-200"
+          ? "bg-blue-50 px-2 py-1 rounded border border-blue-200 no-underline text-gray-800"
           : "cursor-pointer",
-        className
+        isEditing ? "" : className // 編集中は親から受け取ったクラス（取り消し線など）を適用しない
       )}
       contentEditable={isEditing}
       suppressContentEditableWarning
       onDoubleClick={handleDoubleClick}
+      onClick={onClick}
       onBlur={handleBlur}
       onInput={handleInput}
       onKeyDown={handleKeyDown}
