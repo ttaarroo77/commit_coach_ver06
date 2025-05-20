@@ -5,6 +5,7 @@ import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { DashboardCtx } from "../_hooks/use-dashboard"
 import { type Task } from "@/lib/dashboard-utils"
+import { SubtaskItem } from "./subtask-item"
 
 interface Props {
   ctx: DashboardCtx
@@ -31,26 +32,46 @@ export const TaskItem = ({ ctx, gid, pid, task, idx, dragProps }: Props) => {
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
-      <HierarchicalTaskItem
-        level={2}
-        id={task.id}
-        title={task.title}
-        completed={task.completed}
-        expanded={task.expanded}
-        hasChildren={task.subtasks.length > 0}
-        startTime={task.startTime}
-        endTime={task.endTime}
-        onToggleExpand={() => ctx.toggleTask(gid, pid, task.id)}
-        onToggleComplete={() => ctx.toggleTaskComplete(gid, pid, task.id)}
-        onDelete={() => ctx.handleDeleteTask(gid, pid, task.id)}
-        onAddChild={() => ctx.handleAddSubtask(gid, pid, task.id)}
-        dragHandleProps={{
-          ...attributes,
-          ...listeners
-        }}
-        onTimeChange={(s, e) => ctx.handleTaskTimeChange?.(gid, pid, task.id, s, e)} /* optional */
-      />
+    <div>
+      <div ref={setNodeRef} style={style}>
+        <HierarchicalTaskItem
+          level={2}
+          id={task.id}
+          title={task.title}
+          completed={task.completed}
+          expanded={task.expanded}
+          hasChildren={task.subtasks.length > 0}
+          startTime={task.startTime}
+          endTime={task.endTime}
+          onToggleExpand={() => ctx.toggleTask(gid, pid, task.id)}
+          onToggleComplete={() => ctx.toggleTaskComplete(gid, pid, task.id)}
+          onDelete={() => ctx.handleDeleteTask(gid, pid, task.id)}
+          onAddChild={() => ctx.handleAddSubtask(gid, pid, task.id)}
+          dragHandleProps={{
+            ...attributes,
+            ...listeners
+          }}
+          onTimeChange={(s, e) => ctx.handleTaskTimeChange?.(gid, pid, task.id, s, e)} /* optional */
+        />
+      </div>
+
+      {/* サブタスクの表示 */}
+      {task.expanded && task.subtasks.length > 0 && (
+        <div className="subtasks-container">
+          {task.subtasks.map((subtask, subtaskIdx) => (
+            <SubtaskItem
+              key={subtask.id}
+              ctx={ctx}
+              gid={gid}
+              pid={pid}
+              tid={task.id}
+              subtask={subtask}
+              idx={subtaskIdx}
+              dragProps={dragProps}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

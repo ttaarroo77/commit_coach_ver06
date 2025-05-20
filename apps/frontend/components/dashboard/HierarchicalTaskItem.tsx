@@ -52,20 +52,20 @@ export const HierarchicalTaskItem = ({
     <div
       className={`flex items-center bg-white ${
         level === 1 ? "px-3 py-2" : level === 2 ? "pl-8 pr-3 py-2" : "pl-16 pr-3 py-1.5"
-      } border-b last:border-b-0`}
+      } border-b last:border-b-0 ${level === 3 ? "bg-gray-50" : ""}`}
     >
       {/* 展開 / 折りたたみ */}
       {hasChildren ? (
         <Button
-          variant="ghost"
+          variant="secondary"
           size="icon"
-          className="h-6 w-6 mr-1 text-gray-600"
+          className="h-7 w-7 mr-2 text-white bg-blue-600 hover:bg-blue-700 border-0 shadow-sm"
           onClick={onToggleExpand}
         >
-          {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          {expanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
         </Button>
       ) : (
-        <div className="w-6 mr-1" /> /* アイコン位置を合わせるためのダミー */
+        <div className="w-7 mr-2" /> /* アイコン位置を合わせるためのダミー */
       )}
 
       {/* 完了チェック */}
@@ -97,29 +97,29 @@ export const HierarchicalTaskItem = ({
         {timeLabel}
       </Button>
 
-      {/* 子要素追加 */}
-      {onAddChild && (
+      {/* 子要素追加（サブタスクには表示しない） */}
+      {onAddChild && level !== 3 && (
         <Button
-          variant="ghost"
+          variant="secondary"
           size="icon"
-          className="h-6 w-6 mr-1 text-gray-500"
+          className="h-7 w-7 mr-2 text-white bg-green-600 hover:bg-green-700 border-0 shadow-sm"
           onClick={onAddChild}
           aria-label="add child"
         >
-          <Plus size={14} />
+          <Plus size={18} strokeWidth={2.5} />
         </Button>
       )}
 
       {/* 削除 */}
       {onDelete && (
         <Button
-          variant="ghost"
+          variant="secondary"
           size="icon"
-          className="h-6 w-6 text-red-500"
+          className="h-7 w-7 text-white bg-red-600 hover:bg-red-700 border-0 shadow-sm" 
           onClick={onDelete}
           aria-label="delete"
         >
-          <Trash2 size={14} />
+          <Trash2 size={18} />
         </Button>
       )}
 
