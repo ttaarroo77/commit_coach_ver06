@@ -235,6 +235,7 @@ export const addProjectToDashboard = (projectId: string, projectTitle: string, g
                   status: task.completed ? "completed" : "todo",
                   progress: task.completed ? 100 : 0,
                   priority: "中",
+                  sort_order: sort_order, // 並び順を追加
                 }
 
                 // サブタスクを追加
@@ -297,6 +298,7 @@ export const addProjectToDashboard = (projectId: string, projectTitle: string, g
 // タスクをプロジェクトに追加（サブタスクも含めて）
 export const addTaskToProject = (taskTitle: string, projectId: string, groupId: string, options?: { sort_order?: number, sourceTaskData?: any }): void => {
   const sourceTaskData = options?.sourceTaskData;
+  const sort_order = options?.sort_order || 0; // 並び順を取得
   const dashboardData = getDashboardData()
   const updatedData = dashboardData.map((group) => {
     if (group.id === groupId) {
@@ -318,6 +320,7 @@ export const addTaskToProject = (taskTitle: string, projectId: string, groupId: 
                 status: sourceTaskData.completed ? "completed" : "todo",
                 progress: sourceTaskData.completed ? 100 : 0,
                 priority: "中",
+                sort_order: sort_order, // 並び順を追加
               }
 
               // サブタスクを追加
@@ -347,7 +350,7 @@ export const addTaskToProject = (taskTitle: string, projectId: string, groupId: 
                 status: "todo",
                 priority: "中",
                 progress: 0,
-                sort_order: options?.sort_order || 0,
+                sort_order: sort_order, // 並び順を追加
               }
             }
 

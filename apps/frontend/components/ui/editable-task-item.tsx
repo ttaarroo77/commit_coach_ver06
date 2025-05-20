@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { EditableHierarchicalTaskItem } from "@/components/dashboard/EditableHierarchicalTaskItem"
+import { SortableTaskWrapper } from "@/components/dashboard/SortableTaskWrapper"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { DashboardCtx } from "@/app/dashboard/_hooks/use-dashboard"
@@ -17,21 +18,6 @@ interface Props {
 }
 
 export const EditableTaskItem = ({ ctx, gid, pid, task, idx, dragProps }: Props) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id: task.id,
-  });
-  
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
   // タイトル変更ハンドラ
   const handleTitleChange = (newTitle: string) => {
     ctx.handleTaskTitleChange?.(gid, pid, task.id, newTitle);
@@ -39,7 +25,7 @@ export const EditableTaskItem = ({ ctx, gid, pid, task, idx, dragProps }: Props)
 
   return (
     <div>
-      <div ref={setNodeRef} style={style}>
+      <SortableTaskWrapper id={task.id}>
         <EditableHierarchicalTaskItem
           level={2}
           id={task.id}
@@ -61,7 +47,7 @@ export const EditableTaskItem = ({ ctx, gid, pid, task, idx, dragProps }: Props)
           }}
           onTimeChange={(s, e) => ctx.handleTaskTimeChange?.(gid, pid, task.id, s, e)} /* optional */
         />
-      </div>
+      </SortableTaskWrapper>
 
       {/* サブタスクの表示 */}
       {task.expanded && task.subtasks.length > 0 && (
@@ -98,28 +84,13 @@ interface SubtaskProps {
 }
 
 export const EditableSubtaskItem = ({ ctx, gid, pid, tid, subtask, idx, dragProps }: SubtaskProps) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id: subtask.id,
-  });
-  
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
   // サブタスクのタイトル変更ハンドラ
   const handleSubtaskTitleChange = (newTitle: string) => {
     ctx.handleSubtaskTitleChange?.(gid, pid, tid, subtask.id, newTitle);
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <SortableTaskWrapper id={subtask.id}>
       <EditableHierarchicalTaskItem
         level={3}
         id={subtask.id}
@@ -135,6 +106,6 @@ export const EditableSubtaskItem = ({ ctx, gid, pid, tid, subtask, idx, dragProp
           ...listeners
         }}
       />
-    </div>
+    </SortableTaskWrapper>
   );
 }

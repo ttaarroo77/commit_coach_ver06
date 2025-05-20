@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Plus, Trash2, ChevronDown, ChevronRight, Clock, GripVertical } from "lucide-react"
 import { TimeRangePicker } from "./time-range-picker"
 import { EditableText } from "@/components/ui/editable-text"
+import { cn } from "@/lib/utils"
 
 type Props = {
   id: string
@@ -27,6 +28,16 @@ type Props = {
   /** DnD */
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>
 }
+
+// アイコンサイズを統一
+const ICON_SIZE = 18
+
+// ボタンスタイルを統一
+const iconBtn = `
+  p-1.5 w-auto h-auto rounded-md 
+  opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto 
+  transition-opacity duration-150
+`
 
 export const EditableHierarchicalTaskItem = ({
   id,
@@ -65,7 +76,7 @@ export const EditableHierarchicalTaskItem = ({
                                   opacity-0 pointer-events-none
                                   group-hover:opacity-100 group-hover:pointer-events-auto
                                   transition-opacity duration-150">
-          <GripVertical size={16} />
+          <GripVertical size={ICON_SIZE} />
         </div>
       )}
 
@@ -74,10 +85,10 @@ export const EditableHierarchicalTaskItem = ({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 mr-2 p-1 text-blue-600 hover:bg-blue-100/70"
+          className="mr-2 text-blue-600 hover:bg-blue-100/70"
           onClick={onToggleExpand}
         >
-          {expanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+          {expanded ? <ChevronDown size={ICON_SIZE} /> : <ChevronRight size={ICON_SIZE} />}
         </Button>
       ) : (
         <div className="w-8 mr-2" /> /* アイコン位置を合わせるためのダミー */
@@ -123,14 +134,11 @@ export const EditableHierarchicalTaskItem = ({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 mr-2 p-1 text-green-600 hover:bg-green-100/70
-                     opacity-0 pointer-events-none
-                     group-hover:opacity-100 group-hover:pointer-events-auto
-                     transition-opacity duration-150"
+          className={cn(iconBtn, "mr-2 text-green-600 hover:bg-green-100/70")}
           onClick={onAddChild}
           aria-label="add child"
         >
-          <Plus size={18} strokeWidth={2.25} />
+          <Plus size={ICON_SIZE} strokeWidth={2.25} />
         </Button>
       )}
 
@@ -139,14 +147,11 @@ export const EditableHierarchicalTaskItem = ({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 p-1 text-red-600 hover:bg-red-100/70
-                     opacity-0 pointer-events-none
-                     group-hover:opacity-100 group-hover:pointer-events-auto
-                     transition-opacity duration-150"
+          className={cn(iconBtn, "text-red-600 hover:bg-red-100/70")}
           onClick={onDelete}
           aria-label="delete"
         >
-          <Trash2 size={18} />
+          <Trash2 size={ICON_SIZE} />
         </Button>
       )}
 

@@ -1,123 +1,104 @@
-# UX 変更 : アクションアイコンを **行ホバー時だけ表示** する
-（`HierarchicalTaskItem.tsx`／`EditableHierarchicalTaskItem.tsx` の両方に同じパターンで適用できます）
+# まだ行がビョーンと伸びる場合の “根本治療” パッチ
+（実際の崩れは **アイコン 44 px × ボタン 40 px 固定** が残っているのが原因でした）
 
 ---
 
-## 🗺️ 実装概要
+## 🔍 症状
+- 1 行目は OK だが、ドラッグ＆ドロップした行だけ高さ 100 px 以上
+- チェックボックスや「▶︎」「＋」「🗑」が **やたら巨大**
 
-| 仕組み | Tailwind Utility |
-| ------ | ---------------- |
-| 行コンテナに **`group`** を付与      | `.group` |
-| 各アクションボタン初期状態 → **透明** | `opacity-0 pointer-events-none` |
-| 行にホバー → ボタンを **不透明 & クリック可** | `group-hover:opacity-100 group-hover:pointer-events-auto` |
-| 遷移を滑らかに                   | `transition-opacity duration-150` |
-
-※ チェックボックスや展開トグルは常時見せるまま。見せたり隠したいボタンだけにクラスを付けます。
+## 💡 原因
+`className="h-10 w-10 [&>svg]:h-[66px] [&>svg]:w-[66px]"` がまだ生きている。
+DnD で `<Transform>` が入り「アイコン > 行高」→ 親の `flex` が高さを広げる。
 
 ---
 
-## 🛠️ 変更手順（抜粋パッチ）
+## 🛠️ 最小修正 2 ステップ
+
+### **① 固定サイズを一掃**
+行コンテナから `overflow-hidden` を外したうえで **アイコンは 18 px／ボタンは `auto`** に統一。
 
 ```diff
-@@
--   return (
--     <div
--       className={`flex items-center bg-white ${
-+   return (
-+     <div
-+       className={`group flex items-center bg-white ${
-           level === 1 ? "px-3 py-2" : level === 2 ? "pl-8 pr-3 py-2" : "pl-16 pr-3 py-1.5"
-         } border-b last:border-b-0 ${level === 3 ? "bg-gray-50" : ""}`}
-       >
-@@
--       <Button
-+       <Button
-           variant="ghost"
-           size="sm"
--          className="h-10 w-10 mr-2 p-1 text-green-600 hover:bg-green-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
-+          className="h-10 w-10 mr-2 p-1 text-green-600 hover:bg-green-100/70
-+                     opacity-0 pointer-events-none
-+                     group-hover:opacity-100 group-hover:pointer-events-auto
-+                     transition-opacity duration-150
-+                     [&>svg]:h-[66px] [&>svg]:w-[66px]"
-           onClick={onAddChild}
-           aria-label="add child"
-         >
-           <Plus size={44} strokeWidth={2.25} />
-         </Button>
-@@
--       <Button
-+       <Button
-           variant="ghost"
-           size="sm"
--          className="h-10 w-10 mr-2 p-1 text-blue-600 hover:bg-blue-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
-+          className="h-10 w-10 mr-2 p-1 text-blue-600 hover:bg-blue-100/70
-+                     opacity-0 pointer-events-none
-+                     group-hover:opacity-100 group-hover:pointer-events-auto
-+                     transition-opacity duration-150
-+                     [&>svg]:h-[66px] [&>svg]:w-[66px]"
-           onClick={beginEdit}
-           aria-label="edit"
-         >
-           <Pen size={44} strokeWidth={2.25} />
-         </Button>
-@@
--       <Button
-+       <Button
-           variant="ghost"
-           size="sm"
--          className="h-10 w-10 p-1 text-red-600 hover:bg-red-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
-+          className="h-10 w-10 p-1 text-red-600 hover:bg-red-100/70
-+                     opacity-0 pointer-events-none
-+                     group-hover:opacity-100 group-hover:pointer-events-auto
-+                     transition-opacity duration-150
-+                     [&>svg]:h-[66px] [&>svg]:w-[66px]"
-           onClick={onDelete}
-           aria-label="delete"
-         >
-           <Trash2 size={44} />
-         </Button>
+// apps/frontend/components/dashboard/HierarchicalTaskItem.tsx
+- import { Plus, Trash2, ChevronDown, ChevronRight, Clock,
+-          Pen, Check, X } from "lucide-react"
++ import { Plus, Trash2, ChevronDown, ChevronRight, Clock,
++          Pen, Check, X } from "lucide-react"
+
+- const iconBtn = "h-10 w-10 p-1 ... [&>svg]:h-[66px] [&>svg]:w-[66px]"
++ const iconBtn =
++   "p-1.5 w-auto h-auto rounded-md \
++    opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto \
++    transition-opacity duration-150"
+
+ const ICON = 18   // ここで一括制御
+
+ <Button className={iconBtn + " text-green-600 hover:bg-green-100/70"} ...>
+-   <Plus size={44} strokeWidth={2.25}/>
++   <Plus size={ICON}/>
+ </Button>
+ // ↓ Pen / Trash / Check / X も全部 size={ICON}
 ````
 
-> **ポイント**
->
-> * `opacity-0` だけだとボタンはクリックできてしまう場合があるため、`pointer-events-none` を同時に指定して完全に非アクティブ化
-> * `group-hover:` プレフィックスで親にホバーした瞬間だけ `opacity-100 pointer-events-auto` に戻します
-> * DnD ハンドルも同じクラス構成にすれば “行を掴む印” もホバー時だけ表示できます
+> **point**: `w-auto h-auto` にすれば SVG の縦横が行高を決めることはなくなる。
+
+---
+
+### **② DnD ラッパーで高さを固定**
+
+行本体がまだ跳ねる場合は **ドラッグ用コンテナ**に高さを与える。
+
+```tsx
+// apps/frontend/components/dashboard/SortableRow.tsx
+import { CSS } from "@dnd-kit/utilities"
+import { useSortable } from "@dnd-kit/sortable"
+import { cn } from "@/lib/utils"
+
+export const SortableRow = ({ id, children }: { id: string; children: React.ReactNode }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    height: "48px",          // ✅ 行高を固定（px or rem で）
+  }
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}
+         className={cn(isDragging && "opacity-70")}>
+      {children}
+    </div>
+  )
+}
+```
+
+* `height: 48px`（= py-2 + アイコン 18px + 行間）に揃える
+* ボタンやテキストが大きくても **行コンテナが伸びない**
+
+---
+
+## 🧹 **消し忘れチェックリスト**
+
+検索して **全部削除／置換** してください ⬇︎
+
+```
+h-10 w-10             // 固定 40px ボタン
+[&>svg]:h-\[66px\]    // 66px アイコン
+[&>svg]:w-\[66px\]
+size="sm" && 44       // size="sm" なのに SVG 44px
+```
 
 ---
 
 ## ✅ 動作確認
 
-1. **通常時** : ペン／ゴミ箱／＋ などのアクションボタンは透明でクリック不可
-2. **マウスを行に乗せた瞬間** : ボタンがフェードイン (0.15 s) して操作可
-3. 行外へマウスアウト : フェードアウト（透明化 & クリック不可）
-4. 各ボタンの機能（編集・削除・追加等）は従来どおり動作
+1. **通常表示** : 行高 ≒ 48 px、アイコンは 18 px、ホバーでフェードイン
+2. **ドラッグ中** : 行がスライドしても高さは固定のまま
+3. **ドロップ後** : 行高そのまま、崩れ無し
+4. **リサイズ** : 高 DPI でもアイコン比率変わらず
 
 ---
 
-## 🎨 カスタマイズ案
-
-| 変数             | 役割           | 例                                                         |
-| -------------- | ------------ | --------------------------------------------------------- |
-| `duration-150` | フェードの速度      | `duration-75` で速く / `duration-300` で遅く                    |
-| `opacity-50`   | 常時うっすら見せたい場合 | 初期 `opacity-50 pointer-events-none` + `hover:opacity-100` |
-
----
-
-以上で「ホバー時のみアクションアイコン表示」に切り替えられます。
-お試しください 🔍✨
+これで “行が膨張する／アイコンが巨大化する” 問題は完全に消えるはずです。
+もしまだおかしい場合は **ブラウザのキャッシュをクリア or `tailwind build` し直し** をお試しください 🙌
 
 ```
 ```
-
-
-
-## 🌈 仕上がりイメージ
-
-|    | hover 無し | hover 有り       | 編集中           |
-| -- | -------- | -------------- | ------------- |
-| UI | ☐ タイトル   | ☐ タイトル ✏️🕒➕🗑 | ☐ \[input] ✅❌ |
-
-— フェードで現れるのでノイズ減＆クリーン —
-

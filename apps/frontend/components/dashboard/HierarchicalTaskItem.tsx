@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Plus, Trash2, ChevronDown, ChevronRight, Clock, Pen, Check, X } from "lucide-react"
 import { TimeRangePicker } from "./time-range-picker"
+import { cn } from "@/lib/utils"
 
 type Props = {
   id: string
@@ -27,6 +28,16 @@ type Props = {
   /** DnD */
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>
 }
+
+// アイコンサイズを統一
+const ICON_SIZE = 18
+
+// ボタンスタイルを統一
+const iconBtn = `
+  p-1.5 w-auto h-auto rounded-md 
+  opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto 
+  transition-opacity duration-150
+`
 
 export const HierarchicalTaskItem = ({
   id,
@@ -75,11 +86,11 @@ export const HierarchicalTaskItem = ({
       {hasChildren ? (
         <Button
           variant="ghost"
-          size="sm"
-          className="h-10 w-10 mr-2 p-1 text-blue-600 hover:bg-blue-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
+          size="icon"
+          className="mr-2 text-blue-600 hover:bg-blue-100/70"
           onClick={onToggleExpand}
         >
-          {expanded ? <ChevronDown size={44} /> : <ChevronRight size={44} />}
+          {expanded ? <ChevronDown size={ICON_SIZE} /> : <ChevronRight size={ICON_SIZE} />}
         </Button>
       ) : (
         <div className="w-8 mr-2" /> /* アイコン位置を合わせるためのダミー */
@@ -133,16 +144,12 @@ export const HierarchicalTaskItem = ({
       {onAddChild && level !== 3 && (
         <Button
           variant="ghost"
-          size="sm"
-          className="h-10 w-10 mr-2 p-1 text-green-600 hover:bg-green-100/70
-                     opacity-0 pointer-events-none
-                     group-hover:opacity-100 group-hover:pointer-events-auto
-                     transition-opacity duration-150
-                     [&>svg]:h-[66px] [&>svg]:w-[66px]"
+          size="icon"
+          className={cn(iconBtn, "mr-2 text-green-600 hover:bg-green-100/70")}
           onClick={onAddChild}
           aria-label="add child"
         >
-          <Plus size={44} strokeWidth={2.25} />
+          <Plus size={ICON_SIZE} strokeWidth={2.25} />
         </Button>
       )}
 
@@ -150,31 +157,27 @@ export const HierarchicalTaskItem = ({
       {editing ? (
         <>
           <Button
-            variant="ghost" size="sm"
-            className="h-10 w-10 p-1 text-green-600 hover:bg-green-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
+            variant="ghost" size="icon"
+            className="text-green-600 hover:bg-green-100/70"
             onClick={commitEdit} aria-label="save"
           >
-            <Check size={44} strokeWidth={2.25}/>
+            <Check size={ICON_SIZE} strokeWidth={2.25}/>
           </Button>
           <Button
-            variant="ghost" size="sm"
-            className="h-10 w-10 p-1 text-gray-500 hover:bg-gray-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
+            variant="ghost" size="icon"
+            className="text-gray-500 hover:bg-gray-100/70"
             onClick={cancelEdit} aria-label="cancel"
           >
-            <X size={44} strokeWidth={2.25}/>
+            <X size={ICON_SIZE} strokeWidth={2.25}/>
           </Button>
         </>
       ) : (
         <Button
-          variant="ghost" size="sm"
-          className="h-10 w-10 mr-2 p-1 text-blue-600 hover:bg-blue-100/70
-                     opacity-0 pointer-events-none
-                     group-hover:opacity-100 group-hover:pointer-events-auto
-                     transition-opacity duration-150
-                     [&>svg]:h-[66px] [&>svg]:w-[66px]"
+          variant="ghost" size="icon"
+          className={cn(iconBtn, "mr-2 text-blue-600 hover:bg-blue-100/70")}
           onClick={beginEdit} aria-label="edit"
         >
-          <Pen size={44} strokeWidth={2.25}/>
+          <Pen size={ICON_SIZE} strokeWidth={2.25}/>
         </Button>
       )}
 
@@ -182,16 +185,12 @@ export const HierarchicalTaskItem = ({
       {onDelete && (
         <Button
           variant="ghost"
-          size="sm"
-          className="h-10 w-10 p-1 text-red-600 hover:bg-red-100/70
-                     opacity-0 pointer-events-none
-                     group-hover:opacity-100 group-hover:pointer-events-auto
-                     transition-opacity duration-150
-                     [&>svg]:h-[66px] [&>svg]:w-[66px]"
+          size="icon"
+          className={cn(iconBtn, "text-red-600 hover:bg-red-100/70")}
           onClick={onDelete}
           aria-label="delete"
         >
-          <Trash2 size={44} />
+          <Trash2 size={ICON_SIZE} />
         </Button>
       )}
 
