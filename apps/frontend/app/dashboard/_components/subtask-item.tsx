@@ -46,6 +46,7 @@ export const SubtaskItem = ({ ctx, gid, pid, tid, subtask, idx, dragProps }: Pro
           ...attributes,
           ...listeners
         }}
+        onTitleChange={(newTitle) => ctx.handleSubtaskTitleChange?.(gid, pid, tid, subtask.id, newTitle)}
       />
     </div>
   );

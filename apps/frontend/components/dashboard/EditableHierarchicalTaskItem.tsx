@@ -88,12 +88,13 @@ export const EditableHierarchicalTaskItem = ({
           if (checked !== "indeterminate") onToggleComplete?.();
         }}
         onClick={(e) => e.stopPropagation()}  // クリックイベントの伝播を停止
+        onDoubleClick={(e) => e.stopPropagation()}  // ダブルクリックイベントの伝播も停止
         className="h-4 w-4 mr-3"
         id={`chk-${id}`}
       />
 
       {/* 編集可能なタイトル */}
-      <div className="flex-1 select-none truncate">
+      <div className="flex-1 truncate">
         <EditableText 
           value={title}
           onChange={(newValue) => onTitleChange?.(newValue)}

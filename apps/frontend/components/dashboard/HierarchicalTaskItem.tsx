@@ -1,9 +1,11 @@
+// apps/frontend/components/dashboard/HierarchicalTaskItem.tsx
+
 "use client"
 
 import { useState } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { Plus, Trash2, ChevronDown, ChevronRight, Clock } from "lucide-react"
+import { Plus, Trash2, ChevronDown, ChevronRight, Clock, Pen, Check, X } from "lucide-react"
 import { TimeRangePicker } from "./time-range-picker"
 
 type Props = {
@@ -21,6 +23,7 @@ type Props = {
   onDelete?: () => void
   onAddChild?: () => void
   onTimeChange?: (start: string, end: string) => void
+  onTitleChange?: (newTitle: string) => void
   /** DnD */
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>
 }
@@ -39,10 +42,24 @@ export const HierarchicalTaskItem = ({
   onDelete,
   onAddChild,
   onTimeChange,
+  onTitleChange,
   dragHandleProps,
 }: Props) => {
   /** 時間ピッカーの開閉 */
   const [open, setOpen] = useState(false)
+  
+  /** 編集モード用ステート */
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(title)
+  
+  /** 編集モード切替／保存ロジック */
+  const beginEdit = (e: React.MouseEvent) => { e.stopPropagation(); setDraft(title); setEditing(true) }
+  const cancelEdit = () => setEditing(false)
+  const commitEdit = () => {
+    const v = draft.trim()
+    if (v && v !== title) onTitleChange?.(v)
+    setEditing(false)
+  }
 
   /** 表示用テキスト */
   const timeLabel =
@@ -58,8 +75,8 @@ export const HierarchicalTaskItem = ({
       {hasChildren ? (
         <Button
           variant="ghost"
-          size="icon"
-          className="h-12 w-12 mr-2 p-1 text-blue-600 hover:bg-blue-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
+          size="sm"
+          className="h-10 w-10 mr-2 p-1 text-blue-600 hover:bg-blue-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
           onClick={onToggleExpand}
         >
           {expanded ? <ChevronDown size={44} /> : <ChevronRight size={44} />}
@@ -72,19 +89,34 @@ export const HierarchicalTaskItem = ({
       <Checkbox
         checked={completed}
         onCheckedChange={onToggleComplete}
+        onClick={(e) => e.stopPropagation()}  // クリックイベントの伝播を停止
+        onDoubleClick={(e) => e.stopPropagation()}  // ダブルクリックイベントの伝播も停止
         className="h-4 w-4 mr-3"
         id={`chk-${id}`}
       />
 
-      {/* タイトル */}
-      <label
-        htmlFor={`chk-${id}`}
-        className={`flex-1 select-none truncate ${
-          completed ? "line-through text-gray-400" : "text-gray-800"
-        }`}
-      >
-        {title}
-      </label>
+      {/* タイトル or 入力フォーム */}
+      <div className="flex-1 truncate">
+        {editing ? (
+          <input
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === "Enter") commitEdit()
+              if (e.key === "Escape") cancelEdit()
+            }}
+            onBlur={commitEdit}
+            className="border rounded px-1 w-full text-sm"
+            autoFocus
+          />
+        ) : (
+          <span
+            className={completed ? "line-through text-gray-400" : "text-gray-800"}
+          >
+            {title}
+          </span>
+        )}
+      </div>
 
       {/* 時間表示 / 設定 */}
       <Button
@@ -101,8 +133,8 @@ export const HierarchicalTaskItem = ({
       {onAddChild && level !== 3 && (
         <Button
           variant="ghost"
-          size="icon"
-          className="h-12 w-12 mr-2 p-1 text-green-600 hover:bg-green-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
+          size="sm"
+          className="h-10 w-10 mr-2 p-1 text-green-600 hover:bg-green-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
           onClick={onAddChild}
           aria-label="add child"
         >
@@ -110,12 +142,40 @@ export const HierarchicalTaskItem = ({
         </Button>
       )}
 
+      {/* 編集 or 保存／キャンセル */}
+      {editing ? (
+        <>
+          <Button
+            variant="ghost" size="sm"
+            className="h-10 w-10 p-1 text-green-600 hover:bg-green-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
+            onClick={commitEdit} aria-label="save"
+          >
+            <Check size={44} strokeWidth={2.25}/>
+          </Button>
+          <Button
+            variant="ghost" size="sm"
+            className="h-10 w-10 p-1 text-gray-500 hover:bg-gray-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
+            onClick={cancelEdit} aria-label="cancel"
+          >
+            <X size={44} strokeWidth={2.25}/>
+          </Button>
+        </>
+      ) : (
+        <Button
+          variant="ghost" size="sm"
+          className="h-10 w-10 mr-2 p-1 text-blue-600 hover:bg-blue-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
+          onClick={beginEdit} aria-label="edit"
+        >
+          <Pen size={44} strokeWidth={2.25}/>
+        </Button>
+      )}
+
       {/* 削除 */}
       {onDelete && (
         <Button
           variant="ghost"
-          size="icon"
-          className="h-11 w-11 p-1 text-red-600 hover:bg-red-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
+          size="sm"
+          className="h-10 w-10 p-1 text-red-600 hover:bg-red-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
           onClick={onDelete}
           aria-label="delete"
         >

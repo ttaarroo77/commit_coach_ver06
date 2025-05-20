@@ -1,141 +1,158 @@
-````markdown
-# ✅ **タスク行クリックの役割分離**
-（そのまま windsurf に貼り付けてレビュー依頼に使えます）
-
-## 🎯 ゴール
-| UIパーツ | シングルクリック | ダブルクリック | 備考 |
-| --- | --- | --- | --- |
-| **チェックボックス** | `yet-done ⇄ done` 切替 | – | 行全体は反応させない |
-| **タスク名 (テキスト)** | フォーカスして **編集モード** へ | 同上 | チェック状態は変えない |
+# Patch : ペン✏️ボタンで **タイトルをインライン編集** する
+（`apps/frontend/components/dashboard/HierarchicalTaskItem.tsx` 用。
+そのまま windsurf に貼って OK です）
 
 ---
 
-## 🛠 変更ポイント
+## 🗺 実装概要
 
-### 1. 行全体のクリックハンドラを撤去
-以前は `<div … onClick={onToggleComplete}>` のように**行全体**に完了トグルがバインドされていたはず。
-`EditableHierarchicalTaskItem` では **チェックボックスだけ**が `onToggleComplete` を受け取るようにしてください。
+| ボタン          | 役割                           | UI 表示条件 |
+| --------------- | ------------------------------ | ----------- |
+| ✅ **Checkbox** | `Done / yet-Done` 切替         | 常時        |
+| ✏️ **ペン**     | 「編集モード」に入るトグル     | **編集前**  |
+| 💾 **チェック** | 編集内容を保存 & モード終了     | **編集中**  |
+| ❌ **バツ**     | 編集キャンセル & ロールバック   | **編集中**  |
+| 🗑 **ゴミ箱**   | タスク削除                     | 常時        |
+
+---
+
+## 🔑 変更ポイント
+
+### 1. 依存アイコンを追加インポート
 
 ```diff
-- <div onClick={onToggleComplete} …>   // ❌ 行クリック
-+ <div …>                               // ✅ 削除
+- import { Plus, Trash2, ChevronDown, ChevronRight, Clock } from "lucide-react"
++ import { Plus, Trash2, ChevronDown, ChevronRight, Clock,
++          Pen, Check, X } from "lucide-react"   // ★追加
 ````
 
-### 2. **Checkbox** 内で `e.stopPropagation()`
+### 2. `onTitleChange` を Props に追加
 
-*まれに* 行全体や親コンポーネントにクリックがバブリングしている場合があるため、
-チェックボックス側で明示的に止めておくと安全です。
-
-```tsx
-<Checkbox
-  checked={completed}
-  onCheckedChange={(checked) => {
-    // Radix-style Checkbox は checked = true | false | "indeterminate"
-    if (checked !== "indeterminate") onToggleComplete?.();
-  }}
-  onClick={(e) => e.stopPropagation()}   // ← ★ ここを追加
-/>
+```diff
+   startTime?: string
+   endTime?: string
++  onTitleChange?: (newTitle: string) => void   // ★追加
 ```
 
-### 3. **EditableText** 側でもバブリング抑止
+### 3. **編集用ステート** を用意
 
-`input`/`textarea` にフォーカスした瞬間に親へ click が伝播すると
-“完了トグル → 取り消し線” が走るケースがあるため同様に防御。
-
-```tsx
-<EditableText
-  value={title}
-  onChange={(v) => onTitleChange?.(v)}
-  onClick={(e) => e.stopPropagation()}   // ← ★ 追加
-  className={completed ? "line-through text-gray-400" : "text-gray-800"}
-/>
+```ts
+const [editing, setEditing]   = useState(false)
+const [draft, setDraft]       = useState(title)
 ```
 
-### 4. `EditableText` コンポーネントの実装チェック
+### 4. 編集モード切替／保存ロジック
 
-* `div` → `input` のトグル時に **autoFocus** しているか
-* Enter / Esc / Blur で **commit / cancel** しているか
-  ここは既に動いていれば OK。
-  もし動かない場合は下記の最小実装を参考に。
-
-```tsx
-export const EditableText = ({
-  value,
-  onChange,
-  className,
-  placeholder,
-}: {
-  value: string
-  onChange: (v: string) => void
-  className?: string
-  placeholder?: string
-}) => {
-  const [edit, setEdit] = useState(false)
-  const [draft, setDraft] = useState(value)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => { if (edit) inputRef.current?.focus() }, [edit])
-
-  const commit = () => {
-    if (draft.trim() && draft !== value) onChange(draft.trim())
-    setEdit(false)
-  }
-
-  return edit ? (
-    <input
-      ref={inputRef}
-      value={draft}
-      onChange={e => setDraft(e.target.value)}
-      onBlur={commit}
-      onKeyDown={e => {
-        if (e.key === "Enter") commit()
-        if (e.key === "Escape") setEdit(false)
-      }}
-      className={`w-full border rounded px-1 ${className}`}
-    />
-  ) : (
-    <span
-      className={`cursor-text ${className}`}
-      onDoubleClick={() => setEdit(true)}
-    >
-      {value || <span className="text-gray-400">{placeholder}</span>}
-    </span>
-  )
+```ts
+const beginEdit  = (e: React.MouseEvent) => { e.stopPropagation(); setDraft(title); setEditing(true) }
+const cancelEdit = () => setEditing(false)
+const commitEdit = () => {
+  const v = draft.trim()
+  if (v && v !== title) onTitleChange?.(v)
+  setEditing(false)
 }
 ```
 
+### 5. JSX : **タイトル領域とボタン列** を差し替え
+
+```diff
+- {/* タイトル */}
+- <label …>{title}</label>
++ {/* タイトル or 入力フォーム */}
++ <div className="flex-1 truncate">
++   {editing ? (
++     <input
++       value={draft}
++       onChange={e => setDraft(e.target.value)}
++       onKeyDown={e => {
++         if (e.key === "Enter") commitEdit()
++         if (e.key === "Escape") cancelEdit()
++       }}
++       onBlur={commitEdit}
++       className="border rounded px-1 w-full text-sm"
++       autoFocus
++     />
++   ) : (
++     <span
++       className={completed ? "line-through text-gray-400" : "text-gray-800"}
++     >
++       {title}
++     </span>
++   )}
++ </div>
+```
+
+### 6. **操作ボタン群**（ゴミ箱左に配置）
+
+```diff
+   {/* 削除 */}
+   {onDelete && (
+     …
+   )}
+
++ {/* 編集 or 保存／キャンセル */}
++ {editing ? (
++   <>
++     <Button
++       variant="ghost" size="sm"
++       className="h-10 w-10 p-1 text-green-600 hover:bg-green-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
++       onClick={commitEdit} aria-label="save"
++     >
++       <Check size={44} strokeWidth={2.25}/>
++     </Button>
++     <Button
++       variant="ghost" size="sm"
++       className="h-10 w-10 p-1 text-gray-500 hover:bg-gray-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
++       onClick={cancelEdit} aria-label="cancel"
++     >
++       <X size={44} strokeWidth={2.25}/>
++     </Button>
++   </>
++ ) : (
++   <Button
++     variant="ghost" size="sm"
++     className="h-10 w-10 mr-2 p-1 text-blue-600 hover:bg-blue-100/70 [&>svg]:h-[66px] [&>svg]:w-[66px]"
++     onClick={beginEdit} aria-label="edit"
++   >
++     <Pen size={44} strokeWidth={2.25}/>
++   </Button>
++ )}
+```
+
+> ※ `Pen` アイコンは `lucide-react` で提供 💡 ([Lucide][1])
+
 ---
 
-## 🔍 テスト観点
+## ✅ 動作確認
 
-1. **チェックボックス**
+1. ペンをクリック → 入力フォーム表示 & チェック/バツボタンに変化
+2. 入力
 
-   * ✔ チェックすると `completed = true`, 取り消し線が付く
-   * ✔ 再クリックで解除
-   * ✔ クリック時にテキスト編集が始まらない
-
-2. **テキスト**
-
-   * ✔ ダブルクリックで入力フォームに変化
-   * ✔ Enter またはフォーカスアウトで保存
-   * ✔ Esc でキャンセル
-   * ✔ 編集中にチェック状態は変化しない
+   * **Enter / 緑チェック** : 保存して表示モードへ戻る
+   * **Esc / 灰バツ** : 破棄して戻る
+   * **Blur** : 自動保存
+3. 編集中にチェックボックスや DnD ハンドルを触ってもタイトルは更新されない
+4. `onTitleChange` でステート/API が更新される
 
 ---
 
-## 📝 To Do リスト
+### もし **`onTitleChange` が上位でまだ未実装** の場合…
 
-* [ ] `EditableHierarchicalTaskItem.tsx` に上記 **stopPropagation** を追加
-* [ ] 行全体の `onClick`（完了トグル）を削除
-* [ ] `EditableText` が無ければ or 不安定なら最小実装に置き換え
-* [ ] ユニットテスト／Playwright で UI 動作を確認
-* [ ] PR: `fix/task-item-click-behavior` を作成
+`EditableHierarchicalTaskItem` などと同様のロジックで
+
+```ts
+ctx.handleTaskTitleChange(groupId, projectId, taskId, newTitle)
+```
+
+を呼び出すだけで OK です。
 
 ---
 
-以上です！ 「チェック＝完了」「テキスト＝編集」に完全に分離できるはず。
-疑問点があればお気軽にどうぞ 🙌
+以上で「ペンボタン → タイトル編集」版が組み込めます。
+お試しください！ 🙌
 
 ```
-::contentReference[oaicite:0]{index=0}
+::contentReference[oaicite:1]{index=1}
 ```
+
+[1]: https://lucide.dev/icons/pen?utm_source=chatgpt.com "pen - Lucide"

@@ -52,6 +52,7 @@ export const TaskItem = ({ ctx, gid, pid, task, idx, dragProps }: Props) => {
             ...listeners
           }}
           onTimeChange={(s, e) => ctx.handleTaskTimeChange?.(gid, pid, task.id, s, e)} /* optional */
+          onTitleChange={(newTitle) => ctx.handleTaskTitleChange?.(gid, pid, task.id, newTitle)}
         />
       </div>
 

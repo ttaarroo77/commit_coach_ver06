@@ -51,6 +51,7 @@ export const ProjectCard = ({ ctx, gid, project, idx }: Props) => {
           ...listeners
         }}
         onTimeChange={(s, e) => ctx.handleTimeChange?.(gid, project.id, s, e)} /* optional */
+        onTitleChange={(newTitle) => ctx.handleProjectTitleChange?.(gid, project.id, newTitle)}
       />
 
       {project.expanded && (

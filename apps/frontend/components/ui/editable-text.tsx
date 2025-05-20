@@ -1,106 +1,66 @@
-"use client"
-
-import { useState, useRef, useEffect, KeyboardEvent } from "react"
-import { cn } from "@/lib/utils"
+"use client";
+import { useState, useRef, useEffect, KeyboardEvent } from "react";
+import { cn } from "@/lib/utils";
 
 interface EditableTextProps {
-  value: string
-  onChange: (newValue: string) => void
-  className?: string
-  placeholder?: string
-  onBlur?: () => void
-  onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void
-  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void
+  value: string;
+  onChange: (newValue: string) => void;
+  className?: string;
+  placeholder?: string;
+  onClick?: (e: React.MouseEvent<HTMLSpanElement>) => void;
 }
 
 export const EditableText = ({
   value,
   onChange,
   className,
-  placeholder = "タスク名を入力",
-  onBlur,
-  onKeyDown,
+  placeholder = "テキストを入力",
   onClick,
 }: EditableTextProps) => {
-  const [isEditing, setIsEditing] = useState(false)
-  const [localValue, setLocalValue] = useState(value)
-  const inputRef = useRef<HTMLDivElement>(null)
+  const [editing, setEditing]   = useState(false);
+  const [draft, setDraft]       = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // 外部から値が変更された場合、ローカルの状態も更新
+  /* 外から value が変わったら draft も同期 */
+  useEffect(() => setDraft(value), [value]);
+
+  /* 編集開始で auto-focus */
   useEffect(() => {
-    setLocalValue(value)
-  }, [value])
+    if (editing) inputRef.current?.focus();
+  }, [editing]);
 
-  // 編集モードになったらフォーカスを当てる
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus()
-      
-      // カーソルを末尾に配置
-      const selection = window.getSelection()
-      const range = document.createRange()
-      
-      if (selection && inputRef.current.childNodes.length > 0) {
-        range.selectNodeContents(inputRef.current)
-        range.collapse(false) // カーソルを末尾に
-        selection.removeAllRanges()
-        selection.addRange(range)
-      }
-    }
-  }, [isEditing])
+  const commit = () => {
+    const v = draft.trim();
+    if (v && v !== value) onChange(v);
+    setEditing(false);
+  };
 
-  const handleDoubleClick = (e: React.MouseEvent) => {
-    // イベントの伝播を停止（親要素のクリックイベントを発火させない）
-    e.stopPropagation()
-    setIsEditing(true)
-  }
-
-  const handleBlur = () => {
-    setIsEditing(false)
-    if (localValue.trim() !== value.trim()) {
-      onChange(localValue)
-    }
-    onBlur?.()
-  }
-
-  const handleInput = () => {
-    if (inputRef.current) {
-      setLocalValue(inputRef.current.innerText)
-    }
-  }
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      inputRef.current?.blur()
-    } else if (e.key === "Escape") {
-      e.preventDefault()
-      setLocalValue(value) // 編集キャンセル
-      inputRef.current?.blur()
-    }
-    
-    onKeyDown?.(e)
-  }
-
-  return (
-    <div
+  return editing ? (
+    <input
       ref={inputRef}
+      value={draft}
+      onChange={e => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e: KeyboardEvent) => {
+        if (e.key === "Enter") commit();
+        if (e.key === "Escape") { setDraft(value); setEditing(false); }
+      }}
       className={cn(
-        "outline-none transition-colors",
-        isEditing
-          ? "bg-blue-50 px-2 py-1 rounded border border-blue-200 no-underline text-gray-800"
-          : "cursor-pointer",
-        isEditing ? "" : className // 編集中は親から受け取ったクラス（取り消し線など）を適用しない
+        "w-full border border-gray-300 rounded px-1 text-sm",
+        className
       )}
-      contentEditable={isEditing}
-      suppressContentEditableWarning
-      onDoubleClick={handleDoubleClick}
+    />
+  ) : (
+    <span
+      onDoubleClick={e => { e.stopPropagation(); setEditing(true); }}
       onClick={onClick}
-      onBlur={handleBlur}
-      onInput={handleInput}
-      onKeyDown={handleKeyDown}
+      className={cn(
+        "cursor-text break-all",
+        !value && "text-gray-400",
+        className
+      )}
     >
-      {localValue || <span className="text-gray-400">{placeholder}</span>}
-    </div>
-  )
-}
+      {value || placeholder}
+    </span>
+  );
+};
