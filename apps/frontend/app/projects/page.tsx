@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Plus } from "lucide-react"
 import { TaskGroup } from "@/components/task-group"
 import { AICoachSidebar } from "@/components/ai-coach-sidebar"
@@ -207,29 +208,32 @@ export default function ProjectsPage() {
             <div className="space-y-4">
               {/* プロジェクトリスト */}
               {projects.map((project) => (
-                <TaskGroup
-                  key={project.id}
-                  id={project.id}
-                  title={project.title}
-                  tasks={project.tasks || []}
-                  defaultExpanded={project.expanded}
-                  onDelete={() => handleDeleteProject(project.id)}
-                  onAddTask={() => handleAddTask(project.id)}
-                  onToggleExpand={() => toggleProjectExpanded(project.id)}
-                  onAddSubtask={(taskId) => handleAddSubtask(project.id, taskId)}
-                  onToggleTaskExpand={(taskId) => toggleTaskExpanded(project.id, taskId)}
-                  onTitleChange={(newTitle) => handleProjectTitleChange(project.id, newTitle)}
-                  onTaskTitleChange={(taskId, newTitle) => handleTaskTitleChange(project.id, taskId, newTitle)}
-                  onSubtaskTitleChange={(taskId, subtaskId, newTitle) =>
-                    handleSubtaskTitleChange(project.id, taskId, subtaskId, newTitle)
-                  }
-                  onBreakdown={() => console.log(`プロジェクト分解: ${project.id}`)}
-                />
+                <Card key={project.id} className="shadow-sm">
+                  <CardContent className="p-0">
+                    <TaskGroup
+                      id={project.id}
+                      title={project.title}
+                      tasks={project.tasks || []}
+                      defaultExpanded={project.expanded}
+                      onDelete={() => handleDeleteProject(project.id)}
+                      onAddTask={() => handleAddTask(project.id)}
+                      onToggleExpand={() => toggleProjectExpanded(project.id)}
+                      onAddSubtask={(taskId) => handleAddSubtask(project.id, taskId)}
+                      onToggleTaskExpand={(taskId) => toggleTaskExpanded(project.id, taskId)}
+                      onTitleChange={(newTitle) => handleProjectTitleChange(project.id, newTitle)}
+                      onTaskTitleChange={(taskId, newTitle) => handleTaskTitleChange(project.id, taskId, newTitle)}
+                      onSubtaskTitleChange={(taskId, subtaskId, newTitle) =>
+                        handleSubtaskTitleChange(project.id, taskId, subtaskId, newTitle)
+                      }
+                      onBreakdown={() => console.log(`プロジェクト分解: ${project.id}`)}
+                    />
+                  </CardContent>
+                </Card>
               ))}
 
               {/* 新しいプロジェクトを追加ボタン */}
               <div className="flex justify-center mt-6">
-                <Button variant="outline" className="border-dashed" onClick={handleAddProject}>
+                <Button variant="outline" className="border-dashed w-full max-w-sm" onClick={handleAddProject}>
                   <Plus className="mr-2 h-4 w-4" />
                   新しいプロジェクトを追加
                 </Button>

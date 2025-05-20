@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, ChevronDown, ChevronRight, Trash2, Braces } from "lucide-react"
+import { Plus, ChevronDown, ChevronRight, Trash2, Braces, Check } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 // タスクの型定義
 interface Subtask {
@@ -74,16 +75,18 @@ export function TaskGroup({
   }
 
   return (
-    <Card className="mb-4">
-      <CardHeader className="p-4 flex flex-row items-center justify-between bg-gray-50">
-        <div className="flex items-center flex-1">
+    <div className="mb-4">
+      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-t-lg border border-b-0">
+        <div className="flex items-center flex-1 hover:bg-gray-50 py-1 pl-4 rounded">
           <Button
             variant="ghost"
             size="sm"
-            className="p-0 h-6 w-6 mr-2"
+            className="p-0 h-auto w-auto mr-2"
             onClick={handleToggle}
           >
-            {expanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+            {expanded ? 
+              <ChevronDown size={18} className="text-blue-500"/> : 
+              <ChevronRight size={18} className="text-blue-500"/>}
           </Button>
           
           {isEditing ? (
@@ -98,9 +101,9 @@ export function TaskGroup({
               />
             </div>
           ) : (
-            <CardTitle className="text-lg font-bold cursor-pointer" onClick={handleTitleClick}>
+            <span className="text-lg font-bold cursor-pointer" onClick={handleTitleClick}>
               {title}
-            </CardTitle>
+            </span>
           )}
         </div>
         
@@ -110,34 +113,38 @@ export function TaskGroup({
             size="sm"
             onClick={onBreakdown}
             title="AIによるタスク分解"
+            className="h-auto w-auto p-1.5"
           >
-            <Braces className="h-4 w-4" />
+            <Braces size={18} />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={onDelete}
             title="削除"
+            className="h-auto w-auto p-1.5"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 size={18} />
           </Button>
         </div>
-      </CardHeader>
+      </div>
 
       {expanded && (
-        <CardContent className="p-4">
+        <div className="p-4 border border-t-0 rounded-b-lg">
           <div className="space-y-3">
             {tasks.map((task) => (
-              <div key={task.id} className="border rounded-md p-3">
-                <div className="flex items-start justify-between">
+              <div key={task.id} className="border rounded-md">
+                <div className="flex items-start justify-between hover:bg-gray-50 py-1 pl-8 rounded-md">
                   <div className="flex items-start flex-1">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="p-0 h-6 w-6 mr-2 mt-0.5"
+                      className="p-0 h-auto w-auto mr-2 mt-0.5"
                       onClick={() => onToggleTaskExpand(task.id)}
                     >
-                      {task.expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      {task.expanded ? 
+                        <ChevronDown size={18} className="text-blue-500"/> : 
+                        <ChevronRight size={18} className="text-blue-500"/>}
                     </Button>
                     <div className="flex-1">
                       <Input
@@ -147,9 +154,9 @@ export function TaskGroup({
                       />
                       
                       {task.expanded && task.subtasks.length > 0 && (
-                        <div className="pl-6 space-y-2 mt-2">
+                        <div className="space-y-2 mt-2">
                           {task.subtasks.map((subtask) => (
-                            <div key={subtask.id} className="flex items-center">
+                            <div key={subtask.id} className="flex items-center hover:bg-gray-50 py-1 pl-12 rounded-md">
                               <Checkbox
                                 id={subtask.id}
                                 checked={subtask.completed}
@@ -174,9 +181,9 @@ export function TaskGroup({
                     size="sm"
                     onClick={() => onAddSubtask(task.id)}
                     title="サブタスクを追加"
-                    className="mt-0.5"
+                    className="h-auto w-auto p-1.5 mt-0.5"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus size={18} />
                   </Button>
                 </div>
               </div>
@@ -191,8 +198,8 @@ export function TaskGroup({
               新しいタスクを追加
             </Button>
           </div>
-        </CardContent>
+        </div>
       )}
-    </Card>
+    </div>
   )
 }
