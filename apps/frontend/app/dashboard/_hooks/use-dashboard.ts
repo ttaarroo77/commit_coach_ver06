@@ -222,7 +222,9 @@ export const useDashboard = () => {
 
   /* --- add / delete --- */
   const handleAddProject = (gid: string) => {
-    addProjectToDashboard(`project-${Date.now()}`, `新しいプロジェクト ${new Date().toLocaleTimeString()}`, gid)
+    // 一意のプロジェクトIDを生成（タイムスタンプ+ランダム値）
+    const uniqueId = `project-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    addProjectToDashboard(uniqueId, `新しいプロジェクト ${new Date().toLocaleTimeString()}`, gid)
     setTaskGroups(getDashboardData())
   }
   const handleAddTask = (gid: string, pid: string) => {
@@ -238,7 +240,8 @@ export const useDashboard = () => {
       : -1;
     
     // 新しいsort_orderは最大値+1
-    addTaskToProject(`新しいタスク #${Date.now().toString().slice(-4)}`, pid, gid, { sort_order: maxOrder + 1 });
+    const taskLabel = `新しいタスク #${Date.now().toString().slice(-4)}`;
+    addTaskToProject(taskLabel, pid, gid, { sort_order: maxOrder + 1 });
     setTaskGroups(getDashboardData())
   }
   const handleAddSubtask = (gid: string, pid: string, tid: string) => {
@@ -257,7 +260,8 @@ export const useDashboard = () => {
       : -1;
     
     // 新しいsort_orderは最大値+1
-    addSubtaskToTask(`サブタスク #${Date.now().toString().slice(-4)}`, tid, pid, gid, maxOrder + 1);
+    const subtaskLabel = `サブタスク #${Date.now().toString().slice(-4)}`;
+    addSubtaskToTask(subtaskLabel, tid, pid, gid, maxOrder + 1);
     setTaskGroups(getDashboardData())
   }
 
@@ -636,10 +640,13 @@ export const useDashboard = () => {
     
     // 移動先のプロジェクトがなければ作成
     if (!targetProject) {
-      // 新しいプロジェクトを作成
+      // 新しいプロジェクトを作成（一意のIDを生成）
+      const uniqueProjectId = `project-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+      const groupLabel = targetGroupId === "today" ? "今日" : "未定";
       targetProject = {
         ...sourceProject,
-        id: projectId,  // 同じIDを使用
+        id: uniqueProjectId,  // 一意のIDを使用
+        title: `${sourceProject.title} (移動: ${groupLabel})`,  // タイトルにグループ情報を追加
         tasks: [],      // 空のタスクリストで開始
         sort_order: targetGroup.projects.length > 0 
           ? Math.min(...targetGroup.projects.map(p => p.sort_order)) - 10 

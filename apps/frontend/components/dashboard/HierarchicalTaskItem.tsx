@@ -5,7 +5,7 @@
 import { useState } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { Plus, Trash2, ChevronDown, ChevronRight, Clock, Pen, Check, X } from "lucide-react"
+import { Plus, Trash2, ChevronDown, ChevronRight, Clock, Pen, Check, X, ArrowUp, ArrowDown } from "lucide-react"
 import { TimeRangePicker } from "./time-range-picker"
 import { cn } from "@/lib/utils"
 
@@ -197,19 +197,7 @@ export const HierarchicalTaskItem = ({
           onClick={onMoveUp}
           aria-label="move to today"
         >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width={ICON_SIZE} 
-            height={ICON_SIZE} 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-          >
-            <path d="m18 15-6-6-6 6"/>
-          </svg>
+          <ArrowUp size={ICON_SIZE} />
         </Button>
       )}
 
@@ -222,19 +210,7 @@ export const HierarchicalTaskItem = ({
           onClick={onMoveDown}
           aria-label="move to unscheduled"
         >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width={ICON_SIZE} 
-            height={ICON_SIZE} 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-          >
-            <path d="m6 9 6 6 6-6"/>
-          </svg>
+          <ArrowDown size={ICON_SIZE} />
         </Button>
       )}
       

@@ -70,7 +70,7 @@ export const DashboardItemRow = ({
 
   return (
     <div 
-      className="flex items-center gap-1 py-0.5 hover:bg-gray-50 rounded" 
+      className="flex items-center gap-1 py-1 hover:bg-gray-50 rounded transition-colors" 
       style={{ paddingLeft: indent }}
     >
       {/* ドラッグハンドル */}
@@ -82,7 +82,7 @@ export const DashboardItemRow = ({
 
       {/* 矢印 */}
       {hasChildren ? (
-        <button onClick={onToggle} className="p-1 hover:bg-gray-100 rounded">
+        <button onClick={onToggle} className="p-1 hover:bg-gray-100 rounded text-gray-600">
           {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </button>
       ) : (
@@ -94,7 +94,7 @@ export const DashboardItemRow = ({
         type="checkbox"
         checked={completed}
         onChange={onToggleComplete}
-        className="mr-1 accent-black"
+        className="mr-2 accent-black h-4 w-4"
       />
 
       {/* タイトル */}
@@ -105,7 +105,7 @@ export const DashboardItemRow = ({
           onChange={(e) => setDraft(e.target.value)}
           onBlur={finish}
           onKeyDown={key}
-          className="flex-1 border rounded px-1 py-0.5 text-sm"
+          className="flex-1 border rounded px-2 py-1 text-sm"
         />
       ) : (
         <span
@@ -125,47 +125,47 @@ export const DashboardItemRow = ({
           const newStart = prompt("開始時間 (HH:MM)", startTime || "") || startTime || "";
           const newEnd = prompt("終了時間 (HH:MM)", endTime || "") || endTime || "";
           onTimeChange(newStart, newEnd);
-        }} className="p-1 hover:bg-gray-100 rounded">
+        }} className="p-1 hover:bg-gray-50 rounded text-gray-500 hover:text-gray-700">
           <Calendar size={16} />
         </button>
       )}
       {!isSubtask && onAdd && (
-        <button onClick={onAdd} className="p-1 hover:bg-gray-100 rounded">
+        <button onClick={onAdd} className="p-1 hover:bg-gray-50 rounded text-gray-500 hover:text-gray-700">
           <Plus size={16} />
         </button>
       )}
       {!isSubtask && onBreakdown && (
-        <button onClick={onBreakdown} className="p-1 hover:bg-gray-100 rounded">
+        <button onClick={onBreakdown} className="p-1 hover:bg-gray-50 rounded text-gray-500 hover:text-gray-700">
           <Braces size={16} />
         </button>
       )}
       {onClock && (
-        <button onClick={onClock} className="p-1 hover:bg-gray-100 rounded">
+        <button onClick={onClock} className="p-1 hover:bg-gray-50 rounded text-gray-500 hover:text-gray-700">
           <Clock size={16} />
         </button>
       )}
       {/* タスク操作ボタングループ（移動と削除） */}
       <div className="flex items-center">
-        {/* タスク移動ボタン - すべてのタスクとサブタスクに表示 */}
-        {onMoveUp && (
+        {/* タスク移動ボタン - グループに応じて表示 */}
+        {groupId === "unscheduled" && onMoveUp && (
           <button 
             onClick={onMoveUp} 
-            className="p-1 hover:bg-gray-100 rounded" 
-            title="上に移動"
+            className="p-1 hover:bg-gray-50 rounded text-gray-500 hover:text-gray-700" 
+            title="今日のタスクに移動"
           >
             <ArrowUp size={16} />
           </button>
         )}
-        {onMoveDown && (
+        {groupId === "today" && onMoveDown && (
           <button 
             onClick={onMoveDown} 
-            className="p-1 hover:bg-gray-100 rounded" 
-            title="下に移動"
+            className="p-1 hover:bg-gray-50 rounded text-gray-500 hover:text-gray-700" 
+            title="未定のタスクに移動"
           >
             <ArrowDown size={16} />
           </button>
         )}
-        <button onClick={onDelete} className="p-1 hover:bg-gray-100 rounded">
+        <button onClick={onDelete} className="p-1 hover:bg-gray-50 rounded text-gray-500 hover:text-gray-700">
           <Trash2 size={16} />
         </button>
       </div>

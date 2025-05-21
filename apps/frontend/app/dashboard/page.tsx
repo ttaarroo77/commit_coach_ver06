@@ -13,8 +13,8 @@ export default function DashboardPage() {
       <Sidebar />
 
       {/* メインコンテンツ */}
-      <main className="flex-1 overflow-auto p-6 max-w-5xl mx-auto space-y-4">
-        <div className="flex items-center justify-between">
+      <main className="flex-1 overflow-auto p-6 px-[200px] space-y-4">
+        <div className="flex items-center justify-between max-w-4xl mx-auto w-full">
           <h1 className="text-2xl font-bold mb-2"># ダッシュボード</h1>
           <HeaderSection />
         </div>
@@ -23,7 +23,7 @@ export default function DashboardPage() {
         <DashboardNestedList />
       </main>
 
-      {/* 右の AI コーチ */}
+      {/* 右の AI コーチ - 初期非表示 */}
       <AICoachSidebar defaultOpen={false} />
     </div>
   )
