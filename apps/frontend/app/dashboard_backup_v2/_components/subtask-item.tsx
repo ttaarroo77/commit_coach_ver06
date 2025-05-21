@@ -32,23 +32,6 @@ export const SubtaskItem = ({ ctx, gid, pid, tid, subtask, idx, dragProps }: Pro
     transition,
   };
 
-  // サブタスクのグループ間移動ハンドラー
-  const handleMoveToToday = () => {
-    // 未定から今日へ移動
-    if (gid === "unscheduled") {
-      // サブタスクを含む親タスク全体を移動
-      ctx.moveTaskBetweenGroups("unscheduled", "today", pid, tid);
-    }
-  };
-
-  const handleMoveToUnscheduled = () => {
-    // 今日から未定へ移動
-    if (gid === "today") {
-      // サブタスクを含む親タスク全体を移動
-      ctx.moveTaskBetweenGroups("today", "unscheduled", pid, tid);
-    }
-  };
-
   return (
     <div ref={setNodeRef} style={style}>
       <HierarchicalTaskItem
@@ -64,9 +47,6 @@ export const SubtaskItem = ({ ctx, gid, pid, tid, subtask, idx, dragProps }: Pro
           ...listeners
         }}
         onTitleChange={(newTitle) => ctx.handleSubtaskTitleChange?.(gid, pid, tid, subtask.id, newTitle)}
-        groupId={gid}
-        onMoveUp={gid === "unscheduled" ? handleMoveToToday : undefined}
-        onMoveDown={gid === "today" ? handleMoveToUnscheduled : undefined}
       />
     </div>
   );

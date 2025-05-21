@@ -1,7 +1,8 @@
 "use client"
 import { useState, KeyboardEvent } from "react"
 import {
-  Trash2, Plus, Clock, Braces, ChevronDown, ChevronRight, Calendar
+  Trash2, Plus, Clock, Braces, ChevronDown, ChevronRight, Calendar,
+  ArrowUp, ArrowDown
 } from "lucide-react"
 import clsx from "clsx"
 
@@ -23,6 +24,11 @@ type Props = {
   onToggleComplete?: () => void
   isSubtask?: boolean
   dragHandleProps?: any
+  // タスク移動機能用の新しいProps
+  onMoveUp?: () => void
+  onMoveDown?: () => void
+  // タスクが属するグループを識別するためのID
+  groupId?: string
 }
 
 export const DashboardItemRow = ({
@@ -42,7 +48,10 @@ export const DashboardItemRow = ({
   completed,
   onToggleComplete,
   isSubtask,
-  dragHandleProps
+  dragHandleProps,
+  onMoveUp,
+  onMoveDown,
+  groupId
 }: Props) => {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(title)
@@ -111,7 +120,7 @@ export const DashboardItemRow = ({
       )}
 
       {/* アイコン群 */}
-      {startTime !== undefined && endTime !== undefined && onTimeChange && (
+      {onTimeChange && (
         <button onClick={() => {
           const newStart = prompt("開始時間 (HH:MM)", startTime || "") || startTime || "";
           const newEnd = prompt("終了時間 (HH:MM)", endTime || "") || endTime || "";
@@ -135,9 +144,31 @@ export const DashboardItemRow = ({
           <Clock size={16} />
         </button>
       )}
-      <button onClick={onDelete} className="p-1 hover:bg-gray-100 rounded">
-        <Trash2 size={16} />
-      </button>
+      {/* タスク操作ボタングループ（移動と削除） */}
+      <div className="flex items-center">
+        {/* タスク移動ボタン - すべてのタスクとサブタスクに表示 */}
+        {onMoveUp && (
+          <button 
+            onClick={onMoveUp} 
+            className="p-1 hover:bg-gray-100 rounded" 
+            title="上に移動"
+          >
+            <ArrowUp size={16} />
+          </button>
+        )}
+        {onMoveDown && (
+          <button 
+            onClick={onMoveDown} 
+            className="p-1 hover:bg-gray-100 rounded" 
+            title="下に移動"
+          >
+            <ArrowDown size={16} />
+          </button>
+        )}
+        <button onClick={onDelete} className="p-1 hover:bg-gray-100 rounded">
+          <Trash2 size={16} />
+        </button>
+      </div>
     </div>
   )
 }

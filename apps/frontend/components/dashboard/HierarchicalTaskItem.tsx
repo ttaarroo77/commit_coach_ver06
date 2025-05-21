@@ -27,6 +27,10 @@ type Props = {
   onTitleChange?: (newTitle: string) => void
   /** DnD */
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>
+  /** タスク移動ボタン用 */
+  groupId?: string
+  onMoveUp?: () => void
+  onMoveDown?: () => void
 }
 
 // アイコンサイズを統一
@@ -55,6 +59,9 @@ export const HierarchicalTaskItem = ({
   onTimeChange,
   onTitleChange,
   dragHandleProps,
+  groupId,
+  onMoveUp,
+  onMoveDown,
 }: Props) => {
   /** 時間ピッカーの開閉 */
   const [open, setOpen] = useState(false)
@@ -181,6 +188,56 @@ export const HierarchicalTaskItem = ({
         </Button>
       )}
 
+      {/* 矢印ボタン（上）- 未定のタスクから今日のタスクへ */}
+      {groupId === "unscheduled" && onMoveUp && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(iconBtn, "mr-2 text-blue-600 hover:bg-blue-100/70")}
+          onClick={onMoveUp}
+          aria-label="move to today"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width={ICON_SIZE} 
+            height={ICON_SIZE} 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <path d="m18 15-6-6-6 6"/>
+          </svg>
+        </Button>
+      )}
+
+      {/* 矢印ボタン（下）- 今日のタスクから未定のタスクへ */}
+      {groupId === "today" && onMoveDown && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(iconBtn, "mr-2 text-blue-600 hover:bg-blue-100/70")}
+          onClick={onMoveDown}
+          aria-label="move to unscheduled"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width={ICON_SIZE} 
+            height={ICON_SIZE} 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </Button>
+      )}
+      
       {/* 削除 */}
       {onDelete && (
         <Button

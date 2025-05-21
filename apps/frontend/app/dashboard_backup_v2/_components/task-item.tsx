@@ -31,21 +31,6 @@ export const TaskItem = ({ ctx, gid, pid, task, idx, dragProps }: Props) => {
     transition,
   };
 
-  // タスクのグループ間移動ハンドラー
-  const handleMoveToToday = () => {
-    // 未定から今日へ移動
-    if (gid === "unscheduled") {
-      ctx.moveTaskBetweenGroups("unscheduled", "today", pid, task.id);
-    }
-  };
-
-  const handleMoveToUnscheduled = () => {
-    // 今日から未定へ移動
-    if (gid === "today") {
-      ctx.moveTaskBetweenGroups("today", "unscheduled", pid, task.id);
-    }
-  };
-
   return (
     <div>
       <div ref={setNodeRef} style={style}>
@@ -68,9 +53,6 @@ export const TaskItem = ({ ctx, gid, pid, task, idx, dragProps }: Props) => {
           }}
           onTimeChange={(s, e) => ctx.handleTaskTimeChange?.(gid, pid, task.id, s, e)} /* optional */
           onTitleChange={(newTitle) => ctx.handleTaskTitleChange?.(gid, pid, task.id, newTitle)}
-          groupId={gid}
-          onMoveUp={gid === "unscheduled" ? handleMoveToToday : undefined}
-          onMoveDown={gid === "today" ? handleMoveToUnscheduled : undefined}
         />
       </div>
 

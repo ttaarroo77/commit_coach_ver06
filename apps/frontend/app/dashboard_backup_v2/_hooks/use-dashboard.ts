@@ -572,127 +572,6 @@ export const useDashboard = () => {
     callReorderApi(`/subtasks?groupId=${gid}&projectId=${pid}&taskId=${tid}`, ids, orders);
   };
 
-  // プロジェクトをタスクグループ間で移動する
-  const moveProjectBetweenGroups = (sourceGroupId: string, targetGroupId: string, projectId: string) => {
-    // 既存のグループとプロジェクトを見つける
-    const sourceGroup = taskGroups.find((g) => g.id === sourceGroupId);
-    const targetGroup = taskGroups.find((g) => g.id === targetGroupId);
-    
-    if (!sourceGroup || !targetGroup) return;
-    
-    // 移動するプロジェクトを見つけて、元のグループから削除
-    const projectToMove = sourceGroup.projects.find((p) => p.id === projectId);
-    if (!projectToMove) return;
-    
-    // 新しいグループの先頭（または最後）に追加するため、sort_orderを調整
-    const targetProjects = [...targetGroup.projects];
-    // プロジェクトに新しいsort_orderを割り当て（先頭に追加する場合）
-    const newSortOrder = targetProjects.length > 0 
-      ? Math.min(...targetProjects.map(p => p.sort_order)) - 10 
-      : 1000;
-    
-    const updatedProject = { ...projectToMove, sort_order: newSortOrder };
-    
-    // タスクグループの状態を更新
-    setTaskGroups(taskGroups.map((g) => {
-      if (g.id === sourceGroupId) {
-        // 元のグループからプロジェクトを削除
-        return {
-          ...g,
-          projects: g.projects.filter((p) => p.id !== projectId)
-        };
-      } else if (g.id === targetGroupId) {
-        // 対象のグループにプロジェクトを追加
-        return {
-          ...g,
-          projects: [...g.projects, updatedProject].sort((a, b) => a.sort_order - b.sort_order)
-        };
-      }
-      return g;
-    }));
-    
-    // API呼び出し（バックエンド同期があれば実装）
-    // callReorderApi('/project/move', { projectId, sourceGroupId, targetGroupId });
-  };
-
-  // タスクをグループ間で移動する機能
-  const moveTaskBetweenGroups = (sourceGroupId: string, targetGroupId: string, projectId: string, taskId: string) => {
-    // ソースグループとターゲットグループを取得
-    const sourceGroup = taskGroups.find((g) => g.id === sourceGroupId);
-    const targetGroup = taskGroups.find((g) => g.id === targetGroupId);
-    
-    if (!sourceGroup || !targetGroup) return;
-    
-    // ソースプロジェクトを取得
-    const sourceProject = sourceGroup.projects.find((p) => p.id === projectId);
-    if (!sourceProject) return;
-    
-    // ターゲットグループの同名プロジェクトを取得または作成
-    let targetProject = targetGroup.projects.find((p) => p.id === projectId);
-    
-    // 移動するタスクを見つける
-    const taskToMove = sourceProject.tasks.find((t) => t.id === taskId);
-    if (!taskToMove) return;
-    
-    // 移動先のプロジェクトがなければ作成
-    if (!targetProject) {
-      // 新しいプロジェクトを作成
-      targetProject = {
-        ...sourceProject,
-        id: projectId,  // 同じIDを使用
-        tasks: [],      // 空のタスクリストで開始
-        sort_order: targetGroup.projects.length > 0 
-          ? Math.min(...targetGroup.projects.map(p => p.sort_order)) - 10 
-          : 1000
-      };
-    }
-    
-    // タスクに新しいsort_orderを割り当てる
-    const newSortOrder = targetProject.tasks.length > 0 
-      ? Math.min(...targetProject.tasks.map(t => t.sort_order)) - 10 
-      : 1000;
-    
-    const updatedTask = { ...taskToMove, sort_order: newSortOrder };
-    
-    // 状態を更新
-    setTaskGroups(taskGroups.map((g) => {
-      if (g.id === sourceGroupId) {
-        // 元のグループのプロジェクトからタスクを削除
-        return {
-          ...g,
-          projects: g.projects.map((p) => 
-            p.id === projectId 
-              ? { ...p, tasks: p.tasks.filter((t) => t.id !== taskId) }
-              : p
-          )
-        };
-      } else if (g.id === targetGroupId) {
-        if (targetGroup.projects.some(p => p.id === projectId)) {
-          // ターゲットグループに同名プロジェクトがあれば、そのプロジェクトにタスクを追加
-          return {
-            ...g,
-            projects: g.projects.map((p) =>
-              p.id === projectId
-                ? { ...p, tasks: [...p.tasks, updatedTask].sort((a, b) => a.sort_order - b.sort_order) }
-                : p
-            )
-          };
-        } else {
-          // ターゲットグループに同名プロジェクトがなければ、新しいプロジェクトを作成してタスクを追加
-          return {
-            ...g,
-            projects: [...g.projects, { ...targetProject, tasks: [updatedTask] }]
-              .sort((a, b) => a.sort_order - b.sort_order)
-          };
-        }
-      }
-      return g;
-    }));
-    
-    // API呼び出し（必要なら実装）
-    // callReorderApi('/task/move', { taskId, sourceGroupId, targetGroupId, projectId });
-  };
-
   return {
     /* state */
     taskGroups,
@@ -725,9 +604,6 @@ export const useDashboard = () => {
     handleSubtaskTitleChange,
     handleReorderProjects,
     handleReorderTasks,
-    handleReorderSubtasks,
-    /* タスクグループ間の移動 */
-    moveProjectBetweenGroups,
-    moveTaskBetweenGroups
+    handleReorderSubtasks
   }
 }

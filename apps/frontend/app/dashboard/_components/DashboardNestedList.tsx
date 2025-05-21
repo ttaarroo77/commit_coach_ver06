@@ -150,11 +150,25 @@ const SortableProject = ({ project, group, ctx }: SortableProjectProps) => {
     transition,
   };
 
+  // タスクグループ間の移動ハンドラ
+  const handleMoveToToday = () => {
+    if (group.id === "unscheduled") {
+      ctx.moveProjectBetweenGroups("unscheduled", "today", project.id);
+    }
+  };
+
+  const handleMoveToUnscheduled = () => {
+    if (group.id === "today") {
+      ctx.moveProjectBetweenGroups("today", "unscheduled", project.id);
+    }
+  };
+
   return (
     <div ref={setNodeRef} style={style}>
       <div className="bg-white rounded mb-4">
         {/* プロジェクト行 */}
         <DashboardItemRow
+          indent={0}
           hasChildren={project.tasks.length > 0}
           expanded={project.expanded}
           onToggle={() => ctx.toggleProject(group.id, project.id)}
@@ -172,6 +186,9 @@ const SortableProject = ({ project, group, ctx }: SortableProjectProps) => {
             ...attributes,
             ...listeners
           }}
+          groupId={group.id}
+          onMoveUp={handleMoveToUnscheduled}
+          onMoveDown={handleMoveToToday}
         />
 
         {/* タスクリスト */}
