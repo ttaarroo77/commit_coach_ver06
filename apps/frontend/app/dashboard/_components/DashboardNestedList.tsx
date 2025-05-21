@@ -3,28 +3,28 @@ import { DashboardItemRow } from "./DashboardItemRow"
 import { useDashboard } from "../_hooks/use-dashboard"
 import { DashboardCtx } from "../_hooks/use-dashboard"
 import { TaskGroup, Project, Task, SubTask } from "@/lib/dashboard-utils"
-import { 
-  DndContext, 
-  closestCenter, 
-  KeyboardSensor, 
-  PointerSensor, 
-  useSensor, 
-  useSensors, 
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
   DragEndEvent
 } from "@dnd-kit/core"
-import { 
-  SortableContext, 
-  verticalListSortingStrategy, 
+import {
+  SortableContext,
+  verticalListSortingStrategy,
   sortableKeyboardCoordinates,
   useSortable
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, ChevronDown, ChevronRight } from "lucide-react"
 
 export const DashboardNestedList = () => {
   const ctx = useDashboard()
-  
+
   // メインリストのセンサー
   const mainSensors = useSensors(
     useSensor(PointerSensor),
@@ -38,7 +38,7 @@ export const DashboardNestedList = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl mx-auto">
       {ctx.taskGroups.map((group) => (
         <TaskGroupCard key={group.id} group={group} ctx={ctx} />
       ))}
@@ -61,18 +61,18 @@ const TaskGroupCard = ({ group, ctx }: TaskGroupCardProps) => {
   );
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <div className="border border-gray-100 rounded-lg overflow-hidden bg-white shadow-sm">
       {/* グループヘッダー */}
-      <div className="bg-gray-50 p-4 flex items-center justify-between">
+      <div className="p-4 flex items-center justify-between border-b border-gray-100">
         <div className="flex items-center">
-          <button 
-            className="p-1 hover:bg-gray-100 rounded mr-2" 
+          <button
+            className="p-1 hover:bg-gray-50 rounded mr-2"
             onClick={() => ctx.toggleTaskGroup(group.id)}
           >
             {group.expanded ? (
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>
+              <ChevronDown size={16} />
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right"><path d="m9 6 6 6-6 6"/></svg>
+              <ChevronRight size={16} />
             )}
           </button>
           <h3 className="text-lg font-bold">
@@ -84,7 +84,7 @@ const TaskGroupCard = ({ group, ctx }: TaskGroupCardProps) => {
       {/* プロジェクトリスト */}
       {group.expanded && (
         <div className="p-4 space-y-2">
-          <DndContext 
+          <DndContext
             sensors={taskGroupSensors}
             collisionDetection={closestCenter}
             onDragEnd={(event) => {
@@ -97,20 +97,20 @@ const TaskGroupCard = ({ group, ctx }: TaskGroupCardProps) => {
               }
             }}
           >
-            <SortableContext 
-              items={group.projects.map(project => project.id)} 
+            <SortableContext
+              items={group.projects.map(project => project.id)}
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-2">
                 {group.projects.map((project: Project) => (
-                  <SortableProject key={project.id} project={project} group={group} ctx={ctx} />
+                  <SortableProject key={`${group.id}-${project.id}`} project={project} group={group} ctx={ctx} />
                 ))}
               </div>
             </SortableContext>
           </DndContext>
 
           {/* プロジェクト追加ボタン */}
-          <Button variant="outline" className="border-dashed w-full" onClick={() => ctx.handleAddProject(group.id)}>
+          <Button variant="outline" className="border-dashed w-full border-gray-200 hover:border-gray-300 bg-white" onClick={() => ctx.handleAddProject(group.id)}>
             <Plus className="mr-2 h-4 w-4" />
             新しいプロジェクトを追加
           </Button>
@@ -144,7 +144,7 @@ const SortableProject = ({ project, group, ctx }: SortableProjectProps) => {
   } = useSortable({
     id: project.id,
   });
-  
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -165,7 +165,7 @@ const SortableProject = ({ project, group, ctx }: SortableProjectProps) => {
 
   return (
     <div ref={setNodeRef} style={style}>
-      <div className="bg-white rounded mb-4">
+      <div className="mb-2 border border-gray-100 rounded p-2 bg-white">
         {/* プロジェクト行 */}
         <DashboardItemRow
           indent={0}
@@ -187,8 +187,8 @@ const SortableProject = ({ project, group, ctx }: SortableProjectProps) => {
             ...listeners
           }}
           groupId={group.id}
-          onMoveUp={handleMoveToUnscheduled}
-          onMoveDown={handleMoveToToday}
+          onMoveUp={group.id === "unscheduled" ? handleMoveToToday : undefined}
+          onMoveDown={group.id === "today" ? handleMoveToUnscheduled : undefined}
         />
 
         {/* タスクリスト */}
@@ -212,12 +212,12 @@ const SortableProject = ({ project, group, ctx }: SortableProjectProps) => {
                 strategy={verticalListSortingStrategy}
               >
                 {project.tasks.map((task: Task) => (
-                  <SortableTask 
-                    key={task.id} 
-                    task={task} 
-                    project={project} 
-                    group={group} 
-                    ctx={ctx} 
+                  <SortableTask
+                    key={task.id}
+                    task={task}
+                    project={project}
+                    group={group}
+                    ctx={ctx}
                   />
                 ))}
               </SortableContext>
@@ -246,7 +246,7 @@ const SortableTask = ({ task, project, group, ctx }: SortableTaskProps) => {
   } = useSortable({
     id: task.id,
   });
-  
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -275,6 +275,9 @@ const SortableTask = ({ task, project, group, ctx }: SortableTaskProps) => {
             ...attributes,
             ...listeners
           }}
+          groupId={group.id}
+          onMoveUp={group.id === "unscheduled" ? () => ctx.moveTaskBetweenGroups("unscheduled", "today", project.id, task.id) : undefined}
+          onMoveDown={group.id === "today" ? () => ctx.moveTaskBetweenGroups("today", "unscheduled", project.id, task.id) : undefined}
         />
 
         {/* サブタスクリスト */}
@@ -290,6 +293,9 @@ const SortableTask = ({ task, project, group, ctx }: SortableTaskProps) => {
                 onDelete={() => ctx.handleDeleteSubtask(group.id, project.id, task.id, subtask.id)}
                 completed={subtask.completed}
                 onToggleComplete={() => ctx.toggleSubtaskComplete(group.id, project.id, task.id, subtask.id)}
+                groupId={group.id}
+                onMoveUp={group.id === "unscheduled" ? () => ctx.moveTaskBetweenGroups("unscheduled", "today", project.id, task.id) : undefined}
+                onMoveDown={group.id === "today" ? () => ctx.moveTaskBetweenGroups("today", "unscheduled", project.id, task.id) : undefined}
               />
             ))}
           </div>
