@@ -4,32 +4,27 @@
 import { Sidebar } from "@/components/sidebar"
 import { AICoachSidebar } from "@/components/ai-coach-sidebar"
 import { HeaderSection } from "./_components/header-section"
-import { TaskGroupList } from "./_components/task-group-list"
-import { useDashboard } from "./_hooks/use-dashboard"
+import { DashboardNestedList } from "./_components/DashboardNestedList"
 
 export default function DashboardPage() {
-  const ctx = useDashboard()
-
-  if (ctx.isLoading) return (<div className="p-6">読み込み中...</div>)
-
   return (
     <div className="flex h-screen">
       {/* 左サイドバー */}
       <Sidebar />
 
       {/* メインコンテンツ */}
-      <main className="flex-1 flex flex-col overflow-y-auto p-4 space-y-4">
-        <HeaderSection
-          currentTime={ctx.currentTime}
-          formatDateDisplay={ctx.formatDateDisplay}
-          formatTimeDisplay={ctx.formatTimeDisplay}
-        />
-        {/* タスク一覧 */}
-        <TaskGroupList {...ctx} />
+      <main className="flex-1 overflow-auto p-6 max-w-5xl mx-auto space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold mb-2"># ダッシュボード</h1>
+          <HeaderSection />
+        </div>
+        
+        {/* タスク一覧 - 新UIコンポーネント */}
+        <DashboardNestedList />
       </main>
 
       {/* 右の AI コーチ */}
-      <AICoachSidebar />
+      <AICoachSidebar defaultOpen={false} />
     </div>
   )
 }
