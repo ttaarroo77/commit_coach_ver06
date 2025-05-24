@@ -1,222 +1,239 @@
-# Dashboard ― 「今日のタスク ↔ 未定のタスク」矢印ボタン 実装ガイド
+# commit_coach_ver04 — **最小差分リファクタ手順書**
 
-> apps/frontend/app/dashboard 配下の **プロジェクト／タスク／サブタスク** を、
-> *today* ↔ *unscheduled* の 2 グループ間で移動させるための実装手順。
+> **目的**
+> 1. **UI は一切変えず** に「status 属性一本化」を適用
+> 2. **Dashboard / Projects** 2 ページ運用を完成させる
+> 3. _余力があれば_ **localStorage → Supabase** へ載せ替え
+> 4. D&D が重い場合は **チェックボックス＋プルダウン** に簡略化
 >
-> **目的：**
->
-> * **今日のタスク** (group.id === `"today"`) には ↓ ボタンのみ
-> * **未定のタスク** (group.id === `"unscheduled"`) には ↑ ボタンのみ
-> * プロジェクト／タスク／サブタスクいずれも同じ操作感
->
-> ---
-
-## 0. ざっくり構造把握
-
-| レイヤ                | 主なファイル                                                                         | 役割                                                           |
-| ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------ |
-| **UI コンポーネント**     | `_components/DashboardItemRow.tsx`                                             | 単一行（プロジェクト／タスク／サブタスク）の表示。ここで矢印ボタンを描画する                       |
-|                    | `_components/DashboardNestedList.tsx`<br>`_components/DashboardItemRow.tsx` など | DnD & ネスト描画。`onMoveUp / onMoveDown` props を渡している             |
-| **状態管理 (Zustand)** | `_hooks/use-dashboard.ts`                                                      | taskGroups state とユーティリティ (`moveProjectBetweenGroups` 等) を公開 |
-| **ユーティリティ**        | `lib/dashboard-utils.ts`                                                       | 型定義 (`TaskGroup / Project / Task / SubTask`) と汎用 helper      |
+> _※ アプリの本質は「Dashboard ↔ Projects AI分解」と「AI コーチ連携」なので、他機能は削ぎ落として OK。_
 
 ---
 
-## 1. 型と state の前提
+## 3. 作業手順（コピペでいけるレベル）
+
+### 3-1. 型定義に `status` を追加
+<details><summary>`/apps/frontend/lib/dashboard-utils.ts`</summary>
 
 ```ts
-// dashboard-utils.ts（抜粋）
-export interface SubTask { id: string; title: string; completed: boolean; }
-export interface Task    { id: string; title: string; completed: boolean; subtasks: SubTask[]; }
-export interface Project { id: string; title: string; completed: boolean; tasks: Task[]; }
-export interface TaskGroup { id: "today" | "unscheduled"; expanded: boolean; projects: Project[]; }
-```
+// ★ 追加 or 変更行だけ抜粋
+export type Task = {
+  id: string
+  title: string
+  status: 'today' | 'unscheduled' | 'done'        // ← NEW
+  projectId: string | null
+  parentId?: string
+  sortIndex: number
+}
+````
 
-`use-dashboard.ts` では次のような shape の state を保持している想定です。
-
-```ts
-const [taskGroups, setTaskGroups] = useState<TaskGroup[]>(initialGroups);
-```
+</details>
 
 ---
 
-## 2. Context に “移動” ユーティリティを実装
+### 3-2. 旧データを一括変換（1 回だけ実行）
 
-### 2-1. `moveProjectBetweenGroups`
-
-```ts
-/**
- * Project 全体を today ↔ unscheduled に移動させる
- */
-const moveProjectBetweenGroups = (
-  from: "today" | "unscheduled",
-  to: "today" | "unscheduled",
-  projectId: string,
-) =>
-  setTaskGroups(prev => {
-    // 1) 取り出し
-    const project = prev
-      .find(g => g.id === from)!.projects
-      .find(p => p.id === projectId)!;
-
-    // 2) 削除 & 追加
-    return prev.map(g => {
-      if (g.id === from) {
-        return { ...g, projects: g.projects.filter(p => p.id !== projectId) };
-      }
-      if (g.id === to) {
-        return { ...g, projects: [project, ...g.projects] };
-      }
-      return g;
-    });
-  });
+```bash
+# scripts/migrate-to-status.js
+node scripts/migrate-to-status.js
 ```
 
-### 2-2. `moveTaskBetweenGroups`
+```js
+// scripts/migrate-to-status.js
+import fs from 'fs'
+import { todayTasks, unscheduledTasks } from './old-data.json'
 
-```ts
-/**
- * Task / SubTask を today ↔ unscheduled に移動させる
- */
-const moveTaskBetweenGroups = (
-  from: "today" | "unscheduled",
-  to: "today" | "unscheduled",
-  projectId: string,
-  taskId: string,
-  subtaskId?: string, // undefined → Task, defined → SubTask
-) =>
-  setTaskGroups(prev => {
-    // 1) source から取り出し
-    let moved: Task | SubTask | undefined;
-    const newPrev = prev.map(g => {
-      if (g.id !== from) return g;
+const tasks = [
+  ...todayTasks.map((t) => ({ ...t, status: 'today' })),
+  ...unscheduledTasks.map((t) => ({ ...t, status: 'unscheduled' }))
+]
 
-      return {
-        ...g,
-        projects: g.projects.map(p => {
-          if (p.id !== projectId) return p;
-          if (subtaskId) {
-            return {
-              ...p,
-              tasks: p.tasks.map(t => {
-                if (t.id !== taskId) return t;
-                const subtask = t.subtasks.find(s => s.id === subtaskId)!;
-                moved = subtask;
-                return { ...t, subtasks: t.subtasks.filter(s => s.id !== subtaskId) };
-              }),
-            };
-          }
-          const task = p.tasks.find(t => t.id === taskId)!;
-          moved = task;
-          return { ...p, tasks: p.tasks.filter(t => t.id !== taskId) };
-        }),
-      };
-    });
-
-    // 2) target に追加
-    return newPrev.map(g => {
-      if (g.id !== to) return g;
-      return {
-        ...g,
-        projects: g.projects.map(p => {
-          if (p.id !== projectId) return p;
-          if (subtaskId && moved && "title" in moved) {
-            // SubTask
-            return {
-              ...p,
-              tasks: p.tasks.map(t =>
-                t.id === taskId ? { ...t, subtasks: [moved as SubTask, ...t.subtasks] } : t,
-              ),
-            };
-          }
-          // Task
-          return { ...p, tasks: [moved as Task, ...p.tasks] };
-        }),
-      };
-    });
-  });
-```
-
-> **ポイント**
->
-> * **mutation を避けて** `prev.map` で深いコピーを作り直す
-> * Task と SubTask のロジックを 1 関数でまとめると楽
-
-`useDashboard` で上記 2 関数を `return` し、UI 側から呼べるようにします。
-
-```ts
-return {
-  …既存の ctx,
-  moveProjectBetweenGroups,
-  moveTaskBetweenGroups,
-};
+fs.writeFileSync(
+  './data/tasks.json',
+  JSON.stringify(tasks, null, 2),
+  'utf-8'
+)
+console.log('✅  migrated old tasks → tasks.json')
 ```
 
 ---
 
-## 3. UI ― `DashboardItemRow.tsx` を修正
+### 3-3. Hook を書き換え
 
-1. props に下記を追加
+<details><summary>`/apps/frontend/app/dashboard/_hooks/use-dashboard.ts`</summary>
+
+```ts
+// ① グループ抽出をフィルタに変更
+export const useDashboard = () => {
+  const tasks = useTaskStore((s) => s.tasks)
+
+  const todayTasks = tasks.filter((t) => t.status === 'today')
+  const backlog    = tasks.filter((t) => t.status === 'unscheduled')
+
+// ② 移動ロジックを PATCH に統一
+  const moveTask = (id: string, newStatus: Task['status'], newIdx: number) => {
+    updateTask(id, { status: newStatus, sortIndex: newIdx })
+  }
+}
+```
+
+</details>
+
+---
+
+### 3-4. UI ラベルだけ動的に
+
+<details><summary>`DashboardNestedList.tsx`（抜粋）</summary>
+
+```tsx
+const STATUS_LABEL: Record<Task['status'], string> = {
+  today: '今日のタスク',
+  unscheduled: '未定のタスク',
+  done: '完了'
+}
+
+export function DashboardNestedList({ status }: { status: Task['status'] }) {
+  const tasks = useTasksByStatus(status)
+  return (
+    <Card>
+      <CardHeader>
+        <h3>{`### ${STATUS_LABEL[status]}`}</h3>
+      </CardHeader>
+      {/* …既存のリスト描画を流用… */}
+    </Card>
+  )
+}
+```
+
+</details>
+
+---
+
+### 3-5. `/projects` ページをプロジェクトフィルタに
+
+```tsx
+// app/projects/page.tsx (想定)
+const ProjectPage = () => {
+  const { projectId } = useParams()  // /projects/:projectId
+  const tasks = useTasks().filter(t => t.projectId === projectId)
+
+  return (
+    <TaskList title="プロジェクト内タスク" tasks={tasks} />
+  )
+}
+```
+
+---
+
+## 4. 「今の UI で粘る」場合の注意点
+
+| 項目             | リスク           | 最小コスト回避策                                         |
+| -------------- | ------------- | ------------------------------------------------ |
+| **親子タスクのドラッグ** | サブタスクが孤立する    | `draggable={subtasks.length===0}` にする or 親ごとパッチ  |
+| **列追加を後で頼まれる** | UI が 2 列前提で崩壊 | `const STATUS = [...]` 配列で一元管理し map で描画          |
+| **スマホ幅**       | 右の AI コーチが潰れる | `@media (max-width:768px){.coach{display:none}}` |
+| **大量タスクで重い**   | 初期ロード遅延       | `useMemo` + `virtualized list` を後付け可能            |
+| **D\&D がむずい**  | 実装に時間         | 初期 MVP は「↑↓ボタン」+「ステータス切替プルダウン」だけ                 |
+
+---
+
+## 5. これでも「無理そう」と感じたら…
+
+### 5-1. **localStorage → Supabase** へ移行
+
+1. **Supabase プロジェクト作成**
+
+   * `Table: tasks` を GUI で作成（列名は型定義どおり）。
+2. **環境変数**
+
+   ```bash
+   # .env.local
+   NEXT_PUBLIC_SUPABASE_URL=...
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+   ```
+3. **SDK インストール**
+
+   ```bash
+   pnpm add @supabase/supabase-js
+   ```
+4. **ユーティリティ作成**
 
    ```ts
-   onMoveUp?: () => void;
-   onMoveDown?: () => void;
-   groupId: "today" | "unscheduled";
+   // lib/supa.ts
+   export const supa = createClient(
+     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+   )
+   ```
+5. **読み書きを差し替え**
+
+   * `useTaskStore` の `fetchTasks` → `supa.from('tasks').select('*')`
+   * `updateTask` → `.update({...}).eq('id',id)`
+6. **既存 JSON を一括 import**
+
+   ```bash
+   supabase import json --table tasks data/tasks.json --upsert
    ```
 
-2. ボタンを描画
+### 5-2. **D\&D を削除 → プルダウン簡略版**
+
+1. **`@dnd-kit` をコメントアウト**
+
+   * `<DndContext>` ラッパーを削除。
+2. **UI 変更**
 
    ```tsx
-   {onMoveUp && (
-     <ArrowUpCircle
-       size={16}
-       className="cursor-pointer text-gray-500 hover:text-gray-800"
-       onClick={onMoveUp}
-     />
-   )}
-   {onMoveDown && (
-     <ArrowDownCircle
-       size={16}
-       className="cursor-pointer text-gray-500 hover:text-gray-800"
-       onClick={onMoveDown}
-     />
-   )}
+   <select
+     value={task.status}
+     onChange={(e)=>updateTask(task.id,{status:e.target.value as Task['status']})}
+   >
+     <option value="today">今日</option>
+     <option value="unscheduled">未定</option>
+     <option value="done">完了</option>
+   </select>
    ```
+3. **並べ替え**
 
-3. `groupId` に応じて親側で props を渡す（コードはすでに記載済み）。
+   * 「↑↓ボタン」のみ残す or `sortIndex` を自動で `Date.now()` に。
+4. **あとで Drag & Drop を戻す**
 
-> **注 :** すでに `_components/DashboardNestedList.tsx` で `onMoveUp / onMoveDown` を渡しているため、描画さえ行えばボタンは機能する。
-
----
-
-## 4. 動作確認
-
-1. `pnpm --filter frontend dev` でローカル起動
-2. **今日のタスク** のプロジェクト行で ↓ をクリック → "未定" に即移動
-3. **未定のタスク** で ↑ をクリック → "今日" に移動
-4. タスク／サブタスクにも同様に矢印が表示・移動するか確認
-5. コンソール警告（key 重複・state ミューテーション）などが無いかチェック
+   * `git checkout -p` で `@dnd-kit` 関連コミットを再適用すれば OK。
 
 ---
 
-## 5. よくあるハマりポイント
+## 6. AI コーチ連携の最小実装
 
-| 症状                          | 原因                                      | 対処                                          |
-| --------------------------- | --------------------------------------- | ------------------------------------------- |
-| ボタンクリックで UI は変わるが次の再読込で元に戻る | Supabase など永続層へ `UPDATE` していない          | `move*` 内で API 叩く or `useEffect` で sync     |
-| サブタスク移動で `undefined` エラー    | `subtaskId` が `Task` 側にも存在すると思い込んでいる    | 深いコピーの順序を確認し、`find` の結果 null チェック           |
-| DnD と衝突してドラッグ開始時にボタンが誤反応    | `<button>` 内で `e.stopPropagation()` を呼ぶ | `onClick={e => { e.stopPropagation(); … }}` |
+```ts
+// /app/coach/_actions/sendMessage.ts
+import OpenAI from 'openai'
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+
+export async function sendToCoach(history: string) {
+  const res = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role:'user', content: history }]
+  })
+  return res.choices[0].message.content
+}
+```
+
+* **.env.local** に `OPENAI_API_KEY=` をセット
+* フロントから `fetch('/api/coach', {method:'POST', body:history})`
 
 ---
 
-## 6. 次の拡張アイデア
+### 🎯 ゴールチェックリスト
 
-* ドラッグ＆ドロップでも today ↔ unscheduled 間の移動をサポート（`dnd-kit` `useDroppable` を利用）
-* 移動後にトースト通知 / アンドゥ実装（`use-toast.ts` を流用）
-* タグや優先度を付けて並び替え条件を複合化
+* [ ] `npm run dev` で旧 UI のまま動く
+* [ ] today ↔ 未定 の切替が PATCH 1 発で動く
+* [ ] プロジェクトページで projectId フィルタが効く
+* [ ] （オプション）Supabase に同期しても同じ UI で動く
+* [ ] AI コーチ欄に返信が出た
 
----
+完成したら **GitHub に “minimal-migration” ブランチ** としてプッシュし、
+試用 → 問題なければ `main` にマージするだけでリリースできます 🚀
 
-### 以上
+```
 
-このドキュメントを **windsurf** に貼り付ければ、開発者が不足無く実装できるはずです。もし `use-dashboard.ts` の実装詳細や別ファイルの I/F が分からなければ、該当ファイルを共有してください。
+> 上記を **そのまま windsurf に貼り付け** れば、チーム全員が手順を共有できます。
+```

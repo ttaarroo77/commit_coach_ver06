@@ -1,53 +1,106 @@
 // apps/frontend/components/sidebar.tsx
 
+
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Home, Folder, LogOut, Clock } from "lucide-react"
 
 export const Sidebar = () => {
   const pathname = usePathname()
 
+  const navItem =
+    "flex h-9 w-full items-center rounded-md px-3 text-sm font-medium " +
+    "hover:bg-muted hover:text-foreground data-[active=true]:bg-muted " +
+    "data-[active=true]:font-semibold"
+
   return (
     <div className="flex h-screen w-56 flex-col border-r bg-white">
+      {/* ヘッダー */}
       <div className="flex h-14 items-center border-b px-4">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#31A9B8] text-white">C</div>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#31A9B8] text-white">
+            C
+          </div>
           <span className="font-semibold">コミットコーチ</span>
         </Link>
       </div>
 
-      <div className="flex flex-1 flex-col overflow-auto">
-        {/* メインナビゲーション */}
-        <div className="px-3 py-4">
-          <div className="space-y-1">
-            <Link href="/dashboard" className="block">
-              <Button 
-                variant="ghost" 
-                className="h-9 w-full justify-start" 
-                data-active={pathname === "/dashboard" || pathname?.startsWith("/dashboard/")}
-              >
-                <Home className="mr-2 h-4 w-4" />
-                <span>ダッシュボード</span>
-              </Button>
-            </Link>
-            <Link href="/projects" className="block">
-              <Button 
-                variant="ghost" 
-                className="h-9 w-full justify-start" 
-                data-active={pathname === "/projects" || pathname?.startsWith("/projects/")}
-              >
-                <Folder className="mr-2 h-4 w-4" />
-                <span>プロジェクト一覧</span>
-              </Button>
-            </Link>
-          </div>
-        </div>
+      {/* メインナビゲーション */}
+      <div className="flex flex-1 flex-col overflow-auto px-3 py-4 space-y-1">
+        <Link
+          href="/dashboard"
+          className={navItem}
+          data-active={pathname === "/dashboard" || pathname?.startsWith("/dashboard/")}
+        >
+          ダッシュボード
+        </Link>
+
+        <Link
+          href="/projects"
+          className={navItem}
+          data-active={pathname === "/projects" || pathname?.startsWith("/projects/")}
+        >
+          プロジェクト一覧
+        </Link>
       </div>
     </div>
   )
 }
+
+
+// "use client"
+// import Link from "next/link"
+// import { usePathname } from "next/navigation"
+// import { Button } from "@/components/ui/button"
+// import { Home, Folder, LogOut, Clock } from "lucide-react"
+
+// export const Sidebar = () => {
+//   const pathname = usePathname()
+
+//   return (
+//     <div className="flex h-screen w-56 flex-col border-r bg-white">
+//       <div className="flex h-14 items-center border-b px-4">
+//         <Link href="/dashboard" className="flex items-center gap-2">
+//           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#31A9B8] text-white">C</div>
+//           <span className="font-semibold">コミットコーチ</span>
+//         </Link>
+//       </div>
+
+//       <div className="flex flex-1 flex-col overflow-auto">
+//         {/* メインナビゲーション */}
+//         <div className="px-3 py-4">
+//           <div className="space-y-1">
+
+//             <Link href="/dashboard" className="block">
+//               <Button
+//                 variant="ghost"
+//                 className="h-9 w-full justify-start"
+//                 data-active={pathname === "/dashboard" || pathname?.startsWith("/dashboard/")}
+//               >
+//                 {/* <Home className="mr-2 h-4 w-4" /> */}
+//                 <span>ダッシュボード</span>
+//               </Button>
+//             </Link>
+
+
+//             <Link href="/projects" className="block">
+//               <Button
+//                 variant="ghost"
+//                 className="h-9 w-full justify-start"
+//                 data-active={pathname === "/projects" || pathname?.startsWith("/projects/")}
+//               >
+//                 {/* <Folder className="mr-2 h-4 w-4" /> */}
+//                 <span>プロジェクト一覧</span>
+//               </Button>
+//             </Link>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   )
+// }
+
+
 
 
 
