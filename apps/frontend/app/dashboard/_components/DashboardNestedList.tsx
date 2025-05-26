@@ -96,7 +96,7 @@ const TaskGroupCard = ({ group, ctx }: TaskGroupCardProps) => {
             )}
           </button>
           <h3 className="text-lg font-bold">
-            {group.id === "today" ? "### 今日のタスク" : group.id === "unscheduled" ? "### 未定のタスク" : ""}
+            {group.id === "today" ? "### 今日のタスク" : group.id === "unscheduled" ? "### プロジェクト一覧" : ""}
           </h3>
         </div>
       </div>

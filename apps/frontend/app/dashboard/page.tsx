@@ -21,6 +21,14 @@ export default function DashboardPage() {
         
         {/* タスク一覧 - 新UIコンポーネント */}
         <DashboardNestedList />
+        
+        {/* 余分なセクション非表示用スタイル */}
+        <style jsx global>{`
+          /* 3つ目のタスクグループセクションを非表示 */
+          .space-y-6.max-w-5xl.mx-auto > div:nth-of-type(3) {
+            display: none !important;
+          }
+        `}</style>
       </main>
 
       {/* 右の AI コーチ - 初期非表示 */}

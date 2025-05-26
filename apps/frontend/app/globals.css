@@ -11,10 +11,7 @@ body {
     text-wrap: balance;
   }
   
-  /* 重複する未定のタスクを非表示 */
-  .space-y-6 > div:nth-of-type(3) {
-    display: none !important;
-  }
+  /* 2-tab方式のUIスタイル調整 */
 }
 
 @layer base {

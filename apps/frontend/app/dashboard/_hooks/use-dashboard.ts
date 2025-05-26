@@ -658,7 +658,7 @@ export const useDashboard = () => {
     if (!targetProject) {
       // 新しいプロジェクトを作成（一意のIDを生成）
       const uniqueProjectId = `project-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-      const groupLabel = targetGroupId === "today" ? "今日" : "未定";
+      const groupLabel = targetGroupId === "today" ? "今日" : "プロジェクト";
       targetProject = {
         ...sourceProject,
         id: uniqueProjectId,  // 一意のIDを使用
