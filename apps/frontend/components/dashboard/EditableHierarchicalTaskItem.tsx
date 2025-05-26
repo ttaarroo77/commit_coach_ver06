@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { Plus, Trash2, ChevronDown, ChevronRight, Clock, GripVertical } from "lucide-react"
+import { Plus, Trash2, ChevronDown, ChevronRight, Clock, GripVertical, Pen } from "lucide-react"
 import { TimeRangePicker } from "./time-range-picker"
 import { EditableText } from "@/components/ui/editable-text"
 import { cn } from "@/lib/utils"
@@ -34,7 +34,7 @@ const ICON_SIZE = 18
 
 // ボタンスタイルを統一
 const iconBtn = `
-  p-1.5 w-auto h-auto rounded-md 
+  p-0.5 w-auto h-auto rounded-md 
   opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto 
   transition-opacity duration-150
 `
@@ -59,6 +59,9 @@ export const EditableHierarchicalTaskItem = ({
 }: Props) => {
   /** 時間ピッカーの開閉 */
   const [open, setOpen] = useState(false)
+  
+  /** 編集モード用ステート */
+  const [editing, setEditing] = useState(false)
 
   /** 表示用テキスト */
   const timeLabel =
@@ -66,7 +69,7 @@ export const EditableHierarchicalTaskItem = ({
 
   return (
     <div
-      className={`group flex items-center bg-white ${
+      className={`group flex items-center ${editing ? "bg-blue-50" : "bg-white"} ${
         level === 1 ? "px-3 py-2" : level === 2 ? "pl-8 pr-3 py-2" : "pl-16 pr-3 py-1.5"
       } border-b last:border-b-0 ${level === 3 ? "bg-gray-50" : ""}`}
     >
@@ -84,7 +87,7 @@ export const EditableHierarchicalTaskItem = ({
       {hasChildren ? (
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           className="mr-2 text-blue-600 hover:bg-blue-100/70"
           onClick={onToggleExpand}
         >
@@ -115,6 +118,8 @@ export const EditableHierarchicalTaskItem = ({
           onClick={(e) => e.stopPropagation()}  // クリックイベントの伝播を停止
           className={completed ? "line-through text-gray-400" : "text-gray-800"}
           placeholder="タスク名を入力"
+          isEditing={editing}
+          onEditingChange={setEditing}
         />
       </div>
 
@@ -133,7 +138,7 @@ export const EditableHierarchicalTaskItem = ({
       {onAddChild && level !== 3 && (
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           className={cn(iconBtn, "mr-2 text-green-600 hover:bg-green-100/70")}
           onClick={onAddChild}
           aria-label="add child"
@@ -142,12 +147,23 @@ export const EditableHierarchicalTaskItem = ({
         </Button>
       )}
 
+      {/* 編集 */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="mr-2 p-0.5 h-auto text-blue-600 hover:bg-blue-100/70"
+        onClick={() => setEditing(true)}
+        aria-label="edit"
+      >
+        <Pen size={ICON_SIZE} strokeWidth={2.25}/>
+      </Button>
+
       {/* 削除 */}
       {onDelete && (
         <Button
           variant="ghost"
-          size="icon"
-          className={cn(iconBtn, "text-red-600 hover:bg-red-100/70")}
+          size="sm"
+          className="p-0.5 h-auto text-red-600 hover:bg-red-100/70"
           onClick={onDelete}
           aria-label="delete"
         >

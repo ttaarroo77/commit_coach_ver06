@@ -37,11 +37,31 @@ export const DashboardNestedList = () => {
     return <div className="py-4 text-center">読み込み中...</div>
   }
 
+  // 重複しているタスクグループのIDをカウント
+  const groupCounts = ctx.taskGroups.reduce((acc, group) => {
+    acc[group.id] = (acc[group.id] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // 表示済みのグループIDを追跡
+  const displayedGroups = new Set<string>();
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      {ctx.taskGroups.map((group) => (
-        <TaskGroupCard key={group.id} group={group} ctx={ctx} />
-      ))}
+      {ctx.taskGroups
+        .filter((group) => {
+          // 同じIDのグループが既に表示されている場合は非表示
+          if (displayedGroups.has(group.id)) {
+            return false;
+          }
+          // 表示済みリストに追加
+          displayedGroups.add(group.id);
+          return true;
+        })
+        .map((group) => (
+          <TaskGroupCard key={group.id} group={group} ctx={ctx} />
+        ))}
+      {/* ### 未定のタスク // ここから下がコメントアウト */}
     </div>
   );
 }
@@ -76,7 +96,7 @@ const TaskGroupCard = ({ group, ctx }: TaskGroupCardProps) => {
             )}
           </button>
           <h3 className="text-lg font-bold">
-            {group.id === "today" ? "### 今日のタスク" : "### 未定のタスク"}
+            {group.id === "today" ? "### 今日のタスク" : group.id === "unscheduled" ? "### 未定のタスク" : ""}
           </h3>
         </div>
       </div>

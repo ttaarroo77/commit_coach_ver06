@@ -27,7 +27,23 @@ export const useDashboard = () => {
 
   /* --- 初期ロード & clock --- */
   useEffect(() => {
-    setTaskGroups(getDashboardData())
+    // 重複したグループを除外する
+    const data = getDashboardData()
+    // 重複IDチェック用のSET
+    const uniqueIds = new Set<string>()
+    // 重複なしのデータ配列
+    const uniqueGroups = data.filter(group => {
+      // 既に処理済みのIDは除外
+      if (uniqueIds.has(group.id)) {
+        console.log(`重複したグループが除外されました: ${group.id}`);
+        return false;
+      }
+      // 新しいIDは追加して表示
+      uniqueIds.add(group.id);
+      return true;
+    })
+    
+    setTaskGroups(uniqueGroups)
     setIsLoading(false)
     const timer = setInterval(() => setCurrentTime(new Date()), 60_000)
     return () => clearInterval(timer)
