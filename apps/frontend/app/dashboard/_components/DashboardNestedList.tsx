@@ -211,9 +211,9 @@ const SortableProject = ({ project, group, ctx }: SortableProjectProps) => {
                 items={project.tasks.map(task => task.id)}
                 strategy={verticalListSortingStrategy}
               >
-                {project.tasks.map((task: Task) => (
+                {project.tasks.map((task: Task, index: number) => (
                   <SortableTask
-                    key={task.id}
+                    key={`${group.id}-${project.id}-${task.id}-${index}`}
                     task={task}
                     project={project}
                     group={group}
@@ -244,7 +244,7 @@ const SortableTask = ({ task, project, group, ctx }: SortableTaskProps) => {
     transform,
     transition,
   } = useSortable({
-    id: task.id,
+    id: `${group.id}-${project.id}-${task.id}`,
   });
 
   const style = {
