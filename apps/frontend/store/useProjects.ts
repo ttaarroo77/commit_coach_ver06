@@ -1,5 +1,4 @@
 import { create } from "zustand"
-import { getDashboardData, saveDashboardData, addProjectToDashboard, addTaskToProject, addSubtaskToTask } from "@/lib/dashboard-utils"
 
 /* 型定義 */
 export type Subtask = { id: string; title: string; completed: boolean }
@@ -32,7 +31,6 @@ const mockProjects: Project[] = [
 
 type Store = {
   projects: Project[]
-  selectedForDashboard: string[]
   /* CRUD & UI アクション */
   addProject: () => void
   deleteProject: (projectId: string) => void
@@ -46,13 +44,11 @@ type Store = {
   deleteSubtask: (projectId: string, taskId: string, subtaskId: string) => void
   updateSubtaskTitle: (projectId: string, taskId: string, subtaskId: string, title: string) => void
   toggleComplete: (level:"task"|"subtask", ids:string[]) => void
-  toggleDashboard: (id:string)=>void
   breakdown: (level:"project"|"task", ids:string[]) => void
 }
 
 export const useProjects = create<Store>((set) => ({
   projects: mockProjects,
-  selectedForDashboard: [],
 
   /* --- Project --- */
   addProject: () =>
@@ -224,75 +220,7 @@ export const useProjects = create<Store>((set) => ({
       }
     }),
 
-  toggleDashboard: (id) =>
-    set((s) => {
-      // 選択されたIDがすでにあるか確認
-      const isSelected = s.selectedForDashboard.includes(id);
-      
-      // IDに関連するプロジェクト、タスク、サブタスクを検索
-      const projectWithId = s.projects.find((p) => p.id === id);
-      let relatedTask = null;
-      let relatedSubtask = null;
-      let parentProject = null;
-      let parentTask = null;
-      
-      if (!projectWithId) {
-        // タスクかサブタスクの場合
-        for (const project of s.projects) {
-          // タスクを検索
-          const task = project.tasks.find((t) => t.id === id);
-          if (task) {
-            relatedTask = task;
-            parentProject = project;
-            break;
-          }
-          
-          // サブタスクを検索
-          for (const t of project.tasks) {
-            const subtask = t.subtasks.find((st) => st.id === id);
-            if (subtask) {
-              relatedSubtask = subtask;
-              parentTask = t;
-              parentProject = project;
-              break;
-            }
-          }
-          
-          if (relatedTask || relatedSubtask) break;
-        }
-      }
-      
-      if (!isSelected) {
-        // 選択に追加された場合のみダッシュボードに追加
-        const groupId = "today"; // 今日のタスクグループに追加
-        
-        if (projectWithId) {
-          // プロジェクトを追加
-          addProjectToDashboard(projectWithId.id, projectWithId.title, groupId);
-        } else if (relatedTask && parentProject) {
-          // タスクを追加
-          addTaskToProject(relatedTask.title, parentProject.id, groupId, {
-            sort_order: Date.now(),
-            sourceTaskData: {
-              id: relatedTask.id,
-              title: relatedTask.title,
-              completed: relatedTask.completed,
-              subtasks: relatedTask.subtasks
-            }
-          });
-        } else if (relatedSubtask && parentTask && parentProject) {
-          // サブタスクを追加
-          addSubtaskToTask(relatedSubtask.title, parentTask.id, parentProject.id, groupId, Date.now());
-        }
-      }
-      
-      // Zustandの状態も更新
-      return {
-        selectedForDashboard: isSelected
-          ? s.selectedForDashboard.filter((x) => x !== id)
-          : [...s.selectedForDashboard, id],
-      };
-    }),
+
 
   breakdown: () => alert("今はダミーです 🚧"),
 }))

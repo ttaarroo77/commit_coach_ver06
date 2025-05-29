@@ -19,7 +19,6 @@ export const NestedList = () => {
             onAdd={() => s.addTask(p.id)}
             onBreakdown={() => s.breakdown("project", [p.id])}
             onDelete={() => s.deleteProject(p.id)}
-            onClock={() => s.toggleDashboard(p.id)}
           />
 
           {/* Tasks */}
@@ -36,7 +35,6 @@ export const NestedList = () => {
                   onAdd={() => s.addSubtask(p.id, t.id)}
                   onBreakdown={() => s.breakdown("task", [p.id, t.id])}
                   onDelete={() => s.deleteTask(p.id, t.id)}
-                  onClock={() => s.toggleDashboard(t.id)}
                   completed={t.completed}
                   onToggleComplete={() => s.toggleComplete("task", [p.id, t.id])}
                 />
@@ -52,7 +50,6 @@ export const NestedList = () => {
                       title={st.title}
                       onTitleChange={(tt) => s.updateSubtaskTitle(p.id, t.id, st.id, tt)}
                       onDelete={() => s.deleteSubtask(p.id, t.id, st.id)}
-                      onClock={() => s.toggleDashboard(st.id)}
                       completed={st.completed}
                       onToggleComplete={() => s.toggleComplete("subtask", [p.id, t.id, st.id])}
                     />

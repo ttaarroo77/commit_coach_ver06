@@ -17,7 +17,7 @@ export const Sidebar = () => {
     <div className="flex h-screen w-56 flex-col border-r bg-white">
       {/* ヘッダー */}
       <div className="flex h-14 items-center border-b px-4">
-        <Link href="/dashboard" className="flex items-center gap-2">
+        <Link href="/projects" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#31A9B8] text-white">
             C
           </div>
@@ -27,14 +27,6 @@ export const Sidebar = () => {
 
       {/* メインナビゲーション */}
       <div className="flex flex-1 flex-col overflow-auto px-3 py-4 space-y-1">
-        <Link
-          href="/dashboard"
-          className={navItem}
-          data-active={pathname === "/dashboard" || pathname?.startsWith("/dashboard/")}
-        >
-          ダッシュボード
-        </Link>
-
         <Link
           href="/projects"
           className={navItem}

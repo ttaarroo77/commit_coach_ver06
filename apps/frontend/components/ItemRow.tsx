@@ -1,7 +1,7 @@
 "use client"
 import { useState, KeyboardEvent } from "react"
 import {
-  Trash2, Plus, Clock, Braces, ChevronDown, ChevronRight,
+  Trash2, Plus, Braces, ChevronDown, ChevronRight,
 } from "lucide-react"
 import clsx from "clsx"
 
@@ -15,7 +15,6 @@ type Props = {
   onAdd?: () => void
   onBreakdown?: () => void
   onDelete: () => void
-  onClock: () => void
   completed?: boolean
   onToggleComplete?: () => void
   isSubtask?: boolean
@@ -31,7 +30,6 @@ export const ItemRow = ({
   onAdd,
   onBreakdown,
   onDelete,
-  onClock,
   completed,
   onToggleComplete,
   isSubtask,
@@ -103,9 +101,6 @@ export const ItemRow = ({
           <Braces size={16} />
         </button>
       )}
-      <button onClick={onClock} className="p-1 hover:bg-gray-100 rounded">
-        <Clock size={16} />
-      </button>
       <button onClick={onDelete} className="p-1 hover:bg-gray-100 rounded">
         <Trash2 size={16} />
       </button>
