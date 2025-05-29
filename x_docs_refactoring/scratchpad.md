@@ -1,136 +1,91 @@
-# scratchpad.md — Dashboard “2‑Tab UI” 要件チェックリスト
+# Dashboard Task List Refactor
 
-> **目標スコープ**: 既存 Dashboard 画面を「Today / Unscheduled」の **2 タブ方式** に改修し、UI 破綻なくリリースできる状態にする。
-> **アウト・オブ・スコープ**: 3 タブ以上の拡張・新 API 設計・全面デザインシステム導入。
-> **ゴール定義**: 2 タブ切替で **(1) 表示切替 150 ms 以内**、**(2) URL 同期**、**(3) e2e テスト通過**。
-
-## 📝 作業完了リスト
-
-* [x] **Dashboard タイトル編集機能の改修**
-  * [x] `HierarchicalTaskItem`を`EditableHierarchicalTaskItem`に置換
-  * [x] 編集開始イベントの実装（ダブルクリックとペンアイコン押下）
-  * [x] ペン＆ごみ箱アイコンの常時表示化
-  * [x] 編集モード時の背景色変更
+このドキュメントは、**Work Tasks** タブの下に **Plan Tasks** を表示させるためのリファクタリング手順をまとめたものです。対象ブランチは
+`refactor/002-ui-dashboard-task-management` です。
 
 ---
 
-## 📃 多層チェックリスト
-
-### 1. 情報設計
-
-* [ ] \[P0] **UI 要件の整理**
-
-  * [ ] Figma モックで要素一覧を抽出
-  * [ ] タブ切替時に **保持する state / 破棄する state** を整理
-
-    * [ ] 選択プロジェクト ID
-    * [ ] 展開状態 (`expanded`)
-    * [ ] 編集中タイトル (`editingTitle`)
-* [ ] \[P1] **ユーザーシナリオ確認**
-
-  * [ ] 通常タスク追加フロー
-  * [ ] D\&D 移動→タブ自動切替フロー
-  * [ ] スマホ（幅 375 px）閲覧フロー
-
-### 2. レイアウト / Tab コンポーネント
-
-* [ ] \[P0] **Tab API 決定**
-
-  * [ ] `@/components/ui/tabs` 再利用可否調査
-  * [ ] props: `tabs: { id: string; label: string; badge?: number }[]`
-* [ ] \[P0] **アクセシビリティ**
-
-  * [ ] `role="tablist"` / `role="tab"` / `aria-selected` 実装
-  * [ ] キーボード操作 (←/→/Home/End) 確認
-* [ ] \[P1] **レスポンシブ**
-
-  * [ ] モバイル時に bottom navigation 化の是非検討
-
-### 3. ルーティング & URL 同期
-
-* [ ] \[P0] **クエリパラメータ設計**
-
-  * [ ] `/dashboard?view=today` vs パス分割 `/dashboard/today`
-  * [ ] ブラウザバック動作テスト
-* [ ] \[P0] **Next.js Segment 追加**
-
-  * [ ] `app/dashboard/(tabs)/today/page.tsx`
-  * [ ] `app/dashboard/(tabs)/unscheduled/page.tsx`
-* [ ] \[P1] **Deep Linking QA**
-
-  * [ ] 直接 URL でアクセス → 正常描画
-
-### 4. 状態管理
-
-* [ ] \[P0] **タブ状態**
-
-  * [ ] Zustand store `dashboard.view`
-  * [ ] Persist middleware で LS 保存
-* [ ] \[P1] **派生 Selector**
-
-  * [ ] `selectVisibleProjects(view)` 実装
-
-### 5. コンポーネント分割
-
-* [ ] \[P0] **現在の `DashboardNestedList` を分解**
-
-  * [ ] `DashboardListToday.tsx`
-  * [ ] `DashboardListUnscheduled.tsx`
-* [ ] \[P0] **共通部品抽出**
-
-  * [ ] `ProjectCard`
-  * [ ] `TaskRow`
-* [ ] \[P2] Storybook 追加
-
-### 6. スタイリング / 動作
-
-* [ ] \[P0] **Tab 切替アニメーション** (Framer Motion)
-
-  * [ ] Fade + Slide 20 px
-  * [ ] prefers-reduced-motion 対応
-* [ ] \[P1] **高さ揺れ対策**
-
-  * [ ] 同一高さコンテナ & `overflow‑anchor` 無効化
-
-### 7. テスト
-
-* [ ] \[P0] **ユニット** (Jest + Testing Library)
-
-  * [ ] 初期レンダーが Today
-  * [ ] タブクリック → 期待タスクが表示
-* [ ] \[P0] **e2e** (Playwright)
-
-  * [ ] URL 直打ち `/dashboard/unscheduled` で Unscheduled タブ
-  * [ ] D\&D でタスク移動 → 他タブに表示される
-* [ ] \[P1] **AXE 自動テスト**
-
-### 8. パフォーマンス
-
-* [ ] \[P1] **Code‑Split**
-
-  * [ ] `dynamic()` でタブ毎に遅延読み込み
-* [ ] \[P2] **React.memo** 適用箇所洗い出し
-
-### 9. アナリティクス
-
-* [ ] \[P2] Tab 切替イベントを `gtag("event", "dashboard_view_change")` 送信
-* [ ] \[P3] ヒートマップ要件検討
-
-### 10. ロールアウト計画
-
-* [ ] \[P0] **フラグ管理**
-
-  * [ ] LaunchDarkly flag `dashboard_2tab`
-  * [ ] QA グループ 100 % → ステージ
-* [ ] \[P0] **リリースノート**草案
-* [ ] \[P1] **撤退戦略**
-
-  * [ ] フラグ OFF で旧 UI 復帰確認
+## 1. 目的
+- **UX 向上**: タブを切り替えずに Work と Plan の両方のタスクを一望できるようにする。
+- **実装簡素化**: タブ間で重複しているロジックや状態管理を一元化する。
+- **拡張性**: 将来のタスク種別追加に備えてスケーラブルなデータモデルへ移行する。
 
 ---
 
-## 参考リンク
+## 2. 変更概要
+1. **データモデル統合**
+   `Task` 型に `category: 'work' | 'plan'` を追加し、単一配列で両カテゴリを管理。
 
-* `x_docs_refactoring` ➜ *UI Layer/Navigation.md*
-* Figma ➜ *Dashboard v2 / Page32*
-* 課題: [https://github.com/ttaarroo77/commit\_coach\_ver04/issues/123](https://github.com/ttaarroo77/commit_coach_ver04/issues/123)
+2. **状態管理のリファクタ**
+   `useTaskStore`（Zustand 例）の selector を削除し、`tasks` 配列を直接クエリ。
+   ```ts
+   // before
+   const workTasks = useTaskStore(s => s.workTasks)
+   const planTasks = useTaskStore(s => s.planTasks)
+
+   // after
+   const tasks = useTaskStore(s => s.tasks)
+   const workTasks = tasks.filter(t => t.category === 'work')
+   const planTasks = tasks.filter(t => t.category === 'plan')
+````
+
+3. **UI コンポーネント統合**
+
+   * `DashboardTabs.tsx` を削除。
+   * `WorkTaskList.tsx` を `TaskList.tsx` に改名し、`category` prop でフィルタリング。
+   * Plan セクションを Work セクション配下に描画。
+
+4. **スタイリングの調整**
+   Figma 参照: Plan セクションは Work リストの**直下**に `border-t` を入れて区切る。
+
+5. **既存データのマイグレーション**
+
+   ```sql
+   -- PostgreSQL 例
+   UPDATE tasks SET category = 'plan'
+   WHERE list_id IN (SELECT id FROM lists WHERE name = 'Plan Tasks');
+   ```
+
+6. **E2E / 単体テスト更新**
+
+   * Cypress: `dashboard_tab.spec.ts` を `dashboard_tasklist.spec.ts` にリネーム。
+   * 期待 DOM セレクタを `.plan-section` へ変更。
+
+---
+
+## 3. 手順詳細
+
+| #  | ステップ         | コマンド/ファイル                                                                    | メモ                                                            |
+| -- | ------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| 1  | 新ブランチ作成      | `git checkout -b feature/merge-plan-into-work`                               |                                                               |
+| 2  | 型定義更新        | `types/task.ts`                                                              | `category` フィールド追加                                            |
+| 3  | Store 統合     | `stores/taskStore.ts`                                                        | selector 統合                                                   |
+| 4  | UI 改修        | `components/TaskList.tsx`                                                    | JSX と tailwind クラス調整                                          |
+| 5  | 不要タブ削除       | `components/DashboardTabs.tsx`                                               | ファイル削除 & import 削除                                            |
+| 6  | ルーティング調整     | `pages/dashboard/index.tsx`                                                  | `<TaskList category="work" />` `<TaskList category="plan" />` |
+| 7  | DB マイグレーション  | `prisma/migrations/xxxx`                                                     | SQL 例参照                                                       |
+| 8  | テスト修正        | `cypress/e2e/dashboard_tasklist.spec.ts`                                     |                                                               |
+| 9  | lint & build | `pnpm lint && pnpm build`                                                    |                                                               |
+| 10 | commit & PR  | `git commit -am "feat: merge plan tasks under work tasks"`<br>`gh pr create` |                                                               |
+
+---
+
+## 4. ロールバック手順
+
+1. `git revert` で対象コミットを戻す。
+2. DB の `category` 値を `NULL` へリセット。
+
+---
+
+## 5. 参考
+
+* [Atomic Design Methodology](https://bradfrost.com/blog/post/atomic-web-design/)
+* Zustand Docs – Selectors
+* Tailwind UI – List Groups
+
+---
+
+Happy Coding!
+
+```
+```
