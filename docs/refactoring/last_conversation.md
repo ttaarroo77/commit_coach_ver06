@@ -1,9 +1,9 @@
+# 概要：以下は最後の会話です。
+-----
 
 @last_conversation.md この会話の続きを進めて。
 
-=====
 
-# 参考情報：
 
 @10_development_flow.md @readme.md@scratchpad.md
 

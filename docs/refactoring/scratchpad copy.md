@@ -1,78 +1,3 @@
-# 🗒️ Commit Coach Scratchpad — Hierarchical Checklist
-
-*ネストされたチェックリスト ( `[ ]` / `[x]` ) だけで進捗を管理する軽量テンプレ*
-
----
-
-## ルール (最短版)
-
-1. **1 行 1 項目** — 親 → 子 → 孫 … とインデント 2 スペースでネスト。
-2. **\[ ] 未完 / \[x] 完了** を切り替えるだけ。期日やメモは必要に応じて末尾 `(MM‑DD)`。
-3. **親がすべて \[x] になったら自動で折りたたみ表示 (GitHub UI)**。
-
-<details>
-<summary>多層構造のチェックリスト記法サンプル</summary>
-
-```markdown
-- [ ] 🏁 リリース準備 (06‑10)
-  - [ ] ビルド最終確認 @Taro
-  - [ ] Netlify ステージングデプロイ @Sara
-    - [ ] env 変数反映 (06‑08)
-  - [ ] QA リグレッション @Alex
-- [ ] ドキュメント更新 @Mia (06‑09)
-```
-
-</details>
-
----
-
-## Backlog
-
-* [ ] 🌱 新機能アイデア
-
-  * [ ] AI でタスク見積もり
-  * [ ] ダークモード自動切替
-
----
-
-## Doing
-
-* [x] 📚 **docs/refactoring ドキュメント確定** (05‑31)
-
-  * [x] 01〜09.md 校閲 @nakazawatarou
-  * [x] spell‑check & linter 実行
-  * [x] Reviewer アサイン (@tech‑lead, @ux)
-* [x] 📨 **ドキュメントをリポジトリに push** (05‑31)
-
-  * [x] `docs/refactoring` に配置
-  * [x] `git add && commit -m "docs: add x_docs_refactoring"`
-  * [x] GitHub PR 作成 (draft)
-* [ ] 🏗 **フロント移行タスクの着手** (06‑01)
-
-  * [x] `feature/remove-dashboard` 最新リベース
-  * [x] Storybook import エラー修正 (`Cascade > Fix imports`)
-  * [x] `pnpm test` & `pnpm lint` で green に
-
----
-
-## Blockers
-
-* [ ] Supabase Edge Function 削除に伴う Zapier Hook 影響範囲調査 (担当未定)
-
----
-
-## Done
-
-* [x] Scratchpad 雛形決定 & 反映 (05‑30)
-
----
-
-## Ideas
-
-* [ ] Postgres → ClickHouse 移行調査
-
--------------------------------------------------
-
 # Commit Coach – **Ver 0** 要件定義書
 
 *作成日: 2025‑05‑30
@@ -173,7 +98,138 @@
 
 
 
+---------
 
+# 🗒️ Commit Coach — Ver 0 Implementation Checklist
 
+*目的: 48 h で公開デモを完成させるための作業ブレークダウン*
+
+---
+
+## ルール（再掲）
+
+1. **\[ ] / \[x]** で進捗を更新。親タスクは子が全て完了したら自動的に閉じる。
+2. 期日メモは任意で末尾に `(MM‑DD)`。
+
+---
+
+## Backlog （着手前タスク）
+
+* [ ] 🌱 新規タスク追加はここに列挙
+
+---
+
+## Doing（実作業）
+
+### 1. プロジェクト初期セットアップ
+
+* [ ] **リポジトリ準備**
+
+  * [ ] `git clone` & ブランチ `feat/ver0` 作成
+  * [ ] `pnpm install` ▶︎ 依存関係解決
+  * [ ] `.env.example` を `.env.local` にコピー (05‑30)
+* [ ] **Supabase プロジェクト作成**
+
+  * [ ] 新規プロジェクト & URL/anon key 発行
+  * [ ] **`users`, `messages`, `profiles`** テーブル作成
+  * [ ] RLS 有効化 (`auth.uid() = user_id`)
+  * [ ] `supabase init` & `supabase db push`
+* [ ] **環境変数追加**
+
+  * [ ] `NEXT_PUBLIC_SUPABASE_URL`
+  * [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  * [ ] `OPENAI_API_KEY`
+
+### 2. 認証（FR‑1）
+
+* [ ] **Auth UI 実装**
+
+  * [ ] `/login` ページでメールフォーム
+  * [ ] `supabase.auth.signInWithOtp`
+  * [ ] 成功トースト & エラーハンドリング
+* [ ] **セッション管理**
+
+  * [ ] `SupabaseProvider` で Context ラップ
+  * [ ] 7 日間 cookie 設定
+
+### 3. チャットエンドポイント（FR‑2）
+
+* [ ] **Edge Function `chat`**
+
+  * [ ] リクエストバリデーション (`zod`)
+  * [ ] OpenAI Chat 呼び出し (stream)
+  * [ ] `messages` 挿入 (role, content, created\_at)
+  * [ ] 30 s タイムアウト → 504 返却
+* [ ] **API ルート `/api/chat`**
+
+  * [ ] クライアントから呼び出しラッパー作成
+  * [ ] SWR / React Query でストリーム受信
+
+### 4. フロント UI
+
+* [ ] **ランディングページ（FR‑4）**
+
+  * [ ] Hero セクション: タグライン + スクショモック
+  * [ ] CTA ボタン → `/login`
+* [ ] **チャット画面 MVP**
+
+  * [ ] メッセージリスト (`MessageList`)
+  * [ ] 入力フォーム (`ChatInput`)
+  * [ ] トーンセレクト (select → context)
+* [ ] **マイページ（FR‑5）**
+
+  * [ ] ガード付きレイアウト → 未ログイン時 `/login`
+  * [ ] 直近 10 チャット取得 & 表示
+* [ ] **Storybook 復旧（Should）**
+
+  * [ ] `pnpm storybook` エラー解消
+  * [ ] Button / MessageCard など登録
+* [ ] **404 & ErrorBoundary（Should）**
+
+  * [ ] `NotFound.tsx` 作成
+  * [ ] `_app.tsx` に ErrorBoundary ラップ
+
+### 5. デプロイ（FR‑6）
+
+* [ ] **Vercel プロジェクト連携**
+
+  * [ ] GitHub ↔︎ Vercel import
+  * [ ] 環境変数登録
+  * [ ] `VERCEL_SKIP_BUILD=1` for Storybook CI
+* [ ] **本番 URL 検証**
+
+  * [ ] 初回 build < 5 min
+  * [ ] Magic‑Link 動作確認
+  * [ ] OpenAI 呼び出し確認
+
+### 6. テスト & クオリティチェック
+
+* [ ] `pnpm lint` → エラー 0
+* [ ] `pnpm typecheck` → エラー 0
+* [ ] 手動 QA: PC / モバイル幅レスポンシブ確認
+* [ ] Lighthouse quick‑run （Could）perf 60+
+
+### 7. ドキュメント
+
+* [ ] README 更新
+
+  * [ ] セットアップ手順
+  * [ ] `.env` 説明
+  * [ ] デモ URL 記載
+
+---
+
+## Blockers
+
+* [ ] OpenAI API レートリミット調整方法 未決定
+
+---
+
+## Done
+
+* [x] 要件定義書作成 & Windsurf 反映 (05‑30)
+
+---
 
 <!-- End of File -->
+
