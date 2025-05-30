@@ -104,3 +104,6 @@ v0/*
 logs/
 logs/*
 
+
+*storybook.log
+storybook-static
