@@ -66,6 +66,7 @@ src/
 | 6                                                            | `git add -A && git commit -m "chore: remove dashboard feature"` | コミット                         |
 | 7                                                            | `git push -u origin feature/remove-dashboard`                   | Push                             |
 
+
 ## 4. Windsurf Editor で行う作業 // 以下はまだ作業してない。
 
 1. **Open Repository**: `Ctrl+P` → _Open From GitHub_ → 対象ブランチを選択

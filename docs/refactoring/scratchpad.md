@@ -41,15 +41,15 @@
 
   * [x] 01〜09.md 校閲 @nakazawatarou
   * [x] spell‑check & linter 実行
-  * [ ] Reviewer アサイン (@tech‑lead, @ux)
-* [ ] 📨 **ドキュメントをリポジトリに push** (05‑31)
+  * [x] Reviewer アサイン (@tech‑lead, @ux)
+* [x] 📨 **ドキュメントをリポジトリに push** (05‑31)
 
   * [x] `docs/refactoring` に配置
-  * [ ] `git add && commit -m "docs: add x_docs_refactoring"`
-  * [ ] GitHub PR 作成 (draft)
+  * [x] `git add && commit -m "docs: add x_docs_refactoring"`
+  * [x] GitHub PR 作成 (draft)
 * [ ] 🏗 **フロント移行タスクの着手** (06‑01)
 
-  * [ ] `feature/remove-dashboard` 最新リベース
+  * [x] `feature/remove-dashboard` 最新リベース
   * [ ] Storybook import エラー修正 (`Cascade > Fix imports`)
   * [ ] `pnpm test` & `pnpm lint` で green に
 
