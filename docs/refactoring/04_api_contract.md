@@ -1,7 +1,7 @@
 # 04\_API\_Contract
 
 > **バージョン:** 2025-05-30 (draft)
-> **対象ブランチ:** `feature/remove-dashboard`
+<!-- > **対象ブランチ:** `feature/remove-dashboard` -->
 > **責任者:** @nakazawatarou
 
 ---

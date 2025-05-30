@@ -2,7 +2,7 @@
 
 > **バージョン:** 2025-05-30 (draft)
 >
-> **対象ブランチ:** `feature/remove-dashboard`
+<!-- > **対象ブランチ:** `feature/remove-dashboard` -->
 >
 > **責任者:** @nakazawatarou
 
@@ -10,7 +10,9 @@
 
 ## 1. ドキュメントの目的
 
-本書は Commit Coach (Dashboard 撤去版) の **ユーザーストーリーごとの受け入れ条件 (Acceptance Criteria)** を明文化し、開発・QA・ステークホルダー間の “Done の定義” を統一することを目的とします。`/projects` を中心とした新フロー、AI コードレビュー機能、基本 CRUD 操作、アクセシビリティなど、機能要件と非機能要件の双方を網羅します。
+本書は Commit Coach の **ユーザーストーリーごとの受け入れ条件 (Acceptance Criteria)** を明文化し、開発・QA・ステークホルダー間の “Done の定義” を統一することを目的とします。`/projects` を中心とした新フロー、AI コードレビュー機能、基本 CRUD 操作、アクセシビリティなど、機能要件と非機能要件の双方を綴羅します。
+
+<!-- 元の記述: 本書は Commit Coach (Dashboard 撤去版) の **ユーザーストーリーごとの受け入れ条件 (Acceptance Criteria)** を明文化し、開発・QA・ステークホルダー間の "Done の定義" を統一することを目的とします。`/projects` を中心とした新フロー、AI コードレビュー機能、基本 CRUD 操作、アクセシビリティなど、機能要件と非機能要件の双方を綴羅します。 -->
 
 ---
 

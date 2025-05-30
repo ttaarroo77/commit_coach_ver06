@@ -2,7 +2,7 @@
 
 > **バージョン:** 2025-05-30 (draft)
 >
-> **移行対象ブランチ:** `safe/004-ui-simple-dashboard` → `feature/remove-dashboard`
+<!-- > **移行対象ブランチ:** `safe/004-ui-simple-dashboard` → `feature/remove-dashboard` -->
 >
 > **責任者:** @nakazawatarou
 
@@ -10,7 +10,9 @@
 
 ## 1. ガイドの目的
 
-本書は **Dashboard 機能を完全撤去し `/projects` 画面へ一本化** するフロントエンド移行手順をまとめたものです。ローカル環境での作業開始から PR 作成・デプロイ確認・ロールバックまで、フロントエンド実装者が迷わず作業できることを目的とします。
+本書は **`/projects` 画面へ一本化** するフロントエンド移行手順をまとめたものです。ローカル環境での作業開始から PR 作成・デプロイ確認・ロールバックまで、フロントエンド実装者が迷わず作業できることを目的とします。
+
+<!-- 元の記述: 本書は **Dashboard 機能を完全撤去し `/projects` 画面へ一本化** するフロントエンド移行手順をまとめたものです。ローカル環境での作業開始から PR 作成・デプロイ確認・ロールバックまで、フロントエンド実装者が迷わず作業できることを目的とします。 -->
 
 > 🛑 **注意:** バックエンド (Supabase) に対する schema 変更は別ドキュメント `07_backend_migration_guide.md` を参照。
 
@@ -18,13 +20,13 @@
 
 ## 2. 移行概要
 
-| Before                      | After                  |
+<!-- | Before                      | After                  |
 | --------------------------- | ---------------------- |
 | `/app/dashboard/**` ルートページ  | **削除**                 |
 | ルート `/` = Dashboard         | **リダイレクト** `/projects` |
 | `dashboardStore` (zustand)  | **削除**（他 store に依存なし）  |
 | Sidebar "Dashboard" navItem | **行ごと削除**              |
-| 強制オプトイン for Dashboard Beta  | **不要** → トグル削除         |
+| 強制オプトイン for Dashboard Beta  | **不要** → トグル削除         | -->
 
 ---
 
@@ -39,7 +41,7 @@
 
 ## 4. 工程一覧
 
-| 手順 | 作業                     | コマンド/ファイル                                                                    | 完了チェック                                                   |
+<!-- | 手順 | 作業                     | コマンド/ファイル                                                                    | 完了チェック                                                   |
 | -- | ---------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------- |
 | 1  | **作業ブランチ作成**           | `git switch -c feature/remove-dashboard`                                     | `git branch --show-current` = `feature/remove-dashboard` |
 | 2  | **Dashboard ディレクトリ削除** | `rm -rf apps/web/app/dashboard`                                              | `git status` に削除表示                                       |
@@ -48,7 +50,7 @@
 | 5  | **zustand ストア削除**      | `rm src/stores/dashboardStore.ts`                                            | 依存 compile error 0 件                                     |
 | 6  | **Import エラー一括修正**     | Windsurf Editor > `Cascade → Fix all import errors`                          | `pnpm lint` PASS                                         |
 | 7  | **ユニットテスト更新**          | Update/Remove dashboard tests                                                | `pnpm test` PASS                                         |
-| 8  | **コミット & Push**        | `git add -A && git commit -m "feat: remove dashboard" && git push -u origin` | CI green                                                 |
+| 8  | **コミット & Push**        | `git add -A && git commit -m "feat: remove dashboard" && git push -u origin` | CI green                                                 | -->
 
 ---
 

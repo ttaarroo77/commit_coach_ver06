@@ -14,6 +14,9 @@ export const CardContent = ({ className, ...props }: ComponentPropsWithoutRef<"d
 export const CardTitle = ({ className, ...props }: ComponentPropsWithoutRef<"h3">) => (
   <h3 className={cn("text-lg font-semibold", className)} {...props} />
 )
+export const CardDescription = ({ className, ...props }: ComponentPropsWithoutRef<"p">) => (
+  <p className={cn("text-sm text-muted-foreground", className)} {...props} />
+)
 export const CardFooter = ({ className, ...props }: ComponentPropsWithoutRef<"div">) => (
   <div className={cn("p-4 pt-0", className)} {...props} />
 )

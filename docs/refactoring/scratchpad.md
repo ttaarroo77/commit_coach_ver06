@@ -49,7 +49,7 @@
   * [x] GitHub PR 作成 (draft)
 * [ ] 🏗 **フロント移行タスクの着手** (06‑01)
 
-  * [x] `feature/remove-dashboard` 最新リベース
+  <!-- * [x] `feature/remove-dashboard` 最新リベース -->
   * [x] Storybook import エラー修正 (`Cascade > Fix imports`)
   * [x] `pnpm test` & `pnpm lint` で green に
 

@@ -2,7 +2,7 @@
 
 > **バージョン:** 2025-05-30 (draft)
 >
-> **移行対象ブランチ:** `safe/004-ui-simple-dashboard` → `feature/remove-dashboard`
+<!-- > **移行対象ブランチ:** `safe/004-ui-simple-dashboard` → `feature/remove-dashboard` -->
 >
 > **DB 環境:** Supabase (Postgres 16) `commitcoach-prod`
 >
@@ -12,20 +12,22 @@
 
 ## 1. ガイドの目的
 
-フロントエンドから Dashboard 機能を撤去したことに伴い、**不要となったテーブル・ビュー・Edge Function を整理** し、一貫性のあるスキーマへリファクタリングするのが本書の目的です。作業は **ゼロダウンタイム** を前提に、ステップバイステップで進めます。
+**不要となったテーブル・ビュー・Edge Function を整理** し、一貫性のあるスキーマへリファクタリングするのが本書の目的です。作業は **ゼロダウンタイム** を前提に、ステップバイステップで進めます。
+
+<!-- 元の記述: フロントエンドから Dashboard 機能を撤去したことに伴い、**不要となったテーブル・ビュー・Edge Function を整理** し、一貫性のあるスキーマへリファクタリングするのが本書の目的です。作業は **ゼロダウンタイム** を前提に、ステップバイステップで進めます。 -->
 
 ---
 
 ## 2. 影響範囲
 
-| 種別            | オブジェクト                     | 状態                     |
+<!-- | 種別            | オブジェクト                     | 状態                     |
 | ------------- | -------------------------- | ---------------------- |
 | Table         | `dashboard_summary`        | **削除**                 |
 | View          | `v_dashboard_metrics`      | **削除**                 |
 | Function      | `fn_refresh_dashboard()`   | **削除**                 |
 | Edge Function | `dashboard-feed`           | **削除** (Supabase Edge) |
 | RLS Policy    | `dashboard_summary_rls`    | **削除**                 |
-| CRON Job      | `dashboard_refresh_hourly` | **無効化**                |
+| CRON Job      | `dashboard_refresh_hourly` | **無効化**                | -->
 
 > ⚠️ `snapshot_*` 系のテーブルは **保持** します。将来的なレトロスペクティブ分析で再利用予定。
 
