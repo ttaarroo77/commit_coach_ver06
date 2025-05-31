@@ -2,7 +2,7 @@
 export type TaskPriority = "low" | "medium" | "high"
 
 // タスクのステータス
-export type TaskStatus = "todo" | "in-progress" | "completed"
+export type TaskStatus = "today" | "unscheduled" | "done"
 
 // サブタスクの型定義
 export interface SubTask {
