@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
