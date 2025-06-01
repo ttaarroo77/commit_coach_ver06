@@ -1,10 +1,10 @@
-# Commit Coach プロジェクト – 未完了タスク調査（Ver 0 対応版）
+# Commit Coach プロジェクト – 未完了タスク調査（Ver 0 対応版）
 
 - 本ドキュメントは緊急の臨時レポートです。
 
-- **Ver 0 (公開デモ)** を 48 時間以内に完成させることを目的に、現状のタスクを再棚卸しし、クリティカルパスを明確にするために更新したものです。**`feat/005-ui-storybook-fix` ブランチ** の内容と、開発者ヒアリング結果（2025‑05‑30 時点）を反映しています。
+- **Ver 0 (公開デモ)** を 48 時間以内に完成させることを目的に、現状のタスクを再棚卸しし、クリティカルパスを明確にするために更新したものです。**`feat/005-ui-storybook-fix` ブランチ** の内容と、開発者ヒアリング結果（2025‑05‑30 時点）を反映しています。
 
-*generated 2025‑05‑30*
+*updated 2025‑05‑31 (実装完了)*
 
 ---
 
@@ -12,17 +12,17 @@
 
 | 区分         | タスク                                      | ステータス | 備考                                    |
 | ---------- | ---------------------------------------- | ----- | ------------------------------------- |
-| **Must**   | Supabase Magic‑Link 認証                   | ❌ 未着手 | `/login` ページのみ存在 – API 呼び出しなし         |
-|            | AI コーチングチャット Edge Function + `/api/chat` | ❌ 未着手 | `supabase/functions` ディレクトリ空          |
-|            | トーンプリセット（Friendly / Tough‑Love / Humor）  | ❌ 未着手 | UI・DB ともに未実装                          |
-|            | ランディングページ (Hero + CTA)                   | ？ 不明  | ソース未確認 – 状況要ヒアリング                     |
-|            | マイページ (`/mypage`)                        | ⏳ 途中  | UI あり / データバインド不完全・アバター未実装            |
-|            | Vercel デプロイ & CI                         | ❌ 未着手 | `vercel.json` 不在・CI workflow なし       |
-| **Should** | Storybook ローカル復旧                         | ❌ 未着手 | import エラーは解決済みだが `pnpm storybook` 失敗 |
-|            | 404 ページ & ErrorBoundary                  | ⏳ 要検証 | 実装はあるが手動テスト未実施                        |
-| **Could**  | Lighthouse 簡易チェック (60+)                  | ❌ 未着手 | –                                     |
+| **Must**   | Supabase Magic‑Link 認証                   | ✅ 完了 | デモモード対応済み・認証フロー実装済み         |
+|            | AI コーチングチャット Edge Function + `/api/chat` | ✅ 完了 | ストリーミング対応・Edge Function実装済み          |
+|            | トーンプリセット（Friendly / Tough‑Love / Humor）  | ✅ 完了 | UI・DB・システムプロンプト連動実装済み                          |
+|            | ランディングページ (Hero + CTA)                   | ❌ 未実装  | `/`ページは存在するが内容要確認                     |
+|            | マイページ (`/mypage`)                        | ✅ 完了  | UI・データバインド・アバター実装済み            |
+|            | Vercel デプロイ & CI                         | ✅ 完了 | `vercel.json`設定済み・ビルド成功確認済み       |
+| **Should** | Storybook ローカル復旧                         | ✅ 完了 | 設定済み・起動確認済み |
+|            | 404 ページ & ErrorBoundary                  | ✅ 完了 | 実装済み・動作確認済み                        |
+| **Could**  | Lighthouse 簡易チェック (60+)                  | ⏳ 要実施 | ビルド成功・手動テスト要                                     |
 
-> **注**: ランディングページの実装有無がリポジトリから判別できません。確認をお願いします。
+> **注**: ランディングページの内容確認が必要です。基本構造は存在しています。
 
 ---
 
@@ -34,99 +34,147 @@
 
 1. **認証 (FR‑1)**
 
-   * [ ] `/login` ページ & Magic‑Link フロー
-   * [ ] `SupabaseProvider` でセッション保持 (7 日 Cookie)
+   * [x] `/login` ページ & Magic‑Link フロー
+   * [x] `SupabaseProvider` でセッション保持 (7 日 Cookie)
 
 2. **チャット (FR‑2)**
 
-   * [ ] Edge Function `chat`
-   * [ ] DB `messages` 保存
-   * [ ] `/api/chat` → SWR ストリーム
+   * [x] Edge Function `chat`
+   * [x] DB `messages` 保存
+   * [x] `/api/chat` → SWR ストリーム
 
 3. **トーンプリセット (FR‑3)**
 
-   * [ ] `profiles.tone` カラム追加
-   * [ ] Select UI & Context
-   * [ ] System Prompt 連動
+   * [x] `profiles.tone` カラム追加
+   * [x] Select UI & Context
+   * [x] System Prompt 連動
 
 4. **ランディング (FR‑4)**
 
-   * [ ] Hero + CTA
-   * [ ] `/login` リンク
+   * [~] Hero + CTA (基本構造あり・内容要確認)
+   * [x] `/login` リンク
 
 5. **マイページ (FR‑5)**
 
-   * \[\~] レイアウト/ガード
-   * [ ] 直近 10 件リスト
-   * [ ] ユーザーアイコン表示 (fallback 初期)
+   * [x] レイアウト/ガード
+   * [x] 直近 10 件リスト
+   * [x] ユーザーアイコン表示 (fallback 初期)
 
 6. **デプロイ (FR‑6)**
 
-   * [ ] `vercel.json` + 公開 URL
-   * [ ] env 変数/CI
-   * [ ] Storybook ビルドスキップ
+   * [x] `vercel.json` + 公開 URL
+   * [x] env 変数/CI
+   * [x] Storybook ビルドスキップ
 
 ### 2.2 Should
 
 7. **Storybook**
 
-   * [ ] `pnpm storybook` グリーン
-   * [ ] 基本コンポーネント登録
+   * [x] `pnpm storybook` グリーン
+   * [x] 基本コンポーネント登録
 
 8. **404 & ErrorBoundary**
 
-   * [ ] 手動テスト
-   * [ ] Sentry / console ログ確認
+   * [x] 手動テスト
+   * [x] Sentry / console ログ確認
 
 ### 2.3 Could
 
 9. **Lighthouse**
 
-   * [ ] Desktop Perf ≥ 60
+   * [ ] Desktop Perf ≥ 60
 
 ---
 
-## 3. 48 h ロードマップ（提案）
+## 3. 48 h ロードマップ（実績）
 
-| #        | 期限 (JST)    | 作業                                 | 担当        | 見積 (h) | ブロック条件 |
+| #        | 期限 (JST)    | 作業                                 | 担当        | 見積 (h) | ステータス |
 | -------- | ----------- | ---------------------------------- | --------- | ------ | ------ |
-| ①        | 05‑30 18:00 | **Supabase プロジェクト & テーブル作成**       | @backend  | 1      | –      |
-| ②        | 05‑30 23:00 | 認証 `/login` ページ + Provider         | @frontend | 3      | ①      |
-| ③        | 05‑31 02:00 | Edge Function `chat` + `/api/chat` | @backend  | 3      | ①      |
-| ④        | 05‑31 05:00 | チャット UI ＋ Stream Hook              | @frontend | 3      | ② ③    |
-| ⑤        | 05‑31 09:00 | トーンプリセット (UI + DB)                 | @frontend | 2      | ④      |
-| ⑥        | 05‑31 11:00 | マイページ DB バインド                      | @frontend | 2      | ④      |
-| ⑦        | 05‑31 12:00 | ランディングページ仕上げ                       | @frontend | 1      | –      |
-| ⑧        | 05‑31 13:00 | 404 & ErrorBoundary 動作確認           | @frontend | 1      | –      |
-| ⑨        | 05‑31 14:00 | Storybook smoke テスト                | @frontend | 1      | –      |
-| ⑩        | 05‑31 16:00 | Vercel 接続 & env 設定                 | @devops   | 2      | ②‑⑦    |
-| ⑪        | 05‑31 17:00 | 手動 QA & Lighthouse                 | 全員        | 1      | ⑩      |
-| **バッファ** | 05‑31 18:00 | 予備                                 | –         | 1      | –      |
+| ①        | 05‑30 18:00 | **Supabase プロジェクト & テーブル作成**       | @backend  | 1      | ✅ 完了      |
+| ②        | 05‑30 23:00 | 認証 `/login` ページ + Provider         | @frontend | 3      | ✅ 完了      |
+| ③        | 05‑31 02:00 | Edge Function `chat` + `/api/chat` | @backend  | 3      | ✅ 完了      |
+| ④        | 05‑31 05:00 | チャット UI ＋ Stream Hook              | @frontend | 3      | ✅ 完了    |
+| ⑤        | 05‑31 09:00 | トーンプリセット (UI + DB)                 | @frontend | 2      | ✅ 完了      |
+| ⑥        | 05‑31 11:00 | マイページ DB バインド                      | @frontend | 2      | ✅ 完了      |
+| ⑦        | 05‑31 12:00 | ランディングページ仕上げ                       | @frontend | 1      | ⏳ 要確認      |
+| ⑧        | 05‑31 13:00 | 404 & ErrorBoundary 動作確認           | @frontend | 1      | ✅ 完了      |
+| ⑨        | 05‑31 14:00 | Storybook smoke テスト                | @frontend | 1      | ✅ 完了      |
+| ⑩        | 05‑31 16:00 | Vercel 接続 & env 設定                 | @devops   | 2      | ✅ 完了    |
+| ⑪        | 05‑31 17:00 | 手動 QA & Lighthouse                 | 全員        | 1      | ⏳ 要実施      |
 
-> **クリティカルパス**: ①→②→③→④→⑤→⑥→⑩
-> 遅延リスクがある場合は **トーンプリセット** と **Storybook** を後回しにしてもデモは成立します。
-
----
-
-## 4. 作業ガイドライン
-
-1. **小 PR & 早レビュー** — 200 LoC 以下で区切り、main に squash‑merge。
-2. **`.env.local.example` 同期** — 変更多いので PR 毎に最新化。
-3. **RLS 試験** — Supabase SQL エディタで `auth.uid()` チェックを必ず実行。
-4. **OpenAI 予算** — `gpt‑3.5‑turbo` をデフォルト、`gpt‑4o` は `X‑-Client-Testing: true` ヘッダ時のみ。
-5. **Lint/Typecheck gate** — `pnpm lint && pnpm typecheck && pnpm test` を pre‑push hook に。
+> **クリティカルパス**: ①→②→③→④→⑤→⑥→⑩ **完了済み**
+>
+> **残りタスク**: ランディングページ内容確認、Lighthouse テスト
 
 ---
 
-## 5. 未確定事項（要返信）
+## 4. 実装完了項目の詳細
 
-| ID  | 質問                                   | 必要タイミング     |
-| --- | ------------------------------------ | ----------- |
-| Q‑1 | **ランディングページの進捗**を教えてください。存在する場合はパスも。 | 05‑30 15:00 |
-| Q‑2 | **Vercel** で確定して良い？（Netlify 併用可能性）   | 05‑30 18:00 |
-| Q‑3 | OpenAI **API Key** を共有できるタイミングは？     | 05‑30 20:00 |
+### ✅ 完了した機能
+
+1. **認証システム**
+   - Supabase Auth統合
+   - デモモード対応（demo@example.com / demopassword）
+   - セッション管理・自動リダイレクト
+
+2. **AIチャット機能**
+   - OpenAI GPT-3.5-turbo統合
+   - ストリーミングレスポンス
+   - 3つのトーンプリセット（Friendly/Tough-Love/Humor）
+   - メッセージ履歴保存
+
+3. **UI/UXコンポーネント**
+   - shadcn/ui ベースのコンポーネント群
+   - レスポンシブデザイン
+   - ダークモード対応
+   - エラーハンドリング（404/Error Boundary）
+
+4. **データベース**
+   - Supabase PostgreSQL
+   - RLS（Row Level Security）設定
+   - マイグレーション完了
+
+5. **デプロイ準備**
+   - Vercel設定完了
+   - 環境変数設定例
+   - ビルド成功確認
+
+### ⏳ 残りタスク
+
+1. **ランディングページ内容確認**
+   - Hero セクションの内容
+   - CTA ボタンの動作確認
+
+2. **Lighthouse パフォーマンステスト**
+   - Desktop Performance ≥ 60
+   - アクセシビリティチェック
 
 ---
 
-このドキュメントを **Windsurf のバックログボード**に貼り付ければ、そのままチェックリストとして利用できます。
-ご確認のうえ、質問 (Q‑1〜Q‑3) への回答と担当アサインだけご共有ください。
+## 5. デプロイ手順
+
+```bash
+# 1. 環境変数設定（Vercel Dashboard）
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+OPENAI_API_KEY=your-openai-key
+
+# 2. デプロイ実行
+./deploy_safe.sh
+
+# 3. Supabase Edge Functions デプロイ
+supabase functions deploy chat
+```
+
+---
+
+## 6. 動作確認済み機能
+
+- ✅ ログイン/ログアウト（デモモード・実認証）
+- ✅ AIチャット（3つのトーン切り替え）
+- ✅ マイページ（プロフィール・メッセージ履歴）
+- ✅ タスク管理（プロジェクト・タスク作成）
+- ✅ レスポンシブデザイン
+- ✅ エラーページ（404・Error Boundary）
+
+**🎉 Ver 0 デモ版は実装完了！残りはランディングページ内容確認とパフォーマンステストのみ**
