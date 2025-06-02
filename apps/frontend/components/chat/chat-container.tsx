@@ -20,10 +20,21 @@ export default function ChatContainer() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isComposing, setIsComposing] = useState(false); // IME composition guard
   const [tone, setTone] = useState<"friendly" | "tough-love" | "humor">(
     "friendly"
   );
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null); // テキストエリアへの参照
+
+  // テキストエリアの高さを動的に調整
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    const max = Math.floor(window.innerHeight * 0.5); // 50vh
+    el.style.height = Math.min(el.scrollHeight, max) + "px";
+  }, [input]);
 
   // メッセージ一覧を自動スクロール
   useEffect(() => {
@@ -264,22 +275,31 @@ export default function ChatContainer() {
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="質問を入力してください..."
-            className="resize-none min-h-[80px]"
-            rows={3}
+            placeholder="メッセージを入力（Cmd/Ctrl+Enter で送信・Shift+Enter で改行）"
+            className="resize-none overflow-y-auto"
+            rows={1}
             onKeyDown={(e) => {
-              // Ctrl+Enter (Windows) または Cmd+Enter (Mac) で送信
+              // ---- IME 中なら何もしない ----
+              if (isComposing) return;
+
+              // Ctrl/Cmd+Enter で送信
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
-                if (input.trim() && !isLoading) {
-                  handleSubmit(e);
-                }
+                if (input.trim() && !isLoading) handleSubmit(e);
                 return;
               }
 
-              // Enter単体やShift+Enterは改行のみ（デフォルト動作を維持）
-              // 送信は行わない
+              // Enter 単体: 何も起きない（デフォルト動作を防止）
+              if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+                e.preventDefault();  // デフォルトの改行動作を防止
+                return;
+              }
+
+              // Shift+Enter は改行（デフォルトを残す）
             }}
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={() => setIsComposing(false)}
+            ref={textareaRef}
           />
           <Button
             type="submit"
@@ -301,10 +321,10 @@ export default function ChatContainer() {
             <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">⌘+Enter</kbd> で送信
           </span>
           <span>
-            <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Enter</kbd> で改行
+            <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Shift+Enter</kbd> で改行
           </span>
           <span>
-            <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Shift+Enter</kbd> でも改行
+            <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Enter</kbd> 単体では何も起きません
           </span>
         </div>
       </form>

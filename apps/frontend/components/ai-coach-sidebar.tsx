@@ -35,7 +35,7 @@ export const AICoachSidebar = ({ defaultOpen = true }: AICoachSidebarProps) => {
 
   // デモモードの状態管理
   const [isDemoMode, setIsDemoMode] = useState(false);
-  
+
   // クライアントサイドでのみCookieをチェック
   useEffect(() => {
     setIsDemoMode(Cookies.get("demo_mode") === "true");
@@ -81,19 +81,39 @@ export const AICoachSidebar = ({ defaultOpen = true }: AICoachSidebarProps) => {
     setIsLoading(true);
 
     try {
-      // デモモードの場合はダミー応答を返す
+      // デモモードの場合は簡易的な会話応答を返す
       if (isDemoMode) {
         await new Promise(resolve => setTimeout(resolve, 1000)); // 擬似的な待機時間
 
-        const demoResponses = [
-          "デモモードでのご利用ありがとうございます！実際のAIコーチでは、あなたの目標達成をサポートします。",
-          "素晴らしい質問ですね！本サービスでは、AIがあなたのタスク管理を効率化し、生産性向上をお手伝いします。",
-          "デモ版では制限がありますが、実際にはあなた専用のAIコーチがカスタマイズされたアドバイスを提供します。",
-          "このような機能に興味をお持ちいただき、ありがとうございます！ぜひアカウント登録して、フル機能をお試しください。"
-        ];
+        let response = "";
+        // 「しりとり」に関連する質問かチェック
+        if (userMessage.includes("しりとり")) {
+          response = "しりとりですね！「りんご」から始めましょう。";
+        }
+        // 「りんご」の場合
+        else if (userMessage.includes("りんご")) {
+          response = "「ごりら」で続けます！";
+        }
+        // 「ごりら」の場合
+        else if (userMessage.includes("ごりら")) {
+          response = "「らっぱ」で続けます！";
+        }
+        // 「らっぱ」の場合
+        else if (userMessage.includes("らっぱ")) {
+          response = "「パンダ」で続けます！";
+        }
+        // デフォルトの応答
+        else {
+          const demoResponses = [
+            "こんにちは！テスト用のデモモードです。具体的な質問をしていただくと、それに応じた返答を試みます。",
+            "テスト会話モードです。「しりとり」と入力すると、しりとりゲームができます。",
+            "会話のテスト中ですね。何かお手伝いできることはありますか？",
+            "テスト会話に参加していただき、ありがとうございます。簡単な応答ですが、質問に答えられるよう努めています。"
+          ];
+          response = demoResponses[Math.floor(Math.random() * demoResponses.length)];
+        }
 
-        const randomResponse = demoResponses[Math.floor(Math.random() * demoResponses.length)];
-        const assistantMessage: Message = { role: 'assistant', content: randomResponse };
+        const assistantMessage: Message = { role: 'assistant', content: response };
         setMessages(prev => [...prev, assistantMessage]);
         setIsLoading(false);
         return;
@@ -199,23 +219,26 @@ export const AICoachSidebar = ({ defaultOpen = true }: AICoachSidebarProps) => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 // placeholder="質問を入力... (Shift+Enter または Cmd+Enter で改行)"
-                placeholder="質問を入力... (Shift+Enter で改行)"
+                placeholder="質問を入力..."
 
                 className="resize-none min-h-[60px] text-sm"
                 onKeyDown={(e) => {
-                  // Shift+Enter または Cmd+Enter (Mac) / Ctrl+Enter (Windows) で改行
-                  if (e.key === 'Enter' && (e.shiftKey || e.metaKey || e.ctrlKey)) {
-                    // デフォルトの改行動作を許可
-                    return;
-                  }
-
-                  // 普通のEnterで送信
-                  if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+                  // Ctrl/Cmd+Enter で送信
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                     e.preventDefault();
                     if (input.trim() && !isLoading) {
                       sendMessage();
                     }
+                    return;
                   }
+
+                  // Enter 単体: 何も起きない（デフォルト動作を防止）
+                  if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+                    e.preventDefault();  // デフォルトの改行動作を防止
+                    return;
+                  }
+
+                  // Shift+Enter は改行（デフォルトを残す）
                 }}
               />
               <Button
@@ -223,16 +246,24 @@ export const AICoachSidebar = ({ defaultOpen = true }: AICoachSidebarProps) => {
                 size="icon"
                 disabled={isLoading || !input.trim()}
                 className="h-[60px] w-10 bg-[#31A9B8] hover:bg-[#2a8f9c]"
-                title="送信 (Enter)"
+                title="送信 (Ctrl+Enter または Cmd+Enter)"
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </Button>
             </div>
 
-            {/* <p className="text-xs text-gray-500 mt-2"> */}
-              {/* <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">Enter</kbd> 送信　 */}
-              {/* <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">Shift+Enter</kbd> 改行 */}
-            {/* </p> */}
+            <div className="text-xs text-gray-500 mt-2 flex flex-wrap gap-4">
+              <span>
+                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">Ctrl+Enter</kbd> または
+                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">⌘+Enter</kbd> で送信
+              </span>
+              <span>
+                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">Shift+Enter</kbd> で改行
+              </span>
+              <span>
+                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">Enter</kbd> 単体では何も起きません
+              </span>
+            </div>
 
           </form>
         </CollapsibleContent>
