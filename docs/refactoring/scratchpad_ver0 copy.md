@@ -75,7 +75,7 @@
 親タスクは子タスク完了で自然に Close する。
 
 ### 0. 初期クリーンアップ
-* [ ] `.gitignore` に `.next`, `.turbo`, `.vercel`, `node_modules`, `dist`, `coverage`, `logs` を追加
+* [x] `.gitignore` に `.next`, `.turbo`, `.vercel`, `node_modules`, `dist`, `coverage`, `logs` を追加
 * [ ] `git rm -r --cached` で不要ファイル履歴を削除
 
 ### 1. Magic-Link 認証 (FR-1)
@@ -91,14 +91,14 @@
 * [ ] `AbortController` 30 s timeout → destruct toast 「AI busy, try later」
 
 ### 3. トーンプリセット (FR-3)
-* [ ] `ToneSelector` コンポーネント (react-aria or native `<select>`)
+* [x] `ToneSelector` コンポーネント (react-aria or native `<select>`)
 * [ ] `setTone(tone)` **async** 関数で `profiles` upsert
 * [ ] 再訪時 `getProfile()` でデフォルトトーン設定
 * [ ] Chat system prompt 内に tone を挿入
 
 ### 4. UI / Pages
 * [ ] **Landing** `app/page.tsx` — Hero + CTA（`next/image` & webp/avif）
-* [ ] **Chat** — `MessageList`, `ChatInput`, tone context
+* [x] **Chat** — `MessageList`, `ChatInput`, tone context
 * [ ] **MyPage** — ガード付きレイアウト, 直近10ペア取得・表示
 * [ ] 404 page (`not-found.tsx`), global Error Boundary (`app/error.tsx`)
 
