@@ -30,6 +30,36 @@ export default function ChatContainer() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // ユーザープロファイルからトーン設定を取得
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user?.id) {
+        try {
+          const supabase = getSupabaseClient();
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('tone')
+            .eq('id', user.id)
+            .single();
+
+          if (error) {
+            console.error('プロファイル取得エラー:', error);
+            return;
+          }
+
+          // トーン設定があれば適用
+          if (data?.tone) {
+            setTone(data.tone as 'friendly' | 'tough-love' | 'humor');
+          }
+        } catch (error) {
+          console.error('プロファイル取得中にエラーが発生しました:', error);
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
+
   // 初回ロード時にウェルカムメッセージを表示
   useEffect(() => {
     if (messages.length === 0) {
@@ -170,7 +200,38 @@ export default function ChatContainer() {
     <div className="flex flex-col h-full max-h-[calc(100vh-6rem)] bg-background">
       {/* トーンセレクター */}
       <div className="p-4 border-b">
-        <ToneSelector value={tone} onChange={setTone} />
+        <ToneSelector value={tone} onChange={(newTone) => {
+          // トーン変更を適用
+          setTone(newTone);
+          
+          // トーン設定をプロファイルに保存
+          if (user?.id) {
+            const saveToneToProfile = async () => {
+              try {
+                const supabase = getSupabaseClient();
+                const { error } = await supabase
+                  .from('profiles')
+                  .upsert({
+                    id: user.id,
+                    tone: newTone,
+                    updated_at: new Date().toISOString()
+                  });
+
+                if (error) {
+                  console.error('トーン設定の保存エラー:', error);
+                  toast.error('トーン設定の保存に失敗しました');
+                } else {
+                  toast.success('トーン設定を保存しました');
+                }
+              } catch (error) {
+                console.error('トーン設定の保存中にエラーが発生しました:', error);
+                toast.error('トーン設定の保存に失敗しました');
+              }
+            };
+
+            saveToneToProfile();
+          }
+        }} />
       </div>
 
       {/* メッセージエリア */}

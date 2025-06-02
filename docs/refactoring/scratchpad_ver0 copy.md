@@ -92,9 +92,9 @@
 
 ### 3. トーンプリセット (FR-3)
 * [x] `ToneSelector` コンポーネント (react-aria or native `<select>`)
-* [ ] `setTone(tone)` **async** 関数で `profiles` upsert
-* [ ] 再訪時 `getProfile()` でデフォルトトーン設定
-* [ ] Chat system prompt 内に tone を挿入
+* [x] `setTone(tone)` **async** 関数で `profiles` upsert
+* [x] 再訪時 `getProfile()` でデフォルトトーン設定
+* [x] Chat system prompt 内に tone を挿入
 
 ### 4. UI / Pages
 * [ ] **Landing** `app/page.tsx` — Hero + CTA（`next/image` & webp/avif）
