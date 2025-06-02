@@ -1,175 +1,242 @@
 // apps/frontend/components/ai-coach-sidebar.tsx
 "use client"
+
+import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '@/context/auth-context';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Send, Loader2, Copy, MessageSquare, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { getSupabaseClient } from '@/lib/supabase';
+import ChatMessage from './chat/chat-message';
+import ToneSelector from './chat/tone-selector';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import Cookies from 'js-cookie';
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 interface AICoachSidebarProps {
   defaultOpen?: boolean
 }
 
-export const AICoachSidebar = ({ defaultOpen = true }: AICoachSidebarProps) => (
-  <aside className="w-[320px] border-l p-4 hidden lg:block">
-    <h3 className="font-semibold mb-2">AI コーチ</h3>
-    <p className="text-sm text-gray-500">ここにコーチングメッセージを表示</p>
-  </aside>
-)
+export const AICoachSidebar = ({ defaultOpen = true }: AICoachSidebarProps) => {
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [tone, setTone] = useState<'friendly' | 'tough-love' | 'humor'>('friendly');
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // デモモードの状態管理
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  
+  // クライアントサイドでのみCookieをチェック
+  useEffect(() => {
+    setIsDemoMode(Cookies.get("demo_mode") === "true");
+  }, []);
 
+  // メッセージ一覧を自動スクロール
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
+  // 初回ロード時にウェルカムメッセージを表示
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([
+        {
+          role: 'assistant',
+          content: `こんにちは${user?.email ? `、${user.email.split('@')[0]}さん` : ''}！コミットコーチです。プログラミングや開発に関する質問があれば、お気軽にどうぞ。何かお手伝いできることはありますか？`
+        }
+      ]);
+    }
+  }, [user]);
 
+  // メッセージをコピーする関数
+  const handleCopyMessage = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      toast.success("メッセージをコピーしました");
+    } catch (error) {
+      console.error('コピーに失敗しました:', error);
+      toast.error("コピーに失敗しました");
+    }
+  };
 
-// "use client"
+  const sendMessage = async () => {
+    if (!input.trim() || isLoading) return;
 
-// import { useState, useEffect, useRef } from "react"
-// import { Button } from "@/components/ui/button"
-// import { Textarea } from "@/components/ui/textarea"
-// import { Send, X, ChevronLeft, ChevronRight } from "lucide-react"
+    const userMessage = input.trim();
+    setInput('');
 
-// // サーバーとクライアントで一貫した時間フォーマットを提供する関数
-// const formatTime = (date: Date): string => {
-//   const hours = date.getHours().toString().padStart(2, '0')
-//   const minutes = date.getMinutes().toString().padStart(2, '0')
-//   return `${hours}:${minutes}`
-// }
+    // ユーザーメッセージを追加
+    const newUserMessage: Message = { role: 'user', content: userMessage };
+    setMessages(prev => [...prev, newUserMessage]);
+    setIsLoading(true);
 
-// interface Message {
-//   id: string
-//   role: "user" | "assistant"
-//   content: string
-//   timestamp: string
-// }
+    try {
+      // デモモードの場合はダミー応答を返す
+      if (isDemoMode) {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 擬似的な待機時間
 
-// export function AICoachSidebar() {
-//   const [isOpen, setIsOpen] = useState(false)
-//   const [messages, setMessages] = useState<Message[]>([
-//     {
-//       id: "1",
-//       role: "assistant",
-//       content: "何かお手伝いできることはありますか？タスクの分解や優先順位付けのお手伝いができます。",
-//       timestamp: formatTime(new Date()),
-//     },
-//   ])
-//   const [input, setInput] = useState("")
-//   const messagesEndRef = useRef<HTMLDivElement>(null)
+        const demoResponses = [
+          "デモモードでのご利用ありがとうございます！実際のAIコーチでは、あなたの目標達成をサポートします。",
+          "素晴らしい質問ですね！本サービスでは、AIがあなたのタスク管理を効率化し、生産性向上をお手伝いします。",
+          "デモ版では制限がありますが、実際にはあなた専用のAIコーチがカスタマイズされたアドバイスを提供します。",
+          "このような機能に興味をお持ちいただき、ありがとうございます！ぜひアカウント登録して、フル機能をお試しください。"
+        ];
 
-//   // メッセージが追加されたときに自動スクロール
-//   useEffect(() => {
-//     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-//   }, [messages])
+        const randomResponse = demoResponses[Math.floor(Math.random() * demoResponses.length)];
+        const assistantMessage: Message = { role: 'assistant', content: randomResponse };
+        setMessages(prev => [...prev, assistantMessage]);
+        setIsLoading(false);
+        return;
+      }
 
-//   const handleSendMessage = () => {
-//     if (!input.trim()) return
+      // 通常のAPI呼び出し
+      const supabase = getSupabaseClient();
+      const response = await supabase.functions.invoke('chat', {
+        body: {
+          message: userMessage,
+          tone: tone,
+          conversation_history: messages.slice(-10) // 直近10件の履歴を送信
+        }
+      });
 
-//     const userMessage: Message = {
-//       id: Date.now().toString(),
-//       role: "user",
-//       content: input,
-//       timestamp: formatTime(new Date()),
-//     }
+      if (response.error) {
+        throw response.error;
+      }
 
-//     setMessages((prev) => [...prev, userMessage])
-//     setInput("")
+      const assistantMessage: Message = { role: 'assistant', content: response.data.message };
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('チャット送信エラー:', error);
+      toast.error("メッセージの送信に失敗しました");
 
-//     // AIからの応答をシミュレート
-//     setTimeout(() => {
-//       const responses = [
-//         "タスクを小さな単位に分解すると、より管理しやすくなります。今のプロジェクトで分解できそうなタスクはありますか？",
-//         "優先順位の高いタスクから取り組むと効率的です。今日の最優先タスクは何ですか？",
-//         "定期的に休憩を取ることも大切です。ポモドーロテクニックを試してみてはいかがでしょうか？",
-//         "タスクの締め切りが近づいていますね。何か手伝えることはありますか？",
-//         "プロジェクトの進捗状況はいかがですか？何か障害があれば教えてください。",
-//       ]
+      // エラー時はユーザーメッセージを削除
+      setMessages(prev => prev.slice(0, -1));
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-//       const randomResponse = responses[Math.floor(Math.random() * responses.length)]
+  // メッセージ送信処理
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await sendMessage();
+  };
 
-//       const aiResponse: Message = {
-//         id: (Date.now() + 1).toString(),
-//         content: randomResponse,
-//         role: "assistant",
-//         timestamp: formatTime(new Date()),
-//       }
-//       setMessages((prev) => [...prev, aiResponse])
-//     }, 1000)
-//   }
+  return (
+    <div className="w-80 border-l border-gray-200 bg-white flex flex-col">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="ghost"
+            className="w-full justify-between p-4 h-auto"
+          >
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              <span className="font-medium">AIコーチ</span>
+              {isDemoMode && (
+                <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">デモ</span>
+              )}
+            </div>
+            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="flex flex-col flex-1">
+          {isDemoMode && (
+            <Alert className="mx-4 mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-sm">
+                デモモードです。実際のAI応答は制限されています。
+              </AlertDescription>
+            </Alert>
+          )}
 
-//   return (
-//     <div className="fixed right-0 top-0 h-screen z-10 flex">
-//       {/* トグルボタン */}
-//       <div className="flex items-center">
-//         <Button
-//           variant="ghost"
-//           size="icon"
-//           onClick={() => setIsOpen(!isOpen)}
-//           className="h-10 w-6 rounded-l-md rounded-r-none border border-r-0 border-gray-200 bg-white shadow-sm"
-//         >
-//           {isOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-//         </Button>
-//       </div>
+          {/* トーンセレクター */}
+          <div className="p-3 border-b">
+            <ToneSelector value={tone} onChange={setTone} />
+          </div>
 
-//       {/* サイドバー本体 */}
-//       <div
-//         className={`flex flex-col bg-white border-l border-gray-200 shadow-lg transition-all duration-300 ease-in-out ${
-//           isOpen ? "w-80" : "w-0 opacity-0 overflow-hidden"
-//         }`}
-//       >
-//         <div className="flex items-center justify-between p-3 border-b">
-//           <div className="flex items-center">
-//             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#31A9B8] text-white mr-2">AI</div>
-//             <h3 className="font-medium">AIコミットコーチ</h3>
-//           </div>
-//           <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-8 w-8">
-//             <X className="h-4 w-4" />
-//           </Button>
-//         </div>
+          {/* メッセージエリア */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+            {messages.map((message, index) => (
+              <div key={index} className="group relative">
+                <div className="text-sm">
+                  <ChatMessage message={message} />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6"
+                  onClick={() => handleCopyMessage(message.content)}
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </div>
+            ))}
+            {isLoading && (
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>考えています...</span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
 
-//         <div className="flex-1 overflow-auto p-4">
-//           <div className="space-y-4">
-//             {messages.map((message) => (
-//               <div
-//                 key={message.id}
-//                 className={`flex items-start gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}
-//               >
-//                 {message.role === "assistant" && (
-//                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#31A9B8] text-white">
-//                     AI
-//                   </div>
-//                 )}
-//                 <div
-//                   className={`rounded-lg p-3 max-w-[80%] ${
-//                     message.role === "user" ? "bg-[#31A9B8] text-white" : "bg-gray-100 text-gray-800"
-//                   }`}
-//                 >
-//                   <p className="text-sm">{message.content}</p>
-//                   <p className="mt-1 text-xs opacity-70">{message.timestamp}</p>
-//                 </div>
-//               </div>
-//             ))}
-//             <div ref={messagesEndRef} />
-//           </div>
-//         </div>
+          {/* 入力エリア */}
+          <form onSubmit={handleSubmit} className="p-3 border-t">
+            <div className="flex items-end gap-2">
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                // placeholder="質問を入力... (Shift+Enter または Cmd+Enter で改行)"
+                placeholder="質問を入力... (Shift+Enter で改行)"
 
-//         <div className="border-t p-3">
-//           <div className="flex items-center gap-2">
-//             <Textarea
-//               placeholder="メッセージを入力..."
-//               value={input}
-//               onChange={(e) => setInput(e.target.value)}
-//               className="min-h-[60px] resize-none"
-//               onKeyDown={(e) => {
-//                 if (e.key === "Enter" && !e.shiftKey) {
-//                   e.preventDefault()
-//                   handleSendMessage()
-//                 }
-//               }}
-//             />
-//             <Button
-//               size="icon"
-//               className="h-10 w-10 shrink-0 rounded-full bg-[#31A9B8]"
-//               onClick={handleSendMessage}
-//               disabled={!input.trim()}
-//             >
-//               <Send className="h-4 w-4" />
-//             </Button>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   )
-// }
+                className="resize-none min-h-[60px] text-sm"
+                onKeyDown={(e) => {
+                  // Shift+Enter または Cmd+Enter (Mac) / Ctrl+Enter (Windows) で改行
+                  if (e.key === 'Enter' && (e.shiftKey || e.metaKey || e.ctrlKey)) {
+                    // デフォルトの改行動作を許可
+                    return;
+                  }
+
+                  // 普通のEnterで送信
+                  if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+                    e.preventDefault();
+                    if (input.trim() && !isLoading) {
+                      sendMessage();
+                    }
+                  }
+                }}
+              />
+              <Button
+                type="submit"
+                size="icon"
+                disabled={isLoading || !input.trim()}
+                className="h-[60px] w-10 bg-[#31A9B8] hover:bg-[#2a8f9c]"
+                title="送信 (Enter)"
+              >
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </div>
+
+            {/* <p className="text-xs text-gray-500 mt-2"> */}
+              {/* <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">Enter</kbd> 送信　 */}
+              {/* <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">Shift+Enter</kbd> 改行 */}
+            {/* </p> */}
+
+          </form>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+};
