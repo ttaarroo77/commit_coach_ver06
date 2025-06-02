@@ -1,57 +1,81 @@
-import { cn } from '@/lib/utils';
-import { Avatar } from '@/components/ui/avatar';
-import { User, Bot } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { cn } from "@/lib/utils"
+import ReactMarkdown from "react-markdown"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism"
+import { Copy, Check } from "lucide-react"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
 
 interface ChatMessageProps {
   message: {
-    role: 'user' | 'assistant';
-    content: string;
-  };
+    role: "user" | "assistant"
+    content: string
+  }
 }
 
 export default function ChatMessage({ message }: ChatMessageProps) {
-  const isUser = message.role === 'user';
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async (text: string) => {
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
     <div
       className={cn(
-        'flex items-start gap-3 rounded-lg p-4',
-        isUser ? 'bg-muted/50' : 'bg-background'
+        "flex w-full items-start gap-4 p-4",
+        message.role === "assistant" ? "bg-muted/50" : ""
       )}
     >
-      {/* アバター */}
-      <Avatar className={cn(
-        'h-8 w-8 border',
-        isUser ? 'bg-primary text-primary-foreground' : 'bg-blue-100 text-blue-600'
-      )}>
-        <div className="flex h-full w-full items-center justify-center">
-          {isUser ? (
-            <User className="h-4 w-4" />
-          ) : (
-            <Bot className="h-4 w-4" />
-          )}
-        </div>
+      <Avatar className="h-8 w-8">
+        <AvatarFallback>
+          {message.role === "user" ? "U" : "AI"}
+        </AvatarFallback>
       </Avatar>
-
-      {/* メッセージ内容 */}
-      <div className="flex-1 space-y-2">
-        <div className="font-medium">
-          {isUser ? 'あなた' : 'コミットコーチ'}
-        </div>
-        <div className="prose prose-sm max-w-none dark:prose-invert">
+      <div className="flex-1 space-y-2 overflow-hidden">
+        <div className="prose prose-sm dark:prose-invert max-w-none">
           <ReactMarkdown
             components={{
-              pre: ({ node, ...props }) => (
-                <div className="overflow-auto rounded-lg bg-muted p-2 my-2">
-                  <pre {...props} />
-                </div>
-              ),
-              code: ({ node, inline, ...props }) => (
-                inline ? 
-                <code className="rounded bg-muted px-1 py-0.5 font-mono text-sm" {...props} /> :
-                <code className="font-mono text-sm" {...props} />
-              ),
+              code({ node, inline, className, children, ...props }) {
+                const match = /language-(\w+)/.exec(className || "")
+                const code = String(children).replace(/\n$/, "")
+
+                if (!inline && match) {
+                  return (
+                    <div className="relative group">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleCopy(code)}
+                      >
+                        {copied ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <SyntaxHighlighter
+                        style={vscDarkPlus}
+                        language={match[1]}
+                        PreTag="div"
+                        {...props}
+                      >
+                        {code}
+                      </SyntaxHighlighter>
+                    </div>
+                  )
+                }
+
+                return (
+                  <code className={className} {...props}>
+                    {children}
+                  </code>
+                )
+              },
             }}
           >
             {message.content}
@@ -59,5 +83,5 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

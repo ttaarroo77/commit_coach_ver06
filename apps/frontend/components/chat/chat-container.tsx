@@ -4,9 +4,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Copy } from 'lucide-react';
 import ChatMessage from './chat-message';
 import ToneSelector from './tone-selector';
+import { toast } from '@/components/ui/use-toast';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -55,6 +56,7 @@ export default function ChatContainer() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         },
         body: JSON.stringify({
           messages: [...messages, userMessage].map(({ role, content }) => ({ role, content })),
@@ -105,6 +107,24 @@ export default function ChatContainer() {
     }
   };
 
+  // メッセージをコピー
+  const handleCopyMessage = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      toast({
+        title: "コピーしました",
+        description: "メッセージをクリップボードにコピーしました",
+      });
+    } catch (error) {
+      console.error("コピーに失敗しました:", error);
+      toast({
+        title: "エラー",
+        description: "メッセージのコピーに失敗しました",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col h-full max-h-[calc(100vh-6rem)] bg-background">
       {/* トーンセレクター */}
@@ -115,7 +135,17 @@ export default function ChatContainer() {
       {/* メッセージエリア */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message, index) => (
-          <ChatMessage key={index} message={message} />
+          <div key={index} className="group relative">
+            <ChatMessage message={message} />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={() => handleCopyMessage(message.content)}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
         ))}
         <div ref={messagesEndRef} />
       </div>

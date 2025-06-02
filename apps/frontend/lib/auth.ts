@@ -1,52 +1,22 @@
 import { getSupabaseClient } from "./supabase"
 
-// ログイン処理
-export async function signIn(email: string, password: string) {
+// Magic-Link認証処理
+export async function signInWithMagicLink(email: string) {
   try {
     const supabase = getSupabaseClient()
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithOtp({
       email,
-      password,
-    })
-
-    if (error) {
-      console.error("サインインエラー:", error.message)
-      throw error
-    }
-
-    if (!data.user) {
-      throw new Error("ユーザー情報が取得できませんでした")
-    }
-
-    return data
-  } catch (error) {
-    console.error("認証エラー:", error)
-    throw error
-  }
-}
-
-// 新規登録処理
-export async function signUp(email: string, password: string, name: string) {
-  try {
-    const supabase = getSupabaseClient()
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
       options: {
-        data: {
-          name,
-        },
+        emailRedirectTo: `${window.location.origin}/login/callback`,
       },
     })
 
     if (error) {
-      console.error("サインアップエラー:", error.message)
+      console.error("Magic-Link認証エラー:", error.message)
       throw error
     }
-
-    return data
   } catch (error) {
-    console.error("登録エラー:", error)
+    console.error("認証エラー:", error)
     throw error
   }
 }

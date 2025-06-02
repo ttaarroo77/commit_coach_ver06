@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { getSupabaseClient } from "@/lib/supabase"
-import { signIn, signUp, signOut, getCurrentUser } from "@/lib/auth"
+import { signOut, getCurrentUser } from "@/lib/auth"
 import type { User } from "@supabase/supabase-js"
 import Cookies from "js-cookie"
 
@@ -11,8 +11,7 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   error: string | null
-  login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string, name: string) => Promise<void>
+  signInWithMagicLink: (email: string) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -21,8 +20,7 @@ const defaultContextValue: AuthContextType = {
   user: null,
   loading: true,
   error: null,
-  login: async () => {},
-  register: async () => {},
+  signInWithMagicLink: async () => {},
   logout: async () => {},
 }
 
@@ -39,21 +37,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsClient(true)
 
     try {
-      // デモモードのチェック
-      const isDemoMode = Cookies.get("demo_mode") === "true"
-      if (isDemoMode) {
-        console.log("デモモードが有効です")
-        // デモユーザー情報を設定
-        const demoUser = {
-          id: "demo-user-id",
-          email: "demo@example.com",
-          user_metadata: { name: "デモユーザー" },
-        } as User
-        setUser(demoUser)
-        setLoading(false)
-        return
-      }
-
       const supabase = getSupabaseClient()
 
       // 初期ロード時にユーザー情報を取得
@@ -92,67 +75,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     "Invalid login credentials": "メールアドレスまたはパスワードが正しくありません",
     "Email not confirmed": "メールアドレスが確認されていません。メールをご確認ください",
     "User already registered": "このメールアドレスは既に登録されています",
-    "Password should be at least 6 characters": "パスワードは6文字以上である必要があります",
     "Email format is invalid": "メールアドレスの形式が正しくありません",
   }
 
-  // ログイン処理
-  const login = async (email: string, password: string) => {
+  // Magic-Link認証処理
+  const signInWithMagicLink = async (email: string) => {
     try {
       setError(null)
       setLoading(true)
 
-      // デモモードのチェック
-      if (email === "demo@example.com" && password === "demopassword") {
-        console.log("デモモードでログインします")
-        // デモモードをクッキーに保存
-        Cookies.set("demo_mode", "true", { expires: 1 }) // 1日間有効
+      const supabase = getSupabaseClient()
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login/callback`,
+        },
+      })
 
-        // デモユーザー情報を設定
-        const demoUser = {
-          id: "demo-user-id",
-          email: "demo@example.com",
-          user_metadata: { name: "デモユーザー" },
-        } as User
-
-        setUser(demoUser)
-        router.push("/dashboard")
-        return
+      if (error) {
+        throw error
       }
-
-      try {
-        const { user } = await signIn(email, password)
-        setUser(user)
-        router.push("/dashboard")
-      } catch (err: any) {
-        console.error("ログインエラー:", err)
-        // エラーメッセージを日本語に変換
-        const errorMessage = err.message ? authErrorMessages[err.message] || err.message : "ログインに失敗しました"
-        setError(errorMessage)
-        setUser(null) // ログイン失敗時にユーザー状態をクリア
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // 新規登録処理
-  const register = async (email: string, password: string, name: string) => {
-    try {
-      setError(null)
-      setLoading(true)
-
-      try {
-        const { user } = await signUp(email, password, name)
-        setUser(user)
-        router.push("/dashboard")
-      } catch (err: any) {
-        console.error("登録エラー:", err)
-        // エラーメッセージを日本語に変換
-        const errorMessage = err.message ? authErrorMessages[err.message] || err.message : "新規登録に失敗しました"
-        setError(errorMessage)
-        setUser(null) // 登録失敗時にユーザー状態をクリア
-      }
+    } catch (err: any) {
+      console.error("Magic-Link認証エラー:", err)
+      const errorMessage = err.message ? authErrorMessages[err.message] || err.message : "認証リンクの送信に失敗しました"
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -162,32 +108,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       setLoading(true)
-
-      // デモモードのチェック
-      if (Cookies.get("demo_mode") === "true") {
-        console.log("デモモードからログアウトします")
-        // デモモードのクッキーを削除
-        Cookies.remove("demo_mode")
-        setUser(null)
-        router.push("/")
-        return
-      }
-
-      try {
-        await signOut()
-        setUser(null)
-        router.push("/")
-      } catch (err: any) {
-        setError(err.message || "ログアウトに失敗しました")
-        console.error("ログアウトエラー:", err)
-      }
+      await signOut()
+      setUser(null)
+      router.push("/")
+    } catch (err: any) {
+      setError(err.message || "ログアウトに失敗しました")
+      console.error("ログアウトエラー:", err)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, register, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, loading, error, signInWithMagicLink, logout }}>{children}</AuthContext.Provider>
   )
 }
 
