@@ -13,6 +13,7 @@
 import { createBrowserClient, SupabaseClient } from "@supabase/ssr";
 import { Database } from "@/types/supabase";
 import Cookies from "js-cookie";
+import { isDemoModeEnabled } from "./demo-mode";
 
 // ---------- Supabase Singleton ---------- //
 
@@ -24,14 +25,11 @@ let _client: SupabaseClient<Database> | undefined;
 export function supabase(): SupabaseClient<Database> {
   if (_client) return _client;
 
-  // デモモードのチェック
-  let isDemoMode = false;
-  if (typeof window !== "undefined") {
-    isDemoMode = Cookies.get("demo_mode") === "true";
-  }
+  // デモモードのチェック（環境変数 > Cookie）
+  const demoMode = typeof window !== "undefined" ? isDemoModeEnabled() : false;
 
   // デモモードの場合はダミークライアントを返す
-  if (isDemoMode) {
+  if (demoMode) {
     console.log("デモモード: Supabaseダミークライアントを使用します");
     _client = createBrowserClient<Database>("https://example.supabase.co", "dummy-key");
     return _client;

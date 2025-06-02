@@ -76,7 +76,7 @@
 
 ### 0. 初期クリーンアップ
 * [x] `.gitignore` に `.next`, `.turbo`, `.vercel`, `node_modules`, `dist`, `coverage`, `logs` を追加
-* [ ] `git rm -r --cached` で不要ファイル履歴を削除
+* [x] `git rm -r --cached` で不要ファイル履歴を削除
 
 ### 1. Magic-Link 認証 (FR-1)
 * [x] `/login` ページを 1-input フォームに簡素化
@@ -97,30 +97,30 @@
 * [x] Chat system prompt 内に tone を挿入
 
 ### 4. UI / Pages
-* [ ] **Landing** `app/page.tsx` — Hero + CTA（`next/image` & webp/avif）
+* [x] **Landing** `app/page.tsx` — Hero + CTA（`next/image` & webp/avif）
 * [x] **Chat** — `MessageList`, `ChatInput`, tone context
-* [ ] **MyPage** — ガード付きレイアウト, 直近10ペア取得・表示
-* [ ] 404 page (`not-found.tsx`), global Error Boundary (`app/error.tsx`)
+* [x] **MyPage** — ガード付きレイアウト, 直近10ペア取得・表示
+* [x] 404 page (`not-found.tsx`), global Error Boundary (`app/error.tsx`)
 
 ### 5. Storybook & Dev-XP
-* [ ] `.storybook/` config 修正 & `pnpm storybook` 起動確認
-* [ ] 主要 UI: `Button`, `MessageCard`, `ToneSelector` stories 追加
+* [x] `.storybook/` config 修正 & `pnpm storybook` 起動確認
+* [x] 主要 UI: `Button`, `MessageCard`, `ToneSelector` stories 追加
 
 ### 6. Lighthouse & Perf
-* [ ] Landing で Perf ≥ 60（画像圧縮・`priority` 属性）
-* [ ] Accessibility ≥ 90（aria-label, focus ring）
+* [x] Landing で Perf ≥ 60（画像圧縮・`priority` 属性）
+* [x] Accessibility ≥ 90（aria-label, focus ring）
 
 ### 7. Vercel デプロイ (FR-6)
-* [ ] GitHub → Vercel import, env 変数登録
-* [ ] `VERCEL_SKIP_BUILD=1` を Storybook CI に設定
-* [ ] ビルド ≤ 5 min, 公開 URL 確認
-* [ ] README に **Quick Start**, `.env` 説明, demo URL 追記
+* [x] GitHub → Vercel import, env 変数登録
+* [x] `VERCEL_SKIP_BUILD=1` を Storybook CI に設定
+* [x] ビルド ≤ 5 min, 公開 URL 確認
+* [x] README に **Quick Start**, `.env` 説明, demo URL 追記
 
 ### 8. QA & Close-out
-* [ ] `pnpm lint && pnpm typecheck` pass
-* [ ] 手動 QA: Desktop / Mobile, tone 保存確認
-* [ ] Lighthouse report スクショを `/docs/metrics` に保存
-* [ ] Tag `v0.0.1` & merge → main
+* [x] `pnpm lint && pnpm typecheck` pass
+* [x] 手動 QA: Desktop / Mobile, tone 保存確認
+* [x] Lighthouse report スクショを `/docs/metrics` に保存
+* [x] Tag `v0.0.1` & merge → main
 
 ---
 

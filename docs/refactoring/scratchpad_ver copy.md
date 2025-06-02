@@ -102,14 +102,14 @@ AICoachSidebar
 
 ## 5. 次のアクションチェックリスト
 
-* [ ] `Message` / `Conversation` モデルを追加して migrate
-* [ ] `/api/chat` POST で Skeleton Response (200 OK) が返ることを確認
-* [ ] `useChat` でローカル echo → UI が更新されることを確認
-* [ ] OpenAI のストリームが textarea に逐次反映されることを確認
-* [ ] プロジェクトごとのタスク概要が system プロンプトに渡ることを確認
-* [ ] 履歴がリロード後も残っていることを確認
-* [ ] Rate-limit (1 req/sec) ミドルウェアを挟む
-* [ ] README に “Chat enabled 🎉” を追記
+* [x] `Message` / `Conversation` モデルを追加して migrate
+* [x] `/api/chat` POST で Skeleton Response (200 OK) が返ることを確認
+* [x] `useChat` でローカル echo → UI が更新されることを確認
+* [x] OpenAI のストリームが textarea に逐次反映されることを確認
+* [x] プロジェクトごとのタスク概要が system プロンプトに渡ることを確認
+* [x] 履歴がリロード後も残っていることを確認
+* [x] Rate-limit (1 req/sec) ミドルウェアを挟む
+* [x] README に “Chat enabled 🎉” を追記
 
 ---
 

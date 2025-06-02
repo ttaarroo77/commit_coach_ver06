@@ -3,6 +3,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
+import chatRoutes from './routes/chat';
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 
 // ルート
 app.use('/api/auth', authRoutes);
+app.use('/api/chat', chatRoutes);
 
 // エラーハンドリング
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {

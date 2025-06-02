@@ -176,4 +176,12 @@
 合計タスク数: **120+**
 順にチェックしていけば Netlify + Supabase フルスタック開発が完了します。
 
+
+### additional task:
+- [ ] .env.production の NEXT_PUBLIC_DEMO_MODE=false を確認
+
+- name: デモモードが本番環境でオフになっていることを確認
+  run: grep -q 'NEXT_PUBLIC_DEMO_MODE=false' apps/frontend/.env.production
+
+
 <!-- End of File -->

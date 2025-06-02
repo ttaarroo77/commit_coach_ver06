@@ -186,6 +186,9 @@ importers:
       '@storybook/nextjs':
         specifier: ^9.0.1
         version: 9.0.1(esbuild@0.25.5)(next@15.2.4)(react-dom@18.3.1)(react@18.3.1)(storybook@9.0.1)(typescript@5.8.3)(webpack@5.99.9)
+      '@types/js-cookie':
+        specifier: ^3.0.6
+        version: 3.0.6
       '@types/node':
         specifier: ^22
         version: 22.15.26
@@ -2327,7 +2330,7 @@ packages:
     peerDependencies:
       react-hook-form: ^7.0.0
     dependencies:
-      react-hook-form: 7.56.4(react@19.1.0)
+      react-hook-form: 7.56.4(react@18.3.1)
     dev: false
 
   /@humanwhocodes/config-array@0.13.0:
@@ -7140,6 +7143,10 @@ packages:
     dependencies:
       expect: 29.7.0
       pretty-format: 29.7.0
+    dev: true
+
+  /@types/js-cookie@3.0.6:
+    resolution: {integrity: sha512-wkw9yd1kEXOPnvEeEV1Go1MmxtBJL0RR79aOTAApecWFVu7w0NNXNqhcWgvw2YgZDYadliXkl14pa3WXw5jlCQ==}
     dev: true
 
   /@types/json-schema@7.0.15:

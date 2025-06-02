@@ -1,152 +1,189 @@
 // apps/frontend/components/ai-coach-sidebar.tsx
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@/context/auth-context';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Send, Loader2, Copy, MessageSquare, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import { getSupabaseClient } from '@/lib/supabase';
-import ChatMessage from './chat/chat-message';
-import ToneSelector from './chat/tone-selector';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import Cookies from 'js-cookie';
+import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@/context/auth-context";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Send,
+  Loader2,
+  Copy,
+  MessageSquare,
+  ChevronDown,
+  ChevronUp,
+  AlertCircle,
+} from "lucide-react";
+import { toast } from "sonner";
+import ChatMessage from "./chat/chat-message";
+import ToneSelector from "./chat/tone-selector";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import Cookies from "js-cookie";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+
+// React 19での型互換性問題を解決するためのタイプアサーション
+const CollapsibleComponent = Collapsible as any;
+const CollapsibleTriggerComponent = CollapsibleTrigger as any;
+const CollapsibleContentComponent = CollapsibleContent as any;
+const ButtonComponent = Button as any;
+const TextareaComponent = Textarea as any;
+const AlertComponent = Alert as any;
+const AlertDescriptionComponent = AlertDescription as any;
 
 interface Message {
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
 }
 
 interface AICoachSidebarProps {
-  defaultOpen?: boolean
+  defaultOpen?: boolean;
 }
 
-export const AICoachSidebar = ({ defaultOpen = true }: AICoachSidebarProps) => {
+export const AICoachSidebar = ({
+  defaultOpen = true,
+}: AICoachSidebarProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [tone, setTone] = useState<'friendly' | 'tough-love' | 'humor'>('friendly');
+  const [tone, setTone] = useState<"friendly" | "tough-love" | "humor">(
+    "friendly"
+  );
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // デモモードの状態管理
+  // ---- デモモードの判定（環境変数 > Cookie） ----
   const [isDemoMode, setIsDemoMode] = useState(false);
-
-  // クライアントサイドでのみCookieをチェック
   useEffect(() => {
-    setIsDemoMode(Cookies.get("demo_mode") === "true");
+    // 環境変数とCookieを考慮したデモモード判定
+    setIsDemoMode(isDemoModeEnabled());
   }, []);
 
-  // メッセージ一覧を自動スクロール
+  // オートスクロール
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // 初回ロード時にウェルカムメッセージを表示
+  // 初回ウェルカム
   useEffect(() => {
     if (messages.length === 0) {
       setMessages([
         {
-          role: 'assistant',
-          content: `こんにちは${user?.email ? `、${user.email.split('@')[0]}さん` : ''}！コミットコーチです。プログラミングや開発に関する質問があれば、お気軽にどうぞ。何かお手伝いできることはありますか？`
-        }
+          role: "assistant",
+          content: `こんにちは${
+            user?.email ? `、${user.email.split("@")[0]}さん` : ""
+          }！コミットコーチです。プログラミングや開発に関する質問があれば、お気軽にどうぞ。何かお手伝いできることはありますか？`,
+        },
       ]);
     }
-  }, [user]);
+  }, [user, messages.length]);
 
-  // メッセージをコピーする関数
+  // クリップボード
   const handleCopyMessage = async (content: string) => {
     try {
       await navigator.clipboard.writeText(content);
       toast.success("メッセージをコピーしました");
-    } catch (error) {
-      console.error('コピーに失敗しました:', error);
+    } catch (err) {
+      console.error("コピーに失敗:", err);
       toast.error("コピーに失敗しました");
     }
   };
 
+  // ---------------------------
+  // ★ GPT へ問い合わせる関数
+  // ---------------------------
+  const callChatApi = async (userMessage: string) => {
+    // 最大 10 件 + 今回の user メッセージ
+    const recentHistory = [...messages, { role: "user", content: userMessage }]
+      .slice(-11)
+      .map(({ role, content }) => ({ role, content }));
+
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tone,
+        messages: recentHistory,
+        // ★ システムプロンプトをここで注入（API 側で前置きしても OK）
+        system_prompt: `You are CommitCoach, a seasoned software mentor. Answer in a ${tone} manner, mixing clear explanations with actionable next steps. Keep responses concise but supportive.`,
+      }),
+    });
+
+    if (!res.ok || !res.body) {
+      throw new Error("AI からの応答取得に失敗しました");
+    }
+    return res.body;
+  };
+
+  // ---------------------------
+  // メッセージ送信
+  // ---------------------------
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
-    setInput('');
+    setInput("");
 
-    // ユーザーメッセージを追加
-    const newUserMessage: Message = { role: 'user', content: userMessage };
-    setMessages(prev => [...prev, newUserMessage]);
+    // ユーザーメッセージを即時表示
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
 
     try {
-      // デモモードの場合は簡易的な会話応答を返す
-      if (isDemoMode) {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // 擬似的な待機時間
+      const stream = await callChatApi(userMessage);
 
-        let response = "";
-        // 「しりとり」に関連する質問かチェック
-        if (userMessage.includes("しりとり")) {
-          response = "しりとりですね！「りんご」から始めましょう。";
-        }
-        // 「りんご」の場合
-        else if (userMessage.includes("りんご")) {
-          response = "「ごりら」で続けます！";
-        }
-        // 「ごりら」の場合
-        else if (userMessage.includes("ごりら")) {
-          response = "「らっぱ」で続けます！";
-        }
-        // 「らっぱ」の場合
-        else if (userMessage.includes("らっぱ")) {
-          response = "「パンダ」で続けます！";
-        }
-        // デフォルトの応答
-        else {
-          const demoResponses = [
-            "こんにちは！テスト用のデモモードです。具体的な質問をしていただくと、それに応じた返答を試みます。",
-            "テスト会話モードです。「しりとり」と入力すると、しりとりゲームができます。",
-            "会話のテスト中ですね。何かお手伝いできることはありますか？",
-            "テスト会話に参加していただき、ありがとうございます。簡単な応答ですが、質問に答えられるよう努めています。"
-          ];
-          response = demoResponses[Math.floor(Math.random() * demoResponses.length)];
-        }
+      // 空の assistant メッセージを追加しつつストリーム更新
+      let assistantContent = "";
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
-        const assistantMessage: Message = { role: 'assistant', content: response };
-        setMessages(prev => [...prev, assistantMessage]);
-        setIsLoading(false);
-        return;
+      const reader = stream.getReader();
+      const decoder = new TextDecoder();
+      // GPT から NDJSON で `{ "content": "…" }` が届く想定
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // 改行ごとにパース
+        let boundary = buffer.lastIndexOf("\n");
+        if (boundary === -1) continue;
+        const lines = buffer.slice(0, boundary).split("\n");
+        buffer = buffer.slice(boundary + 1);
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const { content: chunk } = JSON.parse(line);
+            assistantContent += chunk;
+            setMessages((prev) => {
+              const updated = [...prev];
+              const last = updated[updated.length - 1];
+              if (last.role === "assistant") last.content = assistantContent;
+              return updated;
+            });
+          } catch {
+            // JSON パース失敗は無視して次へ
+          }
+        }
       }
-
-      // 通常のAPI呼び出し
-      const supabase = getSupabaseClient();
-      const response = await supabase.functions.invoke('chat', {
-        body: {
-          message: userMessage,
-          tone: tone,
-          conversation_history: messages.slice(-10) // 直近10件の履歴を送信
-        }
-      });
-
-      if (response.error) {
-        throw response.error;
-      }
-
-      const assistantMessage: Message = { role: 'assistant', content: response.data.message };
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('チャット送信エラー:', error);
-      toast.error("メッセージの送信に失敗しました");
-
-      // エラー時はユーザーメッセージを削除
-      setMessages(prev => prev.slice(0, -1));
+    } catch (err) {
+      console.error("チャット送信エラー:", err);
+      toast.error("メッセージ送信に失敗しました");
+      // エラー時: 直前の user メッセージを削除
+      setMessages((prev) => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
     }
   };
 
-  // メッセージ送信処理
+  // フォーム submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await sendMessage();
@@ -154,54 +191,67 @@ export const AICoachSidebar = ({ defaultOpen = true }: AICoachSidebarProps) => {
 
   return (
     <div className="w-80 border-l border-gray-200 bg-white flex flex-col">
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <Button
+      <CollapsibleComponent
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        className="bg-white shadow-md rounded-lg border w-80 flex flex-col max-h-[calc(100vh-2rem)]"
+      >
+        <CollapsibleTriggerComponent asChild>
+          <ButtonComponent
             variant="ghost"
-            className="w-full justify-between p-4 h-auto"
+            className="flex justify-between items-center w-full p-3 h-auto"
           >
             <div className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
               <span className="font-medium">AIコーチ</span>
               {isDemoMode && (
-                <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">デモ</span>
+                <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                  デモ
+                </span>
               )}
             </div>
-            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="flex flex-col flex-1">
+            {isOpen ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </ButtonComponent>
+        </CollapsibleTriggerComponent>
+
+        <CollapsibleContentComponent className="flex flex-col max-h-[calc(100vh-4rem)]">
+          {/* ---- デモモード表示 ---- */}
           {isDemoMode && (
-            <Alert className="mx-4 mb-4">
+            <AlertComponent className="m-3 bg-yellow-50 text-yellow-800 border-yellow-200">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-sm">
-                デモモードです。実際のAI応答は制限されています。
-              </AlertDescription>
-            </Alert>
+              <AlertDescriptionComponent className="text-xs font-medium">
+                デモモード：応答はサンプルです
+              </AlertDescriptionComponent>
+            </AlertComponent>
           )}
 
-          {/* トーンセレクター */}
+          {/* ---- トーンセレクター ---- */}
           <div className="p-3 border-b">
             <ToneSelector value={tone} onChange={setTone} />
           </div>
 
-          {/* メッセージエリア */}
+          {/* ---- メッセージリスト ---- */}
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
-            {messages.map((message, index) => (
-              <div key={index} className="group relative">
+            {messages.map((m, i) => (
+              <div key={i} className="group relative">
                 <div className="text-sm">
-                  <ChatMessage message={message} />
+                  <ChatMessage message={m} />
                 </div>
-                <Button
+                <ButtonComponent
                   variant="ghost"
                   size="icon"
                   className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6"
-                  onClick={() => handleCopyMessage(message.content)}
+                  onClick={() => handleCopyMessage(m.content)}
                 >
                   <Copy className="h-3 w-3" />
-                </Button>
+                </ButtonComponent>
               </div>
             ))}
+
             {isLoading && (
               <div className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -211,63 +261,78 @@ export const AICoachSidebar = ({ defaultOpen = true }: AICoachSidebarProps) => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* 入力エリア */}
+          {/* ---- 入力 ---- */}
           <form onSubmit={handleSubmit} className="p-3 border-t">
             <div className="flex items-end gap-2">
-              <Textarea
+              <TextareaComponent
                 ref={textareaRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                // placeholder="質問を入力... (Shift+Enter または Cmd+Enter で改行)"
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
                 placeholder="質問を入力..."
-
                 className="resize-none min-h-[60px] text-sm"
-                onKeyDown={(e) => {
+                onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                   // Ctrl/Cmd+Enter で送信
-                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                     e.preventDefault();
-                    if (input.trim() && !isLoading) {
-                      sendMessage();
-                    }
+                    if (input.trim() && !isLoading) sendMessage();
                     return;
                   }
-
-                  // Enter 単体: 何も起きない（デフォルト動作を防止）
-                  if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
-                    e.preventDefault();  // デフォルトの改行動作を防止
+                  // Enter 単体: 何も起きない
+                  if (
+                    e.key === "Enter" &&
+                    !e.shiftKey &&
+                    !e.metaKey &&
+                    !e.ctrlKey
+                  ) {
+                    e.preventDefault();
                     return;
                   }
-
-                  // Shift+Enter は改行（デフォルトを残す）
+                  // Shift+Enter → 改行（デフォルト）
                 }}
               />
-              <Button
+              <ButtonComponent
                 type="submit"
                 size="icon"
                 disabled={isLoading || !input.trim()}
                 className="h-[60px] w-10 bg-[#31A9B8] hover:bg-[#2a8f9c]"
                 title="送信 (Ctrl+Enter または Cmd+Enter)"
               >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              </Button>
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </ButtonComponent>
             </div>
 
+            {/* ---- キーバインド表示 (変更禁止) ---- */}
             <div className="text-xs text-gray-500 mt-2 flex flex-wrap gap-4">
               <span>
-                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">Ctrl+Enter</kbd> または
-                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">⌘+Enter</kbd> で送信
+                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">
+                  Ctrl+Enter
+                </kbd>{" "}
+                または
+                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">
+                  ⌘+Enter
+                </kbd>{" "}
+                で送信
               </span>
               <span>
-                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">Shift+Enter</kbd> で改行
+                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">
+                  Shift+Enter
+                </kbd>{" "}
+                で改行
               </span>
               <span>
-                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">Enter</kbd> 単体では何も起きません
+                <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">
+                  Enter
+                </kbd>{" "}
+                単体では何も起きません
               </span>
             </div>
-
           </form>
-        </CollapsibleContent>
-      </Collapsible>
+        </CollapsibleContentComponent>
+      </CollapsibleComponent>
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { z } from 'zod';
 
 export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
 // リクエストのバリデーションスキーマ
 const chatRequestSchema = z.object({
@@ -33,10 +34,15 @@ export async function POST(req: NextRequest) {
     const { messages, tone } = result.data;
 
     // Cookieからセッション情報を取得
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const supabaseCookie = cookieStore.get('sb-auth-token')?.value;
-
-    if (!supabaseCookie) {
+    
+    // Authorization ヘッダーからトークンを取得（フォールバック）
+    const authHeader = req.headers.get('Authorization');
+    const authToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    
+    // CookieまたはAuthorizationヘッダーのどちらかが必要
+    if (!supabaseCookie && !authToken) {
       return NextResponse.json(
         { error: '認証が必要です' },
         { status: 401 }
@@ -134,7 +140,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('APIエラー:', error);
     return NextResponse.json(
-      { error: error.message || '不明なエラーが発生しました' },
+      { error: error instanceof Error ? error.message : '不明なエラーが発生しました' },
       { status: 500 }
     );
   }
