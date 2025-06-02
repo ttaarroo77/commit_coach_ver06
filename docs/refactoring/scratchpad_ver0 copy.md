@@ -86,9 +86,9 @@
 * [x] Cookie Max-Age 7 days 設定
 
 ### 2. チャット Edge Function & API (FR-2)
-* [ ] Edge Function `chat` — Zod でバリデーション, OpenAI stream, 504 on timeout
-* [ ] フロント `/api/chat` ラッパー + SWR/React-Query
-* [ ] `AbortController` 30 s timeout → destruct toast 「AI busy, try later」
+* [x] Edge Function `chat` — Zod でバリデーション, OpenAI stream, 504 on timeout
+* [x] フロント `/api/chat` ラッパー + SWR/React-Query
+* [x] `AbortController` 30 s timeout → destruct toast 「AI busy, try later」
 
 ### 3. トーンプリセット (FR-3)
 * [x] `ToneSelector` コンポーネント (react-aria or native `<select>`)

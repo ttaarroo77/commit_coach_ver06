@@ -1,13 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { cookies } from 'next/headers';
+import { z } from 'zod';
 
 export const runtime = 'edge';
+
+// リクエストのバリデーションスキーマ
+const chatRequestSchema = z.object({
+  messages: z.array(
+    z.object({
+      role: z.enum(['user', 'assistant', 'system']),
+      content: z.string().min(1).max(4000),
+    })
+  ).min(1),
+  tone: z.enum(['friendly', 'tough-love', 'humor', 'professional']).optional().default('friendly'),
+});
 
 export async function POST(req: NextRequest) {
   try {
     // リクエストボディの解析
-    const { messages, tone = 'friendly' } = await req.json();
+    const body = await req.json();
+    
+    // Zodによるバリデーション
+    const result = chatRequestSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: '無効なリクエスト形式です', details: result.error.format() },
+        { status: 400 }
+      );
+    }
+    
+    const { messages, tone } = result.data;
 
     // Cookieからセッション情報を取得
     const cookieStore = cookies();
@@ -81,9 +104,11 @@ export async function POST(req: NextRequest) {
         }
 
         try {
-          while (true) {
+          let continueReading = true;
+          while (continueReading) {
             const { done, value } = await reader.read();
             if (done) {
+              continueReading = false;
               break;
             }
             controller.enqueue(value);
