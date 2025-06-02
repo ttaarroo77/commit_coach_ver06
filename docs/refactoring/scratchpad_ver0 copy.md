@@ -79,11 +79,11 @@
 * [ ] `git rm -r --cached` で不要ファイル履歴を削除
 
 ### 1. Magic-Link 認証 (FR-1)
-* [ ] `/login` ページを 1-input フォームに簡素化
-* [ ] `signInWithOtp({ email, options... })` 実装
-* [ ] 成功トースト「Link sent!」; 失敗トースト表示
-* [ ] `/login/callback` ページ作成 → セッション取得 → `/chat` リダイレクト
-* [ ] Cookie Max-Age 7 days 設定
+* [x] `/login` ページを 1-input フォームに簡素化
+* [x] `signInWithOtp({ email, options... })` 実装
+* [x] 成功トースト「Link sent!」; 失敗トースト表示
+* [x] `/login/callback` ページ作成 → セッション取得 → `/chat` リダイレクト
+* [x] Cookie Max-Age 7 days 設定
 
 ### 2. チャット Edge Function & API (FR-2)
 * [ ] Edge Function `chat` — Zod でバリデーション, OpenAI stream, 504 on timeout
