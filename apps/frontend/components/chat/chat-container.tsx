@@ -168,7 +168,7 @@ export default function ChatContainer() {
       }
     } catch (error) {
       console.error("チャットエラー:", error);
-      
+
       // AbortErrorの場合はタイムアウトメッセージを表示済みなのでスキップ
       if (!(error instanceof DOMException && error.name === "AbortError")) {
         toast.error(
@@ -203,7 +203,7 @@ export default function ChatContainer() {
         <ToneSelector value={tone} onChange={(newTone) => {
           // トーン変更を適用
           setTone(newTone);
-          
+
           // トーン設定をプロファイルに保存
           if (user?.id) {
             const saveToneToProfile = async () => {
@@ -264,36 +264,28 @@ export default function ChatContainer() {
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            // placeholder="質問を入力... (Shift+Enter または Cmd+Enter で改行)"
-            placeholder="質問を入力... (Shift+Enter で改行)"
-            className="resize-none"
+            placeholder="質問を入力してください..."
+            className="resize-none min-h-[80px]"
             rows={3}
             onKeyDown={(e) => {
-              // Shift+Enter または Cmd+Enter (Mac) / Ctrl+Enter (Windows) で改行
-              if (e.key === "Enter" && (e.shiftKey || e.metaKey || e.ctrlKey)) {
-                // デフォルトの改行動作を許可
-                return;
-              }
-
-              // 普通のEnterで送信
-              if (
-                e.key === "Enter" &&
-                !e.shiftKey &&
-                !e.metaKey &&
-                !e.ctrlKey
-              ) {
+              // Ctrl+Enter (Windows) または Cmd+Enter (Mac) で送信
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
                 if (input.trim() && !isLoading) {
                   handleSubmit(e);
                 }
+                return;
               }
+
+              // Enter単体やShift+Enterは改行のみ（デフォルト動作を維持）
+              // 送信は行わない
             }}
           />
           <Button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="bg-[#31A9B8] hover:bg-[#2a8f9c]"
-            title="送信 (Enter)"
+            className="bg-[#31A9B8] hover:bg-[#2a8f9c] h-[80px]"
+            title="送信 (Ctrl+Enter または Cmd+Enter)"
           >
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -303,15 +295,18 @@ export default function ChatContainer() {
           </Button>
         </div>
 
-        {/* <p className="text-xs text-gray-500 mt-2">
-          <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">Enter</kbd> 
-          送信　
-          <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">
-            Shift+Enter
-          </kbd> 
-          改行
-        </p> */}
-
+        <div className="text-xs text-muted-foreground mt-2 flex flex-wrap gap-4">
+          <span>
+            <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Ctrl+Enter</kbd> または
+            <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">⌘+Enter</kbd> で送信
+          </span>
+          <span>
+            <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Enter</kbd> で改行
+          </span>
+          <span>
+            <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Shift+Enter</kbd> でも改行
+          </span>
+        </div>
       </form>
     </div>
   );

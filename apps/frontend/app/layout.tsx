@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { AuthProvider } from "@/context/auth-context"
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "sonner"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="ja" suppressHydrationWarning={true}>
       <body suppressHydrationWarning={true}>
         <AuthProvider>{children}</AuthProvider>
-        <Toaster />
+        <Toaster position="top-right" />
       </body>
     </html>
   )

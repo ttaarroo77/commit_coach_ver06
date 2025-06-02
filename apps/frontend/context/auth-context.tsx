@@ -11,6 +11,8 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   error: string | null
+  signIn: (email: string, password: string) => Promise<void>
+  signUp: (email: string, password: string) => Promise<void>
   signInWithMagicLink: (email: string) => Promise<void>
   logout: () => Promise<void>
 }
@@ -20,6 +22,8 @@ const defaultContextValue: AuthContextType = {
   user: null,
   loading: true,
   error: null,
+  signIn: async () => {},
+  signUp: async () => {},
   signInWithMagicLink: async () => {},
   logout: async () => {},
 }
@@ -37,6 +41,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsClient(true)
 
     try {
+      // デモモードのチェック
+      const isDemoMode = Cookies.get("demo_mode") === "true"
+
+      if (isDemoMode) {
+        // デモユーザーを設定
+        const demoUser = {
+          id: "demo-user-id",
+          email: "demo@example.com",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          app_metadata: {},
+          user_metadata: {},
+          aud: "demo",
+          confirmation_sent_at: null,
+          confirmed_at: null,
+          email_confirmed_at: null,
+          identities: [],
+          last_sign_in_at: null,
+          phone: null,
+          phone_confirmed_at: null,
+          recovery_sent_at: null,
+          role: "authenticated"
+        } as User
+
+        setUser(demoUser)
+        setLoading(false)
+        return
+      }
+
       const supabase = getSupabaseClient()
 
       // 初期ロード時にユーザー情報を取得
@@ -57,6 +90,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } = supabase.auth.onAuthStateChange((event, session) => {
         setUser(session?.user ?? null)
         setLoading(false)
+
+        // ログイン成功時にリダイレクト
+        if (event === 'SIGNED_IN' && session?.user) {
+          router.push('/projects')
+        }
       })
 
       loadUser()
@@ -76,6 +114,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     "Email not confirmed": "メールアドレスが確認されていません。メールをご確認ください",
     "User already registered": "このメールアドレスは既に登録されています",
     "Email format is invalid": "メールアドレスの形式が正しくありません",
+    "Password should be at least 6 characters": "パスワードは6文字以上で入力してください",
+    "Signup requires a valid password": "有効なパスワードが必要です",
+  }
+
+  // Email/Password認証（サインイン）
+  const signIn = async (email: string, password: string) => {
+    try {
+      setError(null)
+      setLoading(true)
+
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        throw error
+      }
+
+      if (data.user) {
+        setUser(data.user)
+        router.push('/projects')
+      }
+    } catch (err: any) {
+      console.error("ログインエラー:", err)
+      const errorMessage = err.message ? authErrorMessages[err.message] || err.message : "ログインに失敗しました"
+      setError(errorMessage)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Email/Password認証（サインアップ）
+  const signUp = async (email: string, password: string) => {
+    try {
+      setError(null)
+      setLoading(true)
+
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login/callback`,
+        }
+      })
+
+      if (error) {
+        throw error
+      }
+
+      if (data.user) {
+        // メール確認が必要な場合とそうでない場合を処理
+        if (data.user.email_confirmed_at) {
+          setUser(data.user)
+          router.push('/projects')
+        } else {
+          // メール確認が必要な場合
+          setError("確認メールを送信しました。メールをご確認の上、リンクをクリックしてください。")
+        }
+      }
+    } catch (err: any) {
+      console.error("サインアップエラー:", err)
+      const errorMessage = err.message ? authErrorMessages[err.message] || err.message : "アカウント作成に失敗しました"
+      setError(errorMessage)
+      throw err
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Magic-Link認証処理
@@ -108,6 +217,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       setLoading(true)
+
+      // デモモードのクッキーをクリア
+      if (Cookies.get("demo_mode") === "true") {
+        Cookies.remove("demo_mode")
+        setUser(null)
+        router.push("/")
+        return
+      }
+
       await signOut()
       setUser(null)
       router.push("/")
@@ -120,7 +238,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, signInWithMagicLink, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      error,
+      signIn,
+      signUp,
+      signInWithMagicLink,
+      logout
+    }}>
+      {children}
+    </AuthContext.Provider>
   )
 }
 
