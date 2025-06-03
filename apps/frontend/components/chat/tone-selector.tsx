@@ -37,7 +37,7 @@ export default function ToneSelector({ value, onChange }: ToneSelectorProps) {
                 .upsert({ user_id: userId, tone_preference: tone });
 
               if (error) throw error;
-              console.log('トーン設定が保存されました', tone);
+              // トーン設定が保存されたことを通知
             } catch (error) {
               console.error('トーン設定の保存に失敗しました:', error);
             }

@@ -30,7 +30,7 @@ export function supabase(): SupabaseClient<Database> {
 
   // デモモードの場合はダミークライアントを返す
   if (demoMode) {
-    console.log("デモモード: Supabaseダミークライアントを使用します");
+    // デモモードではダミークライアントを使用
     _client = createBrowserClient<Database>("https://example.supabase.co", "dummy-key");
     return _client;
   }
@@ -134,7 +134,7 @@ export async function insertMessage(role: ChatRole, content: string) {
 
     // デモモードの場合は何もしない
     if (typeof window !== "undefined" && Cookies.get("demo_mode") === "true") {
-      console.log("デモモード: メッセージの保存をスキップします");
+      // デモモードではメッセージの保存をスキップ
       return;
     }
 
@@ -187,7 +187,7 @@ export async function setTone(tone: TonePreset) {
 
     // デモモードの場合は何もしない
     if (typeof window !== "undefined" && Cookies.get("demo_mode") === "true") {
-      console.log("デモモード: トーン設定の保存をスキップします");
+      // デモモードではトーン設定の保存をスキップ
       return;
     }
 

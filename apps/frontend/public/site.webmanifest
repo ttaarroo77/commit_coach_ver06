@@ -1,0 +1,21 @@
+{
+  "name": "Commit Coach",
+  "short_name": "Commit Coach",
+  "description": "AIコーチングでタスク管理とコミットメッセージ作成を効率化",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#31A9B8",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

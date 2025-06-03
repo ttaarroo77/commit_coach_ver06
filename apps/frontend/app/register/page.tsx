@@ -36,7 +36,7 @@ export default function RegisterPage() {
 
     // デモモードのクッキーが存在する場合はクリア
     if (Cookies.get("demo_mode") === "true") {
-      console.log("デモモードのクッキーをクリアします")
+      // デモモードのクッキーをクリア
       Cookies.remove("demo_mode")
       // ページをリロードして認証状態をリセット
       window.location.reload()

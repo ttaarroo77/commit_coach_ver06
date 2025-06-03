@@ -1,29 +1,36 @@
 // apps/frontend/components/ui/button.tsx
 "use client"
-import { cn } from "@/lib/utils"
-import { forwardRef, ComponentPropsWithoutRef } from "react"
 
-export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
+import * as React from "react"
+import { cn } from "@/lib/utils"
+
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "default" | "ghost" | "outline"
   size?: "sm" | "md"
 }
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", size = "md", ...props }, ref) => (
-    <button
-      ref={ref}
-      className={cn(
-        "inline-flex items-center justify-center rounded-md font-medium transition",
-        variant === "default" && "bg-brand text-white hover:opacity-90",
-        variant === "ghost" && "hover:bg-gray-100",
-        variant === "outline" && "border border-gray-300 hover:bg-gray-50",
-        size === "sm" ? "h-7 px-2 text-sm" : "h-9 px-3",
-        className,
-      )}
-      {...props}
-    />
-  ),
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  function Button({ className, variant = "default", size = "md", ...props }, ref) {
+    return (
+      <button
+        ref={ref}
+        className={cn(
+          "inline-flex items-center justify-center rounded-md font-medium transition",
+          variant === "default" && "bg-brand text-white hover:opacity-90",
+          variant === "ghost" && "hover:bg-gray-100",
+          variant === "outline" && "border border-gray-300 hover:bg-gray-50",
+          size === "sm" ? "h-7 px-2 text-sm" : "h-9 px-3",
+          className,
+        )}
+        {...props}
+      />
+    )
+  }
 )
+
 Button.displayName = "Button"
+
+export { Button }
 
 
 

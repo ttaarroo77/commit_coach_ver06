@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { getSupabaseClient } from "@/lib/supabase"
 import { Loader2, CheckCircle2, XCircle } from "lucide-react"
 import { toast } from "sonner"
 
-export default function LoginCallbackPage() {
+function CallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
@@ -98,5 +98,20 @@ export default function LoginCallbackPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function LoginCallbackPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center space-y-4 p-8 bg-white rounded-lg shadow-sm max-w-md w-full">
+          <Loader2 className="h-12 w-12 animate-spin text-[#31A9B8]" />
+          <h2 className="text-xl font-medium text-gray-800">読み込み中...</h2>
+        </div>
+      </div>
+    }>
+      <CallbackContent />
+    </React.Suspense>
   )
 }

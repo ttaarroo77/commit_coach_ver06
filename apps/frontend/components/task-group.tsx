@@ -81,7 +81,7 @@ export function TaskGroup({
             hasChildren={task.subtasks.length > 0}
             onToggle={() => onToggleTaskExpand(task.id)}
             checked={task.completed}
-            onCheck={() => console.log(`タスク完了状態を変更: ${task.id}`)}
+            onCheck={() => {/* タスク完了状態の変更処理を実装 */}}
           >
             {/* サブタスク */}
             {task.expanded &&
