@@ -1,452 +1,118 @@
+# 🗒️ Commit Coach — **Ver 0 要件定義 & 実装チェックリスト**
+*(2025-06-02 改訂版 ― Magic-Link & トーン永続化は後日リファクタリング対象)*
 
-@scratchpad_ver copy.md @scratchpad_ver copy.md 一応、これだけはやりきって。
-
-＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-
-* [ ] `Message` / `Conversation` モデルを追加して migrate
-* [ ] `/api/chat` POST で Skeleton Response (200 OK) が返ることを確認
-* [ ] `useChat` でローカル echo → UI が更新されることを確認
-* [ ] OpenAI のストリームが textarea に逐次反映されることを確認
-* [ ] プロジェクトごとのタスク概要が system プロンプトに渡ることを確認
-* [ ] 履歴がリロード後も残っていることを確認
-* [ ] Rate-limit (1 req/sec) ミドルウェアを挟む
-* [ ] README に “Chat enabled 🎉” を追記
-
-Revert
-Thought Process
-
-
-
-チャット機能実装タスクリスト分析
-ご指定いただいたタスクリストを実装していきます。まずはプロジェクトの構造を確認して、現状を把握しましょう。
-
-タスク分析
-タスク：チャット機能の実装
-主な要件：Message/Conversationモデル追加、APIエンドポイント実装、UIとの連携、履歴保存など
-優先度：リストの順序通りに進める
-開発環境：apps/frontendディレクトリでpnpm devで開発サーバー起動
-まずプロジェクトの構造を確認し、実装を進めていきます。
-
-bash
-CopyInsert in Terminal
-find /Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14 -type f -name "*.ts*" | grep -v "node_modules" | sort
-これからファイル構造を把握して、タスクリストに沿って実装を進めていきます。現在のプロジェクト構造を見てみましょう。
-
-Ran terminal command
-~/…/【safe】commit_coach_ver.14 $ find /Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14 -type f -name "*.ts*" -o -name "*.js*" | grep -v "node_modules" | sort | head -n 30
-
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/.vscode/settings.json
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/.eslintrc.json
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/.vscode/extensions.json
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/.vscode/settings.json
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/coverage/lcov-report/block-navigation.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/coverage/lcov-report/prettify.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/coverage/lcov-report/prisma.ts.html
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/coverage/lcov-report/sorter.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/__tests__/ai.controller.test.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/__tests__/ai.service.test.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/__tests__/sample.test.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/__tests__/setup.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/__tests__/task.test.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/app.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/config/database.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/config/supabase.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/controllers/ai.controller.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/controllers/auth.controller.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/controllers/project.controller.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/controllers/task-group.controller.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/controllers/task.controller.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/edge/_shared/cors.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/edge/auth/verify-session.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/edge/tasks/create-task.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/edge/tasks/list-tasks.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/index.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/lib/prisma.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/middleware/auth.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/middleware/auth.middleware.js
-/Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/dist/middleware/errorHandler.js
-Exit Code 0
-
-Not auto-run
-Thought Process
-
-
-
-まず、プロジェクトの全体像をより詳しく把握し、タスクリストを実装していきます。データベースモデルやAPI実装に関連するファイルを確認しましょう。
-
-データベースモデルの確認
-まずPrismaスキーマファイルを確認します：
-
-Searched filesystem
-0 results
-Searchedin~/Documents/tarou/project/【safe】commit_coach_ver.14with patternschema.prisma
-Thought Process
-
-prismaスキーマを別の方法で探してみましょう：
-
-Ran terminal command
-~/…/【safe】commit_coach_ver.14 $ find /Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14 -name "*.prisma" | grep -v node_modules
-
-
-Not auto-run
-Thought Process
-
-他の方法でPrismaの設定を探しましょう：
-
-Searched codebase
-19 results
-Searched in~/Documents/tarou/project/【safe】commit_coach_ver.14with queryprisma
-Thought Process
-
-続いて、Prismaスキーマの場所を特定しましょう。ドキュメントからの情報ではprisma/schema.prismaのパスで保存されているようです。
-
-Ran terminal command
-~/…/【safe】commit_coach_ver.14 $ find /Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14 -path "*/prisma/schema.prisma" | grep -v node_modules
-
-
-Not auto-run
-Thought Process
-
-もう少し広く検索して、Prismaスキーマファイルの場所を特定しましょう：
-
-Ran terminal command
-~/…/【safe】commit_coach_ver.14 $ find /Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14 -type d -name "prisma" | grep -v node_modules
-
-
-Not auto-run
-Thought Process
-
-
-
-続いて、バックエンドディレクトリの構造をより詳しく確認しましょう：
-
-Analyzed
-apps/backend
-Thought Process
-
-バックエンドのsrcディレクトリの内容を確認しましょう：
-
-Analyzed
-apps/backend/src
-Thought Process
-
-これからSupabaseディレクトリとbakcendのサブディレクトリを確認して、prismaの設定を探します：
-
-Analyzed
-apps/backend/supabase
-Thought Process
-
-
-続いて、スーパーベースのマイグレーションディレクトリを確認しましょう：
-
-Analyzed
-apps/backend/supabase/migrations
-Thought Process
-
-Analyzed
-20240422_initial_schema.sql:(1-200)
-Thought Process
-
-
-続いて、routesディレクトリの構造を確認してAPIエンドポイントの実装場所を把握しましょう：
-
-Analyzed
-apps/backend/src/routes
-Thought Process
-
-他のソースコードもチェックして、バックエンドの実装をより詳しく把握しましょう：
-
-Analyzed
-apps/backend/src/services
-Thought Process
-
-
-
-フロントエンドとバックエンドの構造が確認できました。プロジェクトを調査した結果、以下のことがわかりました：
-
-現在のデータベースにはusers、projects、tasks、subtasks、ai_messagesテーブルがありますが、Message/Conversationモデルはまだありません
-バックエンドはExpressフレームワークを使用していますが、Prismaスキーマファイルは見つかりませんでした
-チャット機能の実装に必要なAPIエンドポイントを新たに作成する必要があります
-これからタスクリストに沿って実装を進めていきます。
-
-1. Prisma初期設定とMessage/Conversationモデルの追加
-まず、Prismaが正しく設定されているか確認しましょう：
-
-Ran terminal command
-~/…/【safe】commit_coach_ver.14 $ mkdir -p /Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/prisma
-
-
-Not auto-run
-Thought Process
-
-
-
-
-それでは、タスクリストの実装を開始します。既存のデータベース構造を確認できたので、Prismaスキーマを作成し、必要なモデルを追加していきましょう。
-
-1. Message/Conversationモデルの追加とマイグレーション
-まず、Prismaスキーマファイルを作成します：
-
-Created
-schema.prisma
-+107
--0
- 0
-Open diff
-Thought Process
-
-次に、Prismaマイグレーションを実行してデータベースに変更を適用します。マイグレーション用のファイルを作成しましょう：
-
-Error while editing
-migration.sql
-Thought Process
-
-マイグレーションのディレクトリを作成してから再度試みます：
-
-Update: Tool calls no longer cost credits after April 21.
-Status: Done
-Ran terminal command
-~/…/【safe】commit_coach_ver.14 $ mkdir -p /Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/prisma/migrations/20250602_add_conversations_messages
-
-
-Not auto-run
-Thought Process
-
-Created
-migration.sql
-+50
--0
- 0
-Open diff
-Thought Process
-
-2. Prismaクライアントの設定
-Prismaクライアントをバックエンドアプリケーションで使用するために、設定ファイルを作成します：
-
-Error while editing
-prisma.ts
-Thought Process
-
-まず、libディレクトリが存在しないようなので、作成します：
-
-Ran terminal command
-~/…/【safe】commit_coach_ver.14 $ mkdir -p /Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/src/lib
-
-
-Not auto-run
-Feedback submitted
-Me
-
-Continue
-
-Revert
-Thought Process
-
-引き続き、チャット機能の実装を進めていきます。
-
-2. Prismaクライアント設定
-Created
-prisma.ts
-+21
--0
- 0
-Open diff
-Thought Process
-
-3. チャットAPIエンドポイントの実装
-続いて、チャットAPIエンドポイントを実装します。まず、/api/chat POSTルートを作成します：
-
-Ran terminal command
-~/…/【safe】commit_coach_ver.14 $ mkdir -p /Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/backend/src/routes
-
-
-Not auto-run
-Thought Process
-
-続いて、チャットAPIエンドポイントを作成します：
-
-Created
-chat.ts
-+296
--0
- 0
-Open diff
-Thought Process
-
-
-
-4. バックエンドアプリケーションにチャットルートを登録
-まず、作成したチャットルートをバックエンドアプリケーションに登録します：
-
-Analyzed
-app.ts:(1-200)
-Thought Process
-
-チャットルートをアプリケーションに登録します：
-
-Error while editing
-app.ts
-The model produced an invalid tool call.
-申し訳ありません。ツール呼び出しに問題がありました。正しい形式で再度試みます。
-
-Edited
-app.ts
-+2
--0
- 26
-Open diff
-Thought Process
-
-5. フロントエンドのチャット機能の実装
-次に、フロントエンドでチャット機能を実装していきます。まず、useChat Hookを作成します：
-
-Ran terminal command
-~/…/【safe】commit_coach_ver.14 $ mkdir -p /Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/frontend/hooks
-
-
-Not auto-run
-Thought Process
-
-
-
-続いて、フロントエンドのチャット機能を実装します。
-
-Created
-useChat.ts
-file:///Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/frontend/hooks/useChat.ts
-+213
--0
- 0
-Open diff
-Thought Process
-
-6. チャットコンポーネントの実装
-続いて、チャット機能のUIコンポーネントを実装します。まずはチャットUIを実装するコンポーネントを作成します：
-
-Ran terminal command
-~/…/【safe】commit_coach_ver.14 $ mkdir -p /Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/frontend/components/chat
-
-
-Not auto-run
-Thought Process
-
-
-
-チャットUIコンポーネントを実装します：
-
-Created
-chat-ui.tsx
-+80
--0
- 0
-Open diff
-Thought Process
-
-次に、チャット履歴を表示するコンポーネントを実装します：
-
-Created
-chat-history.tsx
-+95
--0
- 0
-Open diff
-Thought Process
-
-続いて、チャットページのルートを実装していきます。Next.jsのAppルーターでチャット機能用のページを作成します：
-
-Ran terminal command
-~/…/【safe】commit_coach_ver.14 $ mkdir -p /Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/frontend/app/chat
-
-
-Not auto-run
-Thought Process
-
-チャットページのルート実装を続けます：
-
-Cascade error
-Cascade will not create files that already exist
-すみません、既存のファイルがあるようです。まず、既存のファイルの内容を確認してから適切に修正しましょう。
-
-Ran terminal command
-~/…/【safe】commit_coach_ver.14 $ ls -la /Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/frontend/app/chat
-
-total 8
-drwxr-xr-x@  3 nakazawatarou  staff    96 May 31 13:40 .
-drwxr-xr-x@ 16 nakazawatarou  staff   512 Jun  2 13:34 ..
--rw-r--r--@  1 nakazawatarou  staff  1030 May 31 13:40 page.tsx
-Exit Code 0
-
-Not auto-run
-Thought Process
-
-既存のチャットページを確認して修正します：
-
-Analyzed
-page.tsx:(1-200)
-Thought Process
-
-次に、チャットコンテナコンポーネントを実装して、私たちが作成したチャットUIとチャット履歴を組み込みます：
-
-Ran terminal command
-~/…/【safe】commit_coach_ver.14Working directory: ~/Documents/tarou/project/【safe】commit_coach_ver.14 $ mkdir -p /Users/nakazawatarou/Documents/tarou/project/【safe】commit_coach_ver.14/apps/frontend/components/chat
-
-
-Not auto-run
-Thought Process
-
-続いて、チャットコンテナコンポーネントを実装します：
-
-Cascade error
-Cascade will not create files that already exist
-既存のチャットコンテナコンポーネントがあるようです。まずはその内容を確認してから、必要な修正を行いましょう：
-
-Analyzed
-chat-container.tsx:(1-200)
-Thought Process
-
-Analyzed
-chat-container.tsx:(201-400)
-Thought Process
-
-
-次に、既存のコードと新しいコードを統合し、チャット機能を完成させましょう。すでに既存のチャットUIコンポーネントがあるので、それをベースに更新していきます。
-
-まず、ベースとなるチャットUIコンポーネントを修正して、私たちが作成したuseChatフックと統合しましょう：
-
-Edited
-chat-container.tsx
-+120
--169
- 165
-Open diff
-Thought Process
-
-続いて、チャットコンテナのエラーを修正し、残りのタスクを完了させます：
-
-Edited
-chat-container.tsx
-+2
--2
- 283
-Open diff
-Thought Process
-
-
-最後のタスクとして、READMEを更新してチャット機能の実装を記録します：
-
-Searched filesystem
-1 result
-Searchedin~/Documents/tarou/project/【safe】commit_coach_ver.14with patternREADME.md
-Thought Process
-READMEを確認し、チャット機能の実装が完了したことを記録します。
-
-Analyzed
-README.md:(1-200)
-Continue response
-Continue⌥↵
-Cascade reached the invocation limit for a single response. You can click 'Continue' to simply ask Cascade to continue.
-
-Feedback submitted
 ---
 
-continue  // このボタンが押せない。
+## 0. 目的
+
+1. **48 時間以内**に公開デモを構築し、
+   - ログイン → プロジェクト一覧 → **AI コーチとのチャット** → 返信ストリーム
+     までを一気通貫で体験できるようにする。
+2. 後日の拡張（Magic-Link 認証／トーンプリセット）に備えて、
+   コードに **コメントアウトまたは TODO フック** を残しておく。
+
+---
+
+## 1. スコープ（MoSCoW）
+
+| Priority | 機能 |
+| :-- | :-- |
+| **Must** | 1. **Supabase 認証（メール & パスワード）**<br>2. **AI チャット** Edge Function + `/api/chat` (ストリーム返信)<br>3. **プロジェクト画面右ペインに ChatContainer** 組み込み<br>4. **ランディングページ**（Hero + CTA → `/login`）<br>5. **マイページ**（直近チャット 10 件 / 認可ガード）<br>6. **Vercel デプロイ**（ビルド ≤5 min） |
+| **Should** | 7. **トーンプリセット** UI（選択のみ / 保存ロジックは **コメントアウト**）<br>8. Storybook 起動 / 404 & ErrorBoundary |
+| **Could** | 9. Lighthouse Perf ≥ 60 |
+| **Won’t (Ver 0)** | Magic-Link 認証、トーン永続化、PWA、SNS OAuth、分析 |
+
+---
+
+## 2. ユーザーストーリー
+
+| ID | 説明 | 完了基準 |
+| :-- | :-- | :-- |
+| U-1 | 初回訪問者はメール & PW でサインアップ / ログインできる | セッションが作成され `/projects` にリダイレクト |
+| U-2 | ログインユーザーはプロジェクト画面で AI とチャットできる | 送信→≤3 s でストリーム返信 |
+| U-3 | サイドバー「チャット」から全画面チャットに切替え | `/chat` へ遷移・履歴共有 |
+| U-4 | 再訪ユーザーはマイページで履歴を確認できる | 直近 10 ペアが降順表示 |
+
+---
+
+## 3. 機能要件
+
+| ID | 要件 | 受入れ基準 |
+| :-- | :-- | :-- |
+| **FR-1** | **メール & PW 認証** | `supabase.auth.signInWithPassword` / `signUp` 成功トースト |
+| **FR-2** | **チャット API** | Edge Function `chat` ストリーム + 30 s タイムアウトでトースト |
+| **FR-3** | **チャット UI 組込** | プロジェクト画面右ペインと `/chat` ページで共通コンポーネント |
+| **FR-4** | **ランディング** | 画像 < 250 KB・CTA → `/login` |
+| **FR-5** | **マイページ** | 未ログインは `/login` へリダイレクト |
+| **FR-6** | **デプロイ** | Vercel Free Tier・公開 URL |
+
+*補足* — **トーンプリセット UI** は `components/ToneSelector.tsx` に実装し、
+`onChange` → `/* TODO: saveTone(tone) */` のコメントを残す。
+
+---
+
+## 4. 非機能要件
+
+| 区分 | 指標 |
+| :-- | :-- |
+| パフォーマンス | Lighthouse Perf ≥ 60 / Desktop TTI < 3 s |
+| セキュリティ | `messages` テーブルに RLS (`user_id = auth.uid()`) |
+| 品質 | `pnpm lint && pnpm typecheck` pass |
+| アクセシビリティ | 入力 & ボタンはキーボード操作可 (WCAG 2.1 AA) |
+
+---
+
+## 5. 技術スタック
+
+Next.js 14 / React 18 / TypeScript / TailwindCSS
+Supabase (Postgres15, Edge Functions) + OpenAI Chat API
+Vercel Free Tier
+
+---
+
+## 6. **実装チェックリスト**（Cursor 用）
+
+### 0. 環境準備
+* [ ] `.gitignore` に `.next`, `.turbo`, `.vercel`, `node_modules`, `dist` を追加
+* [ ] `.env.example` を最新化 (`SUPABASE_*`, `OPENAI_API_KEY`)
+
+### 1. 認証（FR-1）
+* [ ] `/login` — メール & PW フォーム
+* [ ] `signUp / signInWithPassword` 実装・トースト
+* [ ] 7 日 Cookie (`refreshTokenRotation=true`)
+
+### 2. チャット API（FR-2）
+* [ ] Edge Function `chat` デプロイ (`supabase functions deploy chat`)
+* [ ] `/api/chat` → Edge Function へ fetch
+* [ ] `AbortController` 30 s → トースト「AIが混雑しています」
+
+### 3. UI 配線（FR-3, 4, 5）
+* [ ] **Sidebar** に `href:'/chat'` 追加
+* [ ] **Project page** 右ペイン `<ChatContainer/>`
+* [ ] **ToneSelector** UI （保存処理はコメントアウト）
+* [ ] ランディング Hero 画像 `next/image` 軽量化
+* [ ] マイページ 直近 10 ペア取得
+
+### 4. デプロイ & QA（FR-6）
+* [ ] Vercel import・環境変数登録
+* [ ] ビルド ≤5 min / 動作確認
+* [ ] Lighthouse Perf ≥ 60
+* [ ] `pnpm lint && pnpm typecheck` pass
+
+### 5. ドキュメント
+* [ ] README — セットアップ・デプロイ手順
+* [ ] CHANGELOG `v0.0.0` → `v0.1.0`
+
+---
+
+## 7. 完了の定義 (DoD)
+
+- すべての **Must** 要件 ☑
+- 「ログイン → プロジェクト画面 → AI チャット」の操作がデモ URL で再現
+- チェックリストが **[x]** で埋まり、タグ `v0.1.0` を push
+
+---
+
+> **備考**
+> - Magic-Link 認証とトーン永続化は `// TODO:` コメントでフックを残すこと。
+> - 将来リファクタ時にスコープを広げる際は MoSCoW を更新して運用する。

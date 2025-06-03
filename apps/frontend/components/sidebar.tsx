@@ -4,7 +4,7 @@
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Folder, LogOut, User } from "lucide-react" // アイコンをインポート
+import { Home, Folder, LogOut, User, MessageSquare } from "lucide-react" // アイコンをインポート
 
 export const Sidebar = () => {
   const pathname = usePathname()
@@ -22,6 +22,14 @@ export const Sidebar = () => {
       icon: <Folder className="mr-2 h-4 w-4" />,
       isActive: pathname === "/projects" || pathname?.startsWith("/projects/"),
     },
+    /* チャットページリンクを非表示化（右側のAIコーチ機能で十分なため）
+    {
+      href: "/chat",
+      label: "チャット",
+      icon: <MessageSquare className="mr-2 h-4 w-4" />,
+      isActive: pathname === "/chat" || pathname?.startsWith("/chat/"),
+    },
+    */
   ]
 
   return (

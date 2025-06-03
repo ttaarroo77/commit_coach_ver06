@@ -22,6 +22,8 @@ export default function MyPage() {
   const [userEmail, setUserEmail] = useState<string>("")
 
   // トーンプリセットを取得
+  /* 
+  // 将来実装のためコメントアウト
   useEffect(() => {
     const loadTone = async () => {
       try {
@@ -35,6 +37,12 @@ export default function MyPage() {
     }
 
     loadTone()
+  }, [])
+  */
+  
+  // 仮の実装として単にローディング状態を解除
+  useEffect(() => {
+    setIsLoadingTone(false)
   }, [])
 
   // 直近のチャットメッセージを取得
@@ -64,6 +72,8 @@ export default function MyPage() {
   }, [])
 
   // トーンプリセットを変更
+  /* 
+  // 将来実装のためコメントアウト
   const handleToneChange = async (value: string) => {
     try {
       const newTone = value as TonePreset
@@ -81,6 +91,17 @@ export default function MyPage() {
         variant: "destructive",
       })
     }
+  }
+  */
+  
+  // UIデモ用の暫定実装
+  const handleToneChange = (value: string) => {
+    const newTone = value as TonePreset
+    setTonePreset(newTone)
+    toast({
+      title: "トーンプリセットを更新しました（デモ）",
+      description: `AIコーチのトーンを「${getToneLabel(newTone)}」に変更しました（実際の保存は将来実装予定）`,
+    })
   }
 
   // トーンプリセットのラベルを取得
@@ -134,7 +155,7 @@ export default function MyPage() {
                         <p className="text-xs text-gray-500">Magic Linkログインで使用されるメールアドレスです</p>
                       </div>
                       
-                      {/* トーンプリセット選択 */}
+                      {/* トーンプリセット選択 - 将来実装のためコメントアウト
                       <div className="space-y-2">
                         <Label htmlFor="tone">AIコーチのトーン</Label>
                         {isLoadingTone ? (
@@ -153,6 +174,7 @@ export default function MyPage() {
                         )}
                         <p className="text-xs text-gray-500">AIコーチの話し方や指導スタイルを設定します</p>
                       </div>
+                      */}
                     </div>
                   </div>
                 </CardContent>

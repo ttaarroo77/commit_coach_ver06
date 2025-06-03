@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { useToast } from '@/components/ui/use-toast';
 
 type Message = {
   id?: string;
@@ -32,29 +33,30 @@ type UseChatResult = {
   setConversation: (conversation: Conversation | null) => void;
   loadConversation: (id: string) => Promise<void>;
   loadConversations: () => Promise<Conversation[]>;
+  conversationId: string | undefined;
+  setConversationId: (conversationId: string | undefined) => void;
+  conversations: Conversation[];
+  isLoadingConversations: boolean;
+  loadConversationsList: () => Promise<void>;
+  deleteConversation: (id: string) => Promise<boolean>;
 };
 
 const API_BASE = '/api';
 
 export function useChat({
   projectId,
-  conversationId,
+  conversationId: initialConversationId,
   onError
 }: UseChatOptions = {}): UseChatResult {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
-
-  // 会話履歴を読み込む
-  useEffect(() => {
-    if (conversationId) {
-      loadConversation(conversationId).catch(error => {
-        console.error('Failed to load conversation:', error);
-        if (onError) onError(error);
-      });
-    }
-  }, [conversationId]);
+  const [conversationId, setConversationId] = useState<string | undefined>(initialConversationId);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [isLoadingConversations, setIsLoadingConversations] = useState(false);
+  const { toast } = useToast();
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // 会話を読み込む関数
   const loadConversation = useCallback(async (id: string) => {
@@ -65,7 +67,7 @@ export function useChat({
       }
       const data = await response.json();
       setConversation(data);
-      setMessages(data.messages);
+      setMessages(data.messages || []);
       return data;
     } catch (error) {
       console.error('Error loading conversation:', error);
@@ -73,6 +75,16 @@ export function useChat({
       throw error;
     }
   }, [onError]);
+
+  // 会話履歴を読み込む
+  useEffect(() => {
+    if (conversationId) {
+      loadConversation(conversationId).catch(error => {
+        console.error('Failed to load conversation:', error);
+        if (onError) onError(error as Error);
+      });
+    }
+  }, [conversationId, loadConversation, onError]);
 
   // 会話リストを取得する関数
   const loadConversations = useCallback(async () => {
@@ -89,6 +101,73 @@ export function useChat({
       throw error;
     }
   }, [onError]);
+  
+  // 会話リストを読み込み状態に保存する関数
+  const loadConversationsList = useCallback(async () => {
+    try {
+      setIsLoadingConversations(true);
+      const data = await loadConversations();
+      setConversations(data);
+    } catch (error) {
+      console.error('会話リスト読み込みエラー:', error);
+      toast({
+        title: '会話リストの読み込みに失敗しました',
+        description: '後ほど再試行してください',
+        variant: 'destructive',
+      });
+      if (onError) onError(error as Error);
+    } finally {
+      setIsLoadingConversations(false);
+    }
+  }, [loadConversations, onError, toast]);
+  
+  // 会話削除関数
+  const deleteConversation = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_BASE}/chat/conversations/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`削除エラー: ${response.status}`);
+      }
+      
+      // 成功した場合、会話リストを更新
+      await loadConversationsList();
+      
+      // 削除した会話が現在表示している会話なら、クリア
+      if (conversationId === id) {
+        setConversationId(undefined);
+        setConversation(null);
+        setMessages([]);
+      }
+      
+      toast({
+        title: '会話を削除しました',
+        description: '会話とそのメッセージが削除されました',
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('会話削除エラー:', error);
+      toast({
+        title: '会話の削除に失敗しました',
+        description: '後ほど再試行してください',
+        variant: 'destructive',
+      });
+      if (onError) onError(error as Error);
+      return false;
+    }
+  }, [conversationId, loadConversationsList, onError, toast]);
+  
+  // コンポーネントのアンマウント時に中断処理
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   // メッセージ送信処理
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
@@ -116,6 +195,18 @@ export function useChat({
         projectId,
       };
 
+      // タイムアウト処理の設定
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        toast({
+          title: 'タイムアウト',
+          description: 'レスポンスが時間内に返ってきませんでした。後ほど再試行してください。',
+          variant: 'destructive',
+        });
+      }, 30000); // 30秒でタイムアウト
+
       // Server-Sent Eventsを使用してストリーミングレスポンスを受信
       const response = await fetch(`${API_BASE}/chat`, {
         method: 'POST',
@@ -123,10 +214,20 @@ export function useChat({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
+        signal: controller.signal,
       });
+
+      // タイムアウトタイマーをクリア
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      // レスポンスヘッダーから会話IDを取得
+      const newConversationId = response.headers.get('X-Conversation-Id');
+      if (newConversationId && !conversationId) {
+        setConversationId(newConversationId);
       }
 
       const reader = response.body?.getReader();
@@ -196,7 +297,7 @@ export function useChat({
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, conversation, projectId, onError, loadConversation, loadConversations]);
+  }, [input, isLoading, conversation, conversationId, projectId, onError, loadConversation, loadConversations, toast]);
 
   return {
     messages,
@@ -208,5 +309,11 @@ export function useChat({
     setConversation,
     loadConversation,
     loadConversations,
+    conversationId,
+    setConversationId,
+    conversations,
+    isLoadingConversations,
+    loadConversationsList,
+    deleteConversation
   };
 }
