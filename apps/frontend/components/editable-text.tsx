@@ -41,9 +41,15 @@ export function EditableText({ value, onChange, className = "", prefix = "", isC
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      setIsEditing(false)
-      onChange(text)
+    // IME入力中はEnterキーで編集を終了しない（isComposingがtrueの場合はIME入力中）
+    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+      // Shift+Enterの場合は常に編集を終了
+      // 通常のEnterでも、IME入力中でなければ編集を終了
+      if (e.shiftKey || !e.nativeEvent.isComposing) {
+        e.preventDefault()
+        setIsEditing(false)
+        onChange(text)
+      }
     } else if (e.key === "Escape") {
       setIsEditing(false)
       setText(value)

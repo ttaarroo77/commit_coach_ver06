@@ -69,7 +69,11 @@ export const EditableText = ({
       onChange={(e) => setDraft(e.target.value)}
       onBlur={commit}
       onKeyDown={(e: KeyboardEvent) => {
-        if (e.key === "Enter") commit();
+        // IME入力中はEnterキーを無視する
+        if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+          e.preventDefault();
+          commit();
+        }
         if (e.key === "Escape") {
           setDraft(value);
           setEditing(false);

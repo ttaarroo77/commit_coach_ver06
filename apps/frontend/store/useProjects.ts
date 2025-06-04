@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { toast } from "sonner"
 
 /* 型定義 */
 export type Subtask = { id: string; title: string; completed: boolean }
@@ -222,5 +223,103 @@ export const useProjects = create<Store>((set) => ({
 
 
 
-  breakdown: () => alert("今はダミーです 🚧"),
+  // タスク分解機能
+  breakdown: (level: "project"|"task", ids: string[]) => {
+    // ローディング表示
+    toast.loading('AIがタスクを分解しています...', { id: 'ai-breakdown' });
+    
+    // 非同期処理を実行
+    (async () => {
+      try {
+        const [projectId, taskId] = ids;
+        const state = useProjects.getState();
+        let title = '';
+        
+        // レベルに応じてタイトルを取得
+        if (level === 'project') {
+          const project = state.projects.find(p => p.id === projectId);
+          if (!project) throw new Error('プロジェクトが見つかりません');
+          title = project.title;
+        } else if (level === 'task') {
+          const project = state.projects.find(p => p.id === projectId);
+          if (!project) throw new Error('プロジェクトが見つかりません');
+          
+          const task = project.tasks.find(t => t.id === taskId);
+          if (!task) throw new Error('タスクが見つかりません');
+          title = task.title;
+        }
+        
+        // APIリクエスト
+        const response = await fetch('/api/tasks/breakdown', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ level, title })
+        });
+        
+        // エラーチェック
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'タスク分解中にエラーが発生しました');
+        }
+        
+        // レスポンスからサブタスクを取得
+        const data = await response.json();
+        const subtasks = data.subtasks || [];
+        
+        // 成功メッセージ
+        toast.success('タスクを分解しました', { id: 'ai-breakdown' });
+        
+        // 状態を更新する関数を呼び出す
+        useProjects.setState(state => ({
+          projects: state.projects.map(p => {
+            if (p.id !== projectId) return p;
+            
+            // プロジェクトレベルの分解
+            if (level === 'project') {
+              // 新しいタスクを生成
+              const newTasks = subtasks.map((st: { title: string, completed: boolean }) => ({
+                id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                title: st.title,
+                completed: false,
+                expanded: false,
+                subtasks: []
+              }));
+              
+              return {
+                ...p,
+                expanded: true,
+                tasks: [...p.tasks, ...newTasks]
+              };
+            }
+            
+            // タスクレベルの分解
+            return {
+              ...p,
+              tasks: p.tasks.map(t => {
+                if (t.id !== taskId) return t;
+                
+                // 新しいサブタスクを生成
+                const newSubtasks = subtasks.map((st: { title: string, completed: boolean }) => ({
+                  id: `subtask-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                  title: st.title,
+                  completed: false
+                }));
+                
+                return {
+                  ...t,
+                  expanded: true,
+                  subtasks: [...t.subtasks, ...newSubtasks]
+                };
+              })
+            };
+          })
+        }));
+        
+      } catch (error) {
+        // エラーハンドリング
+        console.error('タスク分解エラー:', error);
+        toast.error(error instanceof Error ? error.message : '予期しないエラーが発生しました', { id: 'ai-breakdown' });
+      }
+    })();
+  },
 }))

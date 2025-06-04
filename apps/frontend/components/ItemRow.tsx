@@ -42,7 +42,11 @@ export const ItemRow = ({
     setEditing(false)
   }
   const key = (e: KeyboardEvent) => {
-    if (e.key === "Enter") finish()
+    // IME入力中の場合は処理しない (isComposingがセットされる)
+    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+      e.preventDefault()
+      finish()
+    }
     if (e.key === "Escape") {
       setDraft(title)
       setEditing(false)

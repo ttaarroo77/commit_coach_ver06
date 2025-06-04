@@ -120,7 +120,11 @@ export const HierarchicalTaskItem = ({
             value={draft}
             onChange={e => setDraft(e.target.value)}
             onKeyDown={e => {
-              if (e.key === "Enter") commitEdit()
+              // IME入力中は無視する（isComposingがセットされる）
+              if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                e.preventDefault()
+                commitEdit()
+              }
               if (e.key === "Escape") cancelEdit()
             }}
             onBlur={commitEdit}
