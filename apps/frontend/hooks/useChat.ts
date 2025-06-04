@@ -58,12 +58,34 @@ export function useChat({
   const { toast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // エラータイプに応じたメッセージを取得する関数
+  const getErrorMessage = (error: any, defaultMessage: string): string => {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      return 'ネットワーク接続に問題があります。インターネット接続を確認してください。';
+    }
+    
+    if (error instanceof Error) {
+      if (error.message.includes('401')) {
+        return '認証エラーが発生しました。再ログインしてください。';
+      } else if (error.message.includes('403')) {
+        return 'このリソースへのアクセス権がありません。';
+      } else if (error.message.includes('404')) {
+        return '会話が見つかりませんでした。削除されたか移動した可能性があります。';
+      } else if (error.message.includes('500')) {
+        return 'サーバーエラーが発生しました。しばらく経ってから再試行してください。';
+      }
+      return error.message;
+    }
+    
+    return defaultMessage;
+  };
+  
   // 会話を読み込む関数
   const loadConversation = useCallback(async (id: string) => {
     try {
       const response = await fetch(`${API_BASE}/chat/conversations/${id}`);
       if (!response.ok) {
-        throw new Error('Failed to load conversation');
+        throw new Error(`会話の読み込みに失敗しました (${response.status})`);
       }
       const data = await response.json();
       setConversation(data);
@@ -71,10 +93,16 @@ export function useChat({
       return data;
     } catch (error) {
       console.error('Error loading conversation:', error);
+      const errorMessage = getErrorMessage(error, '会話の読み込み中にエラーが発生しました');
+      toast({
+        title: '読み込みエラー',
+        description: errorMessage,
+        variant: 'destructive',
+      });
       if (onError) onError(error as Error);
       throw error;
     }
-  }, [onError]);
+  }, [onError, toast]);
 
   // 会話履歴を読み込む
   useEffect(() => {
@@ -91,16 +119,22 @@ export function useChat({
     try {
       const response = await fetch(`${API_BASE}/chat/conversations`);
       if (!response.ok) {
-        throw new Error('Failed to load conversations');
+        throw new Error(`会話リストの読み込みに失敗しました (${response.status})`);
       }
       const data = await response.json();
       return data;
     } catch (error) {
       console.error('Error loading conversations:', error);
+      const errorMessage = getErrorMessage(error, '会話リストの取得中にエラーが発生しました');
+      toast({
+        title: '会話リスト読み込みエラー',
+        description: errorMessage,
+        variant: 'destructive',
+      });
       if (onError) onError(error as Error);
       throw error;
     }
-  }, [onError]);
+  }, [onError, toast]);
   
   // 会話リストを読み込み状態に保存する関数
   const loadConversationsList = useCallback(async () => {
@@ -110,9 +144,10 @@ export function useChat({
       setConversations(data);
     } catch (error) {
       console.error('会話リスト読み込みエラー:', error);
+      const errorMessage = getErrorMessage(error, '会話リストの読み込みに失敗しました。後ほど再試行してください。');
       toast({
-        title: '会話リストの読み込みに失敗しました',
-        description: '後ほど再試行してください',
+        title: '会話リスト読み込みエラー',
+        description: errorMessage,
         variant: 'destructive',
       });
       if (onError) onError(error as Error);
@@ -127,13 +162,15 @@ export function useChat({
       const response = await fetch(`${API_BASE}/chat/conversations/${id}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) {
-        throw new Error(`削除エラー: ${response.status}`);
+        throw new Error(`会話の削除に失敗しました (${response.status})`);
       }
-      
-      // 成功した場合、会話リストを更新
-      await loadConversationsList();
+
+      toast({
+        title: '成功',
+        description: '会話が削除されました',
+      });
       
       // 削除した会話が現在表示している会話なら、クリア
       if (conversationId === id) {
@@ -141,11 +178,6 @@ export function useChat({
         setConversation(null);
         setMessages([]);
       }
-      
-      toast({
-        title: '会話を削除しました',
-        description: '会話とそのメッセージが削除されました',
-      });
       
       return true;
     } catch (error) {
@@ -158,7 +190,7 @@ export function useChat({
       if (onError) onError(error as Error);
       return false;
     }
-  }, [conversationId, loadConversationsList, onError, toast]);
+  }, [conversationId, onError, toast, setConversationId, setConversation, setMessages]);
   
   // コンポーネントのアンマウント時に中断処理
   useEffect(() => {
@@ -293,6 +325,15 @@ export function useChat({
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      const errorMessage = getErrorMessage(
+        error, 
+        'メッセージ送信中にエラーが発生しました。後ほど再試行してください。'
+      );
+      toast({
+        title: '送信エラー',
+        description: errorMessage,
+        variant: 'destructive',
+      });
       if (onError) onError(error as Error);
     } finally {
       setIsLoading(false);
