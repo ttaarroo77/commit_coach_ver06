@@ -1,9 +1,10 @@
 "use client"
 
+import * as React from "react"
 import { useState } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { Plus, Trash2, ChevronDown, ChevronRight, Clock, GripVertical, Pen } from "lucide-react"
+import { Plus, Trash2, ChevronDown, ChevronRight, Clock, GripVertical, Pen, ArrowUp, ArrowDown } from "lucide-react"
 import { TimeRangePicker } from "./time-range-picker"
 import { EditableText } from "@/components/ui/editable-text"
 import { cn } from "@/lib/utils"
@@ -27,6 +28,10 @@ type Props = {
   onTitleChange?: (newTitle: string) => void
   /** DnD */
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>
+  /** タスク移動ボタン用 */
+  groupId?: string
+  onMoveUp?: () => void
+  onMoveDown?: () => void
 }
 
 // アイコンサイズを統一
@@ -56,6 +61,9 @@ export const EditableHierarchicalTaskItem = ({
   onTimeChange,
   onTitleChange,
   dragHandleProps,
+  groupId,
+  onMoveUp,
+  onMoveDown,
 }: Props) => {
   /** 時間ピッカーの開閉 */
   const [open, setOpen] = useState(false)
@@ -158,6 +166,32 @@ export const EditableHierarchicalTaskItem = ({
         <Pen size={ICON_SIZE} strokeWidth={2.25}/>
       </Button>
 
+      {/* 矢印ボタン（上）- 未定のタスクから今日のタスクへ */}
+      {groupId === "unscheduled" && onMoveUp && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(iconBtn, "mr-2 text-blue-600 hover:bg-blue-100/70")}
+          onClick={onMoveUp}
+          aria-label="move to today"
+        >
+          <ArrowUp size={ICON_SIZE} />
+        </Button>
+      )}
+
+      {/* 矢印ボタン（下）- 今日のタスクから未定のタスクへ */}
+      {groupId === "today" && onMoveDown && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(iconBtn, "mr-2 text-blue-600 hover:bg-blue-100/70")}
+          onClick={onMoveDown}
+          aria-label="move to unscheduled"
+        >
+          <ArrowDown size={ICON_SIZE} />
+        </Button>
+      )}
+      
       {/* 削除 */}
       {onDelete && (
         <Button

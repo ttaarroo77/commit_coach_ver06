@@ -15,6 +15,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { handleError } from "@/lib/error-utils";
 import ChatMessage from "./chat/chat-message";
 import ToneSelector from "./chat/tone-selector";
 import {
@@ -90,8 +91,13 @@ export const AICoachSidebar = ({
       await navigator.clipboard.writeText(content);
       toast.success("メッセージをコピーしました");
     } catch (err) {
-      console.error("コピーに失敗:", err);
-      toast.error("コピーに失敗しました");
+      // 新しいエラーハンドリングユーティリティを使用
+      handleError(
+        err, 
+        "コピーに失敗しました", 
+        "再試行", 
+        () => handleCopyMessage(content)
+      );
     }
   };
 
@@ -174,8 +180,16 @@ export const AICoachSidebar = ({
         }
       }
     } catch (err) {
-      console.error("チャット送信エラー:", err);
-      toast.error("メッセージ送信に失敗しました");
+      // 新しいエラーハンドリングユーティリティを使用して詳細なエラー情報を表示
+      handleError(
+        err,
+        "メッセージ送信に失敗しました",
+        "再試行",
+        () => {
+          // ユーザーが再試行を選択した場合、入力を復元して再送信準備
+          setInput(input);
+        }
+      );
       // エラー時: 直前の user メッセージを削除
       setMessages((prev) => prev.slice(0, -1));
     } finally {

@@ -5,11 +5,10 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { Copy, Check } from "lucide-react"
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 
 interface ChatMessageProps {
   message: {
-    role: "user" | "assistant"
+    role: "user" | "assistant" | "system"
     content: string
   }
 }
@@ -46,10 +45,9 @@ export default function ChatMessage({ message }: ChatMessageProps) {
                 if (!inline && match) {
                   return (
                     <div className="relative group">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      <button
+                        type="button"
+                        className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full hover:bg-gray-700"
                         onClick={() => handleCopy(code)}
                       >
                         {copied ? (
@@ -57,7 +55,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
                         ) : (
                           <Copy className="h-4 w-4" />
                         )}
-                      </Button>
+                      </button>
                       <SyntaxHighlighter
                         style={vscDarkPlus}
                         language={match[1]}

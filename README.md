@@ -9,6 +9,8 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4.2-blue)](https://www.typescriptlang.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-2.39.3-green)](https://supabase.io/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.1-blue)](https://tailwindcss.com/)
+[![React Testing Library](https://img.shields.io/badge/Testing-RTL-red)](https://testing-library.com/docs/react-testing-library/intro/)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/ttaarroo77/commit_coach/ci.yml?branch=main&label=CI)](https://github.com/ttaarroo77/commit_coach/actions)
 
 ## 🌟 概要
 
@@ -55,6 +57,7 @@ Commit Coachは、開発者のタスク管理とコミットメッセージ作�
 
 ## ドキュメント
 
+### 📚 プロジェクト概要
 - [開発フロー](docs/overview/development_flow.md)
 - [プロジェクト構造](docs/overview/project-structure.md)
 - [型定義](docs/overview/types.md)
@@ -62,6 +65,16 @@ Commit Coachは、開発者のタスク管理とコミットメッセージ作�
 - [データベース設計](docs/overview/database.md)
 - [APIルート](docs/overview/api-routes.md)
 - [製品概要](docs/overview/product-brief.md)
+
+### 🧪 テスト関連
+- [テスト戦略](docs/testing/strategy.md)
+- [モックパターン](docs/testing/mocking-patterns.md)
+- [テスト環境セットアップ](docs/testing/test-setup-guide.md)
+
+### 🚀 デプロイ
+- [Vercelデプロイガイド](docs/deployment/vercel-deployment-guide.md)
+
+### その他
 - [Ver 0 実装チェックリスト](docs/refactoring/scratchpad_ver0.md)
 
 ## 開発環境のセットアップ
@@ -79,7 +92,7 @@ pnpm install
 
 3. 環境変数の設定
 
-フロントエンド用（`apps/frontend/.env.local`）:
+`.env.local.example`をコピーして`.env.local`を作成します：
 ```bash
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
@@ -87,49 +100,23 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 # OpenAI Configuration (for API routes)
 OPENAI_API_KEY=your-openai-api-key
+OPENAI_API_MODEL=gpt-3.5-turbo
 
 # Application Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+NEXT_PUBLIC_API_URL=http://localhost:3002/api
 
 # Demo Mode (optional)
-DEMO_MODE=false
-```
-
-バックエンド用（`apps/backend/.env`）:
-```bash
-# Supabase Configuration
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-# OpenAI Configuration
-OPENAI_API_KEY=your-openai-api-key
-
-# JWT Configuration
-JWT_SECRET=your-jwt-secret
-JWT_REFRESH_SECRET=your-jwt-refresh-secret
-JWT_EXPIRES_IN=1h
-
-# Application Configuration
-FRONTEND_URL=http://localhost:3000
-NODE_ENV=development
-PORT=3001
-
-# Database Configuration
-SUPABASE_DB_URL=postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres
+NEXT_PUBLIC_DEMO_MODE=true
 ```
 
 4. 開発サーバーの起動
 ```bash
-# フロントエンド
+# フロントエンドの開発サーバーを起動
 cd apps/frontend && pnpm dev
 
-# バックエンド
-cd apps/backend && pnpm dev
-
-# Storybook
-cd apps/frontend && pnpm storybook
+# モノレポ全体をビルド/起動する場合
+pnpm build && pnpm dev
 ```
 
 ## デプロイ
@@ -177,7 +164,9 @@ supabase functions deploy chat
 - **Turborepo**: モノレポ管理とビルド最適化
 - **ESLint & Prettier**: コード品質とフォーマット
 - **Husky & lint-staged**: コミット前の自動リント
-- **Storybook**: コンポーネント開発とドキュメント
+- **React Testing Library**: コンポーネントのインタラクションテスト
+- **Jest**: テストランナーとアサーション
+- **GitHub Actions**: CI/CD自動化
 - **Vercel**: 高速でスケーラブルなデプロイプラットフォーム
 
 ## 💡 こだわりポイント
@@ -195,7 +184,8 @@ supabase functions deploy chat
 ### 3. コード品質
 - **型安全性**: TypeScriptによる厳格な型チェック
 - **コンポーネント設計**: 再利用可能で保守しやすいコンポーネント
-- **テスト**: 重要な機能に対するユニットテスト
+- **包括的なテスト**: React Testing Libraryを用いたインタラクション中心のテスト戦略
+- **CI/CD**: PRごとの自動テストと型チェック
 
 ### 4. AIインテグレーション
 - **コンテキスト認識**: ユーザーのタスクとプロジェクトを考慮したAIレスポンス
@@ -208,6 +198,8 @@ supabase functions deploy chat
 - **チーム機能**: 複数ユーザーでのプロジェクト共有
 - **高度な分析**: タスク完了率とパフォーマンス指標
 - **AIコーチの強化**: より高度なコンテキスト理解と提案
+- **テストカバレッジ向上**: E2Eテストの導入とカバレッジ90%以上の達成
+- **i18n対応**: 多言語サポート（英語・日本語・中国語など）
 
 ## 📝 ER図
 

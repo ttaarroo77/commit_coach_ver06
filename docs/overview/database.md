@@ -6,6 +6,78 @@ description: "Supabaseを使用したデータベースの設計とスキーマ�
 
 # データベース設計
 
+## 0. ER図
+
+```mermaid
+erDiagram
+    users ||--o{ projects : creates
+    users ||--o{ tasks : owns
+    projects ||--o{ tasks : contains
+    tasks ||--o{ comments : has
+    users ||--o{ comments : writes
+    users ||--o{ conversations : participates
+    conversations ||--o{ messages : contains
+
+    users {
+        uuid id PK
+        text email
+        text name
+        text avatar_url
+        timestamp created_at
+        timestamp updated_at
+    }
+    user_settings {
+        uuid user_id PK,FK
+        text theme
+        jsonb notifications
+        text language
+        timestamp created_at
+        timestamp updated_at
+    }
+    projects {
+        uuid id PK
+        uuid user_id FK
+        text name
+        text description
+        timestamp created_at
+        timestamp updated_at
+    }
+    tasks {
+        uuid id PK
+        uuid user_id FK
+        uuid project_id FK
+        text title
+        text description
+        text status
+        int priority
+        timestamp due_date
+        timestamp created_at
+        timestamp updated_at
+    }
+    comments {
+        uuid id PK
+        uuid task_id FK
+        uuid user_id FK
+        text content
+        timestamp created_at
+    }
+    conversations {
+        uuid id PK
+        uuid user_id FK
+        text title
+        text tone
+        timestamp created_at
+        timestamp updated_at
+    }
+    messages {
+        uuid id PK
+        uuid conversation_id FK
+        text content
+        text role
+        timestamp created_at
+    }
+```
+
 ## 1. データベース概要
 
 ### 1.1 使用技術

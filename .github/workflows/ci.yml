@@ -1,32 +1,124 @@
-name: CI
+name: Commit Coach CI/CD
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    # 手動実行用
+
+# 同時に実行される重複ジョブをキャンセルする設定
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
+  quality-checks:
+    name: 📊 コード品質チェック
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-    - uses: actions/checkout@v4
+    - name: 📥 リポジトリをチェックアウト
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     
-    - name: Setup Node.js
+    - name: 🔧 Node.js 20.x のセットアップ
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'pnpm'
     
-    - name: Install pnpm
-      run: npm install -g pnpm
+    - name: 📦 PNPM のインストール
+      uses: pnpm/action-setup@v3
+      with:
+        version: 8.9.0
+        run_install: false
     
-    - name: Install dependencies
-      run: pnpm install
+    - name: 💾 PNPM キャッシュの取得
+      id: pnpm-cache
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - name: 🔄 依存関係キャッシュのセットアップ
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
     
-    - name: Run lint
+    - name: 🔄 依存関係のインストール
+      run: pnpm install --frozen-lockfile
+    
+    - name: 🔍 コードリンティング
+      id: lint
       run: pnpm lint
+      
+    - name: ✅ 型チェック
+      id: type-check
+      run: pnpm type-check
     
-    - name: Run tests
-      run: pnpm test 
+    - name: 🧪 テスト実行
+      id: test
+      run: pnpm test -- --ci --coverage
+    
+    - name: 📊 テストカバレッジレポートの保存
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-coverage-report
+        path: apps/frontend/coverage
+        retention-days: 7
+    
+  build:
+    name: 🏗 ビルド
+    runs-on: ubuntu-latest
+    needs: quality-checks
+    timeout-minutes: 10
+
+    steps:
+    - name: 📥 リポジトリをチェックアウト
+      uses: actions/checkout@v4
+    
+    - name: 🔧 Node.js セットアップ
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+    
+    - name: 📦 PNPM のインストール
+      uses: pnpm/action-setup@v3
+      with:
+        version: 8.9.0
+        run_install: false
+    
+    - name: 🔄 依存関係キャッシュのセットアップ
+      id: pnpm-cache
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+    
+    - name: 🔄 依存関係のインストール
+      run: pnpm install --frozen-lockfile
+    
+    - name: 🏗 フロントエンドのビルド
+      id: build
+      run: cd apps/frontend && pnpm build
+      
+    - name: 📦 ビルド成果物の保存
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-build
+        path: apps/frontend/.next
+        retention-days: 3

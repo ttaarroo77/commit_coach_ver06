@@ -46,6 +46,9 @@ export const EditableTaskItem = ({ ctx, gid, pid, task, idx, dragProps }: Props)
             ...listeners
           }}
           onTimeChange={(s, e) => ctx.handleTaskTimeChange?.(gid, pid, task.id, s, e)} /* optional */
+          groupId={gid} /* タスクのグループID（today/unscheduled）*/
+          onMoveUp={gid === "unscheduled" ? () => ctx.moveTaskToToday?.(pid, task.id) : undefined}
+          onMoveDown={gid === "today" ? () => ctx.moveTaskToUnscheduled?.(pid, task.id) : undefined}
         />
       </SortableTaskWrapper>
 

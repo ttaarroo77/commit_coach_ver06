@@ -46,6 +46,9 @@ type Store = {
   updateSubtaskTitle: (projectId: string, taskId: string, subtaskId: string, title: string) => void
   toggleComplete: (level:"task"|"subtask", ids:string[]) => void
   breakdown: (level:"project"|"task", ids:string[]) => void
+  /* タスク優先度変更アクション */
+  moveTaskToToday: (projectId: string, taskId: string) => void
+  moveTaskToUnscheduled: (projectId: string, taskId: string) => void
 }
 
 export const useProjects = create<Store>((set) => ({
@@ -321,5 +324,44 @@ export const useProjects = create<Store>((set) => ({
         toast.error(error instanceof Error ? error.message : '予期しないエラーが発生しました', { id: 'ai-breakdown' });
       }
     })();
+  },
+
+  /* タスク優先度変更機能の実装 */
+  moveTaskToToday: (projectId: string, taskId: string) => {
+    set((state) => ({
+      projects: state.projects.map((project) => {
+        if (project.id !== projectId) return project;
+        
+        // タスクのgroupIdを「today」に変更
+        return {
+          ...project,
+          tasks: project.tasks.map((task) => {
+            if (task.id !== taskId) return task;
+            return { ...task, groupId: "today" };
+          }),
+        };
+      }),
+    }));
+    
+    toast.success("タスクを今日の予定に移動しました");
+  },
+
+  moveTaskToUnscheduled: (projectId: string, taskId: string) => {
+    set((state) => ({
+      projects: state.projects.map((project) => {
+        if (project.id !== projectId) return project;
+        
+        // タスクのgroupIdを「unscheduled」に変更
+        return {
+          ...project,
+          tasks: project.tasks.map((task) => {
+            if (task.id !== taskId) return task;
+            return { ...task, groupId: "unscheduled" };
+          }),
+        };
+      }),
+    }));
+    
+    toast.success("タスクを未定の予定に移動しました");
   },
 }))

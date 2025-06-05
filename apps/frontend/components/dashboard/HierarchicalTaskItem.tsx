@@ -2,6 +2,7 @@
 
 "use client"
 
+import * as React from "react"
 import { useState } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
@@ -93,7 +94,7 @@ export const HierarchicalTaskItem = ({
       {hasChildren ? (
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           className="mr-2 text-blue-600 hover:bg-blue-100/70"
           onClick={onToggleExpand}
         >
@@ -155,7 +156,7 @@ export const HierarchicalTaskItem = ({
       {onAddChild && level !== 3 && (
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           className={cn(iconBtn, "mr-2 text-green-600 hover:bg-green-100/70")}
           onClick={onAddChild}
           aria-label="add child"
@@ -168,14 +169,14 @@ export const HierarchicalTaskItem = ({
       {editing ? (
         <>
           <Button
-            variant="ghost" size="icon"
+            variant="ghost" size="sm"
             className="text-green-600 hover:bg-green-100/70"
             onClick={commitEdit} aria-label="save"
           >
             <Check size={ICON_SIZE} strokeWidth={2.25}/>
           </Button>
           <Button
-            variant="ghost" size="icon"
+            variant="ghost" size="sm"
             className="text-gray-500 hover:bg-gray-100/70"
             onClick={cancelEdit} aria-label="cancel"
           >
@@ -184,7 +185,7 @@ export const HierarchicalTaskItem = ({
         </>
       ) : (
         <Button
-          variant="ghost" size="icon"
+          variant="ghost" size="sm"
           className={cn(iconBtn, "mr-2 text-blue-600 hover:bg-blue-100/70")}
           onClick={beginEdit} aria-label="edit"
         >
@@ -196,7 +197,7 @@ export const HierarchicalTaskItem = ({
       {groupId === "unscheduled" && onMoveUp && (
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           className={cn(iconBtn, "mr-2 text-blue-600 hover:bg-blue-100/70")}
           onClick={onMoveUp}
           aria-label="move to today"
@@ -209,7 +210,7 @@ export const HierarchicalTaskItem = ({
       {groupId === "today" && onMoveDown && (
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           className={cn(iconBtn, "mr-2 text-blue-600 hover:bg-blue-100/70")}
           onClick={onMoveDown}
           aria-label="move to unscheduled"
@@ -222,7 +223,7 @@ export const HierarchicalTaskItem = ({
       {onDelete && (
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           className={cn(iconBtn, "text-red-600 hover:bg-red-100/70")}
           onClick={onDelete}
           aria-label="delete"
