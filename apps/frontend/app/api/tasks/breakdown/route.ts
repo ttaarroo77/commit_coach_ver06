@@ -134,6 +134,9 @@ ${description ? `\n追加情報: ${description}` : ''}
         headers: {
           'Content-Type': 'application/json',
           'Authorization': authHeader,
+          // 開発環境とデモモードの情報を伝えるヘッダー
+          'X-Environment': process.env.NODE_ENV || '',
+          'X-Demo-Mode': process.env.NEXT_PUBLIC_DEMO_MODE || 'false',
           // テスト環境の場合はGPT-4oを使用するヘッダー
           ...(process.env.NODE_ENV === 'development' && { 'X-Client-Testing': 'true' }),
         },

@@ -75,21 +75,37 @@ serve(async (req) => {
       return createErrorResponse('OpenAI API key is not configured', 500);
     }
 
-    // ヘッダーからJWTトークンを取得
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return createErrorResponse(ErrorMessages.UNAUTHORIZED, 401);
-    }
-
+    // 開発環境判定用のヘッダーを取得
+    const isDevMode = req.headers.get('X-Environment') === 'development';
+    const isDemoMode = req.headers.get('X-Demo-Mode') === 'true';
+    console.log(`環境設定: 開発環境=${isDevMode}, デモモード=${isDemoMode}`);
+    
     // Supabaseクライアントの初期化
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    let user = null;
+    
+    // 開発環境やデモモードでない場合のみ認証を行う
+    if (!isDevMode && !isDemoMode) {
+      // ヘッダーからJWTトークンを取得
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        return createErrorResponse(ErrorMessages.UNAUTHORIZED, 401);
+      }
 
-    // ユーザー認証
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      // ユーザー認証
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
 
-    if (authError || !user) {
-      return createErrorResponse(ErrorMessages.UNAUTHORIZED, 401);
+      if (authError || !authUser) {
+        return createErrorResponse(ErrorMessages.UNAUTHORIZED, 401);
+      }
+      
+      user = authUser;
+    } else {
+      console.log('開発環境またはデモモードのため認証をスキップ');
+      // 開発環境やデモモードの場合はダミーユーザーIDを設定
+      user = { id: 'dev-user-' + Date.now() };
     }
 
     // レート制限チェック

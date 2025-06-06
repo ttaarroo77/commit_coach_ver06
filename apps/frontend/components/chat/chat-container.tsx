@@ -181,7 +181,6 @@ export default function ChatContainer() {
           </div>
         )}
 
-      <ErrorBoundary>
         <div className="flex flex-col flex-1"> {/* .flex-col コンテナ */}
           {/* ヘッダー */}
           <div className="p-4 border-b flex justify-between items-center">
@@ -196,95 +195,89 @@ export default function ChatContainer() {
               履歴
             </button>
           </div>
-            onClick={() => setShowHistory(!showHistory)}
-            className="ml-2 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <History className="h-4 w-4 mr-1" />
-            履歴
-          </button>
-        </div>
 
-        {/* メッセージエリア */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((message, index) => (
-            <div key={index} className="group relative">
-              <ChatMessage message={message} />
+          {/* メッセージエリア */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.map((message, index) => (
+              <div key={index} className="group relative">
+                <ChatMessage message={message} />
+                <button
+                  className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => handleCopyMessage(message.content)}
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            {isLoading && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>コーチが回答を考えています...</span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* 入力エリア */}
+          <form onSubmit={handleSubmit} className="border-t p-4">
+            <div className="flex items-end gap-2">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="メッセージを入力（Cmd/Ctrl+Enter で送信・Shift+Enter で改行）"
+                className="resize-none overflow-y-auto flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#31A9B8] focus:border-transparent"
+                rows={1}
+                onKeyDown={(e) => {
+                  // ---- IME 中なら何もしない ----
+                  if (isComposing) return;
+
+                  // Ctrl/Cmd+Enter で送信
+                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                    e.preventDefault();
+                    if (input.trim() && !isLoading) handleSubmit(e);
+                    return;
+                  }
+
+                  // Enter 単体: 何も起きない（デフォルト動作を防止）
+                  if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+                    e.preventDefault();  // デフォルトの改行動作を防止
+                    return;
+                  }
+
+                  // Shift+Enter は改行（デフォルトを残す）
+                }}
+                onCompositionStart={() => setIsComposing(true)}
+                onCompositionEnd={() => setIsComposing(false)}
+                ref={textareaRef}
+              />
               <button
-                className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => handleCopyMessage(message.content)}
+                type="submit"
+                disabled={!input.trim() || isLoading}
+                className="bg-[#31A9B8] hover:bg-[#2a8f9c] text-white h-[80px] px-4 rounded-md flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                title="送信 (Ctrl+Enter または Cmd+Enter)"
               >
-                <Copy className="h-4 w-4" />
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
               </button>
             </div>
-          ))}
-          {isLoading && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>コーチが回答を考えています...</span>
+
+            <div className="text-xs text-muted-foreground mt-2 flex flex-wrap gap-4">
+              <span>
+                <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Ctrl+Enter</kbd> または
+                <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">⌘+Enter</kbd> で送信
+              </span>
+              <span>
+                <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Shift+Enter</kbd> で改行
+              </span>
+              <span>
+                <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Enter</kbd> 単体では何も起きません
+              </span>
             </div>
-          )}
-          <div ref={messagesEndRef} />
+          </form>
         </div>
-
-        {/* 入力エリア */}
-        <form onSubmit={handleSubmit} className="border-t p-4">
-          <div className="flex items-end gap-2">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="メッセージを入力（Cmd/Ctrl+Enter で送信・Shift+Enter で改行）"
-              className="resize-none overflow-y-auto flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#31A9B8] focus:border-transparent"
-              rows={1}
-              onKeyDown={(e) => {
-                // ---- IME 中なら何もしない ----
-                if (isComposing) return;
-
-                // Ctrl/Cmd+Enter で送信
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                  e.preventDefault();
-                  if (input.trim() && !isLoading) handleSubmit(e);
-                  return;
-                }
-
-                // Enter 単体: 何も起きない（デフォルト動作を防止）
-                if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
-                  e.preventDefault();  // デフォルトの改行動作を防止
-                  return;
-                }
-
-                // Shift+Enter は改行（デフォルトを残す）
-              }}
-              onCompositionStart={() => setIsComposing(true)}
-              onCompositionEnd={() => setIsComposing(false)}
-              ref={textareaRef}
-            />
-            <button
-              type="submit"
-              disabled={!input.trim() || isLoading}
-              className="bg-[#31A9B8] hover:bg-[#2a8f9c] text-white h-[80px] px-4 rounded-md flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-              title="送信 (Ctrl+Enter または Cmd+Enter)"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </button>
-          </div>
-
-          <div className="text-xs text-muted-foreground mt-2 flex flex-wrap gap-4">
-            <span>
-              <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Ctrl+Enter</kbd> または
-              <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">⌘+Enter</kbd> で送信
-            </span>
-            <span>
-              <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Shift+Enter</kbd> で改行
-            </span>
-            <span>
-              <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Enter</kbd> 単体では何も起きません
-            </span>
-          </div>
-        </form>
       </div>
     </ErrorBoundary>
   );
