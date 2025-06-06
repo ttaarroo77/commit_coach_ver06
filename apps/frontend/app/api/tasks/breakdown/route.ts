@@ -36,10 +36,12 @@ export async function POST(req: NextRequest) {
     // セッション情報の取得
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    // 開発環境またはデモモードの場合は認証をスキップ
+    // デモモードの場合は認証をスキップ
     const isDevelopment = process.env.NODE_ENV === 'development';
     const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+    console.log(`環境設定: 開発環境=${isDevelopment}, デモモード=${isDemoMode}`);
     
+    // 開発環境またはデモモードの場合は認証をスキップ
     if ((sessionError || !session) && !isDevelopment && !isDemoMode) {
       return NextResponse.json(
         { error: 'セッションが無効です' },
@@ -97,9 +99,9 @@ ${description ? `\n追加情報: ${description}` : ''}
     const timeoutId = setTimeout(() => controller.abort(), 20000);
 
     try {
-      // 開発環境またはデモモードの場合はダミーレスポンスを返す
-      if (isDevelopment || isDemoMode) {
-        console.log('開発環境またはデモモード: ダミータスク分解を使用');
+      // デモモードの場合のみダミーレスポンスを返す
+      if (isDemoMode) {
+        console.log('デモモード: ダミータスク分解を使用');
         // タイミングを擬似的に再現するため少し待つ
         await new Promise(resolve => setTimeout(resolve, 800));
         
@@ -124,6 +126,7 @@ ${description ? `\n追加情報: ${description}` : ''}
         }
       }
       
+      console.log('Edge Function呼び出し: 実タスク分解を使用');
       // Supabase Edge Functionへのリクエスト
       const authHeader = session ? `Bearer ${session.access_token}` : 'Bearer dummy-token-for-development';
       const response = await fetch(functionEndpoint, {

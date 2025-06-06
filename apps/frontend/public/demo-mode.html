@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commit Coach - デモモード設定</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+    }
+    h1 {
+      color: #31A9B8;
+      margin-top: 0;
+    }
+    .button {
+      background-color: #31A9B8;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px 0;
+      transition: background-color 0.3s;
+    }
+    .button:hover {
+      background-color: #2a8f9c;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 5px;
+      display: none;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .info {
+      background-color: #cce5ff;
+      color: #004085;
+      border: 1px solid #b8daff;
+    }
+    pre {
+      background-color: #f8f9fa;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    .actions {
+      margin-top: 30px;
+      display: flex;
+      gap: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Commit Coach - デモモード設定</h1>
+    
+    <p>このページでは、Commit CoachのAI機能（タスク分解機能とチャット機能）のデモモードを有効化できます。</p>
+    
+    <div class="status info" id="currentStatus">
+      <p>現在のデモモード状態：<span id="demoStatus">確認中...</span></p>
+    </div>
+    
+    <h2>環境変数の状態</h2>
+    <pre id="envVarStatus">確認中...</pre>
+    
+    <h2>操作</h2>
+    <p>以下のボタンをクリックして、デモモードを有効化または無効化できます。</p>
+    
+    <div class="actions">
+      <button class="button" id="enableDemoMode">デモモードを有効化する</button>
+      <button class="button" id="disableDemoMode" style="background-color: #6c757d;">デモモードを無効化する</button>
+      <button class="button" id="goToApp" style="background-color: #28a745;">アプリケーションに戻る</button>
+    </div>
+    
+    <div class="status success" id="actionStatus"></div>
+    
+    <h2>注意事項</h2>
+    <ul>
+      <li>デモモードでは、汎用的なダミーデータが返されます</li>
+      <li>実際のプロジェクトに応じた詳細な分解結果は得られません</li>
+      <li>この機能は開発・テスト目的のみで使用してください</li>
+      <li>本番環境では、Supabase Edge Functionの正しいデプロイが必要です</li>
+    </ul>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 現在のステータスを表示
+      const currentStatusElement = document.getElementById('currentStatus');
+      const statusElement = document.getElementById('demoStatus');
+      const actionStatusElement = document.getElementById('actionStatus');
+      const envVarStatusElement = document.getElementById('envVarStatus');
+      
+      // Cookieの取得
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+      }
+      
+      // Cookieの設定
+      function setCookie(name, value, days) {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+        document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+      }
+      
+      // 現在の状態を確認
+      function checkCurrentStatus() {
+        const demoModeCookie = getCookie('demo_mode');
+        currentStatusElement.style.display = 'block';
+        
+        if (demoModeCookie === 'true') {
+          statusElement.textContent = '有効';
+          statusElement.style.color = '#155724';
+        } else {
+          statusElement.textContent = '無効';
+          statusElement.style.color = '#721c24';
+        }
+        
+        // 環境変数の状態を表示（実際の値は取得できないので、参考情報として表示）
+        envVarStatusElement.textContent = `// .env.localファイル内の設定（参考）
+NEXT_PUBLIC_DEMO_MODE=true  // 編集済み
+
+// この設定は開発サーバーの再起動時に反映されます。
+// 現在の状態: 再起動済み（ポート3001で起動中）`;
+      }
+      
+      // 初期確認
+      checkCurrentStatus();
+      
+      // デモモード有効化
+      document.getElementById('enableDemoMode').addEventListener('click', function() {
+        setCookie('demo_mode', 'true', 365);
+        actionStatusElement.textContent = 'デモモードを有効化しました。アプリを再読み込みするとデモ機能が利用できます。';
+        actionStatusElement.style.display = 'block';
+        checkCurrentStatus();
+      });
+      
+      // デモモード無効化
+      document.getElementById('disableDemoMode').addEventListener('click', function() {
+        setCookie('demo_mode', 'false', 365);
+        actionStatusElement.textContent = 'デモモードを無効化しました。アプリを再読み込みすると変更が反映されます。';
+        actionStatusElement.style.display = 'block';
+        checkCurrentStatus();
+      });
+      
+      // アプリに戻る
+      document.getElementById('goToApp').addEventListener('click', function() {
+        window.location.href = '/';
+      });
+    });
+  </script>
+</body>
+</html>

@@ -157,28 +157,29 @@ export default function ChatContainer() {
   };
 
   return (
-    <div className="flex h-full max-h-[calc(100vh-6rem)] bg-background"> 
-      {/* 会話履歴サイドバー */}
-      {showHistory && (
-        <div className="w-64 border-r overflow-y-auto">
-          <div className="p-3 border-b flex justify-between items-center">
-            <h3 className="text-sm font-medium">会話履歴</h3>
-            <button 
-              onClick={() => setShowHistory(false)}
-              className="h-7 w-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
-            >
-              <span className="sr-only">Close</span>
-              <span aria-hidden="true">&times;</span>
-            </button>
+    <ErrorBoundary>
+      <div className="flex h-full max-h-[calc(100vh-6rem)] bg-background"> 
+        {/* 会話履歴サイドバー */}
+        {showHistory && (
+          <div className="w-64 border-r overflow-y-auto">
+            <div className="p-3 border-b flex justify-between items-center">
+              <h3 className="text-sm font-medium">会話履歴</h3>
+              <button 
+                onClick={() => setShowHistory(false)}
+                className="h-7 w-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
+              >
+                <span className="sr-only">Close</span>
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <ChatHistory 
+              currentConversationId={conversation?.id} 
+              onSelectConversation={(id) => {
+                loadConversation(id);
+              }} 
+            />
           </div>
-          <ChatHistory 
-            currentConversationId={conversation?.id} 
-            onSelectConversation={(id) => {
-              loadConversation(id);
-            }} 
-          />
-        </div>
-      )}
+        )}
 
       <ErrorBoundary>
         <div className="flex flex-col flex-1"> {/* .flex-col コンテナ */}
